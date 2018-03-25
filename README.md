@@ -1,0 +1,11 @@
+# JSON Iterator [![Build Status](https://travis-ci.org/comodal/json-iterator.svg?branch=master)](https://travis-ci.org/comodal/json-iterator)  [![codecov](https://codecov.io/gh/comodal/json-iterator/branch/master/graph/badge.svg)](https://codecov.io/gh/comodal/json-iterator) [ ![Download](https://api.bintray.com/packages/comodal/libraries/json-iterator/images/download.svg) ](https://bintray.com/comodal/libraries/json-iterator/_latestVersion)
+
+JSON iterator is a minimal Java 10 adaption of the original [jsoniter JsonIterator](https://github.com/json-iterator/java), maintaining only the [stream parsing features](http://jsoniter.com/java-features.html#iterator-to-rescue).  See [JsonIterator.java](systems.comodal.json_iterator/src/main/java/systems/comodal/jsoniter/JsonIterator.java) for the public interface.
+
+### Usage
+```java
+JsonIterator jsonIterator = JsonIterator.parse("{\"hello\": \"world\"}");
+String fieldName = jsonIterator.readObject();
+String fieldValue = jsonIterator.readString();
+System.out.println(fieldName + ' ' + fieldValue);
+```
