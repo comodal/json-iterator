@@ -4,37 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static systems.comodal.jsoniter.ValueType.VALUE_TYPES;
 
 class BytesJsonIterator implements JsonIterator {
-
-  private final static ValueType[] VALUE_TYPES = new ValueType[256];
-
-  static {
-    for (int i = 0; i < VALUE_TYPES.length; i++) {
-      VALUE_TYPES[i] = ValueType.INVALID;
-    }
-    VALUE_TYPES['"'] = ValueType.STRING;
-    VALUE_TYPES['-'] = ValueType.NUMBER;
-    VALUE_TYPES['0'] = ValueType.NUMBER;
-    VALUE_TYPES['1'] = ValueType.NUMBER;
-    VALUE_TYPES['2'] = ValueType.NUMBER;
-    VALUE_TYPES['3'] = ValueType.NUMBER;
-    VALUE_TYPES['4'] = ValueType.NUMBER;
-    VALUE_TYPES['5'] = ValueType.NUMBER;
-    VALUE_TYPES['6'] = ValueType.NUMBER;
-    VALUE_TYPES['7'] = ValueType.NUMBER;
-    VALUE_TYPES['8'] = ValueType.NUMBER;
-    VALUE_TYPES['9'] = ValueType.NUMBER;
-    VALUE_TYPES['t'] = ValueType.BOOLEAN;
-    VALUE_TYPES['f'] = ValueType.BOOLEAN;
-    VALUE_TYPES['n'] = ValueType.NULL;
-    VALUE_TYPES['['] = ValueType.ARRAY;
-    VALUE_TYPES['{'] = ValueType.OBJECT;
-  }
 
   static final boolean[] BREAKS = new boolean[127];
 
@@ -48,68 +22,32 @@ class BytesJsonIterator implements JsonIterator {
     BREAKS[']'] = true;
   }
 
-  static final int[] INT_DIGITS = new int[127];
-  private static final int[] FLOAT_DIGITS = new int[127];
-  private static final int END_OF_NUMBER = -2;
-  private static final int DOT_IN_NUMBER = -3;
-  static final int INVALID_CHAR_FOR_NUMBER = -1;
-  private static final long POW10[] = {
+  private static final long[] POW10 = {
       1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
       1000000000, 10000000000L, 100000000000L, 1000000000000L,
       10000000000000L, 100000000000000L, 1000000000000000L};
 
+  static final int[] INT_DIGITS = new int[127];
+  static final int INVALID_CHAR_FOR_NUMBER = -1;
+
   static {
-    for (int i = 0; i < FLOAT_DIGITS.length; i++) {
-      FLOAT_DIGITS[i] = INVALID_CHAR_FOR_NUMBER;
-      INT_DIGITS[i] = INVALID_CHAR_FOR_NUMBER;
-    }
+    Arrays.fill(INT_DIGITS, INVALID_CHAR_FOR_NUMBER);
     for (int i = '0'; i <= '9'; ++i) {
-      FLOAT_DIGITS[i] = (i - '0');
       INT_DIGITS[i] = (i - '0');
     }
-    FLOAT_DIGITS[','] = END_OF_NUMBER;
-    FLOAT_DIGITS[']'] = END_OF_NUMBER;
-    FLOAT_DIGITS['}'] = END_OF_NUMBER;
-    FLOAT_DIGITS[' '] = END_OF_NUMBER;
-    FLOAT_DIGITS['.'] = DOT_IN_NUMBER;
-  }
-
-
-  private static final int[] HEX_DIGITS = new int['f' + 1];
-
-  static {
-    for (int i = 0; i < HEX_DIGITS.length; i++) {
-      HEX_DIGITS[i] = -1;
-    }
-    for (int i = '0'; i <= '9'; ++i) {
-      HEX_DIGITS[i] = (i - '0');
-    }
-    for (int i = 'a'; i <= 'f'; ++i) {
-      HEX_DIGITS[i] = ((i - 'a') + 10);
-    }
-    for (int i = 'A'; i <= 'F'; ++i) {
-      HEX_DIGITS[i] = ((i - 'A') + 10);
-    }
-  }
-
-  static int translateHex(final byte b) {
-    final int val = HEX_DIGITS[b];
-    if (val == -1) {
-      throw new IndexOutOfBoundsException(b + " is not valid hex digit");
-    }
-    return val;
   }
 
   byte[] buf;
   int head;
   int tail;
 
-  char[] reusableChars = new char[32];
+  char[] reusableChars;
 
   BytesJsonIterator(final byte[] buf, final int head, final int tail) {
     this.buf = buf;
     this.head = head;
     this.tail = tail;
+    this.reusableChars = new char[32];
   }
 
   @Override
@@ -724,10 +662,10 @@ class BytesJsonIterator implements JsonIterator {
             case '\\':
               break;
             case 'u':
-              bc = (translateHex(buf[i++]) << 12) +
-                  (translateHex(buf[i++]) << 8) +
-                  (translateHex(buf[i++]) << 4) +
-                  translateHex(buf[i++]);
+              bc = (JHex.decode(buf[i++]) << 12) +
+                  (JHex.decode(buf[i++]) << 8) +
+                  (JHex.decode(buf[i++]) << 4) +
+                  JHex.decode(buf[i++]);
               if (Character.isHighSurrogate((char) bc)) {
                 if (isExpectingLowSurrogate) {
                   throw new JsonException("invalid surrogate");

@@ -6,11 +6,12 @@ import java.io.InputStream;
 final class BufferedStreamJsonIterator extends BytesJsonIterator {
 
   private InputStream in;
-  private int skipStartedAt = -1; // skip should keep bytes starting at this pos
+  private int skipStartedAt; // skip should keep bytes starting at this pos
 
   BufferedStreamJsonIterator(final InputStream in, final byte[] buf, final int head, final int tail) {
     super(buf, head, tail);
     this.in = in;
+    this.skipStartedAt = -1;
   }
 
   @Override
@@ -19,10 +20,21 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
+  public JsonIterator reset(final byte[] buf) {
+    return new BytesJsonIterator(buf, 0, buf.length);
+  }
+
+  @Override
+  public JsonIterator reset(final byte[] buf, final int head, final int tail) {
+    return new BytesJsonIterator(buf, head, tail);
+  }
+
+  @Override
   public JsonIterator reset(final InputStream in) {
     this.in = in;
     this.head = 0;
     this.tail = 0;
+    this.skipStartedAt = -1;
     return this;
   }
 
@@ -34,6 +46,7 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
     this.in = in;
     this.head = 0;
     this.tail = 0;
+    this.skipStartedAt = -1;
     return this;
   }
 
@@ -363,10 +376,10 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
           case '\\':
             break;
           case 'u':
-            bc = (translateHex(readByte()) << 12) +
-                (translateHex(readByte()) << 8) +
-                (translateHex(readByte()) << 4) +
-                translateHex(readByte());
+            bc = (JHex.decode(readByte()) << 12) +
+                (JHex.decode(readByte()) << 8) +
+                (JHex.decode(readByte()) << 4) +
+                JHex.decode(readByte());
             if (Character.isHighSurrogate((char) bc)) {
               if (isExpectingLowSurrogate) {
                 throw new JsonException("invalid surrogate");
