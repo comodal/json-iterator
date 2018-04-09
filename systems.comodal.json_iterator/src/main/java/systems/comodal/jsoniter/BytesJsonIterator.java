@@ -51,6 +51,22 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
+  public boolean supportsMarkReset() {
+    return true;
+  }
+
+  @Override
+  public int mark() {
+    return head;
+  }
+
+  @Override
+  public JsonIterator reset(final int mark) {
+    this.head = mark;
+    return this;
+  }
+
+  @Override
   public JsonIterator reset(final byte[] buf) {
     this.buf = buf;
     this.head = 0;

@@ -20,6 +20,21 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
+  public boolean supportsMarkReset() {
+    return false;
+  }
+
+  @Override
+  public int mark() {
+    throw new UnsupportedOperationException("Mark is not supported when using an InputStream.");
+  }
+
+  @Override
+  public JsonIterator reset(final int mark) {
+    throw new UnsupportedOperationException("Reset via mark is not supported when using an InputStream.");
+  }
+
+  @Override
   public JsonIterator reset(final byte[] buf) {
     return new BytesJsonIterator(buf, 0, buf.length);
   }

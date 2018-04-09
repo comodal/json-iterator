@@ -24,6 +24,12 @@ public interface JsonIterator extends Closeable {
     return parse(str.getBytes());
   }
 
+  boolean supportsMarkReset();
+
+  int mark();
+
+  JsonIterator reset(final int mark);
+
   JsonIterator reset(final byte[] buf);
 
   JsonIterator reset(final byte[] buf, final int head, final int tail);
