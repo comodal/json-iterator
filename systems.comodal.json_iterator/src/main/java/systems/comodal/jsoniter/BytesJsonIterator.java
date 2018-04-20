@@ -990,6 +990,16 @@ class BytesJsonIterator implements JsonIterator {
   double readDoubleSlowPath() throws IOException {
     try {
       final var numberChars = readNumber();
+      if (numberChars.charsLength == 0 && whatIsNext() == ValueType.STRING) {
+        final var possibleInf = readString();
+        if ("infinity".equals(possibleInf)) {
+          return Double.POSITIVE_INFINITY;
+        }
+        if ("-infinity".equals(possibleInf)) {
+          return Double.NEGATIVE_INFINITY;
+        }
+        throw reportError("readDoubleSlowPath", "expect number but found string: " + possibleInf);
+      }
       return Double.valueOf(new String(numberChars.chars, 0, numberChars.charsLength));
     } catch (final NumberFormatException e) {
       throw reportError("readDoubleSlowPath", e.toString());

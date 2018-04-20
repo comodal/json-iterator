@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TestFloat {
 
@@ -84,5 +85,14 @@ final class TestFloat {
   @Test
   void testBigDecimal() throws IOException {
     assertEquals(new BigDecimal("100.1"), JsonIterator.parse("100.1").readBigDecimal());
+  }
+
+
+  @Test
+  void testInfinity() throws IOException {
+    assertEquals(JsonIterator.parse("\"-infinity\"").readDouble(), Double.NEGATIVE_INFINITY);
+    assertEquals(JsonIterator.parse("\"-infinity\"").readFloat(), Float.NEGATIVE_INFINITY);
+    assertEquals(JsonIterator.parse("\"infinity\"").readDouble(), Double.POSITIVE_INFINITY);
+    assertEquals(JsonIterator.parse("\"infinity\"").readFloat(), Float.POSITIVE_INFINITY);
   }
 }
