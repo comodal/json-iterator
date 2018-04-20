@@ -176,9 +176,18 @@ class BytesJsonIterator implements JsonIterator {
 
   @Override
   public long readLong() throws IOException {
-    final byte c = nextToken();
+    byte c = nextToken();
     if (c == '-') {
-      return readLong(readByte());
+      c = readByte();
+      if(INT_DIGITS[c] == 0) {
+        assertNotLeadingZero();
+        return 0;
+      }
+      return readLong(c);
+    }
+    if(INT_DIGITS[c] == 0) {
+      assertNotLeadingZero();
+      return 0;
     }
     final long val = readLong(c);
     if (val == Long.MIN_VALUE) {
@@ -853,10 +862,6 @@ class BytesJsonIterator implements JsonIterator {
 
   long readLong(final byte c) throws IOException {
     long ind = INT_DIGITS[c];
-    if (ind == 0) {
-      assertNotLeadingZero();
-      return 0;
-    }
     if (ind == INVALID_CHAR_FOR_NUMBER) {
       throw reportError("readLong", "expect 0~9");
     }
