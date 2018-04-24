@@ -248,6 +248,8 @@ class BytesJsonIterator implements JsonIterator {
       }
       final byte c = buf[i];
       switch (c) {
+        case ' ':
+          continue;
         case '.':
         case 'e':
         case 'E':

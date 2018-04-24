@@ -173,6 +173,8 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
         }
         final byte c = buf[i];
         switch (c) {
+          case ' ':
+            continue;
           case '.':
           case 'e':
           case 'E':
