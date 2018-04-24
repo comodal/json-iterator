@@ -506,4 +506,20 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
     tail = offset + n;
     return true;
   }
+
+  @Override
+  public String currentBuffer() {
+    int peekStart = head - 10;
+    if (peekStart < 0) {
+      peekStart = 0;
+    }
+    final var peek = new String(buf, peekStart, head - peekStart);
+    final var bufString = new String(buf, 0, tail);
+    final var headPeekBuf = "head: " + head + ", peek: " + peek + ", buf: " + bufString;
+    try {
+      return headPeekBuf + ", remaining: " + new String(in.readAllBytes());
+    } catch (final IOException ioEx) {
+      return headPeekBuf;
+    }
+  }
 }
