@@ -103,19 +103,6 @@ artifacts {
   archives sourcesJar
 }
 
-def pomConfig = {
-  licenses {
-    license {
-      name "Apache License 2.0"
-      url project.vcsUrl + '/blob/master/LICENSE'
-      distribution "repo"
-    }
-  }
-  scm {
-    url project.vcsUrl
-  }
-}
-
 publishing {
   publications {
     mavenJava(MavenPublication) {
@@ -125,13 +112,6 @@ publishing {
       groupId project.group
       artifactId project.name
       version = project.version
-      pom.withXml {
-        def root = asNode()
-        root.appendNode('description', "$desc")
-        root.appendNode('name', project.name)
-        root.appendNode('url', project.vcsUrl)
-        root.children().last() + pomConfig
-      }
     }
   }
 }
@@ -148,7 +128,7 @@ bintray {
     vcsUrl = project.vcsUrl
     websiteUrl = project.vcsUrl
     issueTrackerUrl = project.vcsUrl + '/issues'
-    licenses = ["Apache-2.0"]
+    licenses = ["MIT License"]
     publish = true
     version {
       name = project.version
