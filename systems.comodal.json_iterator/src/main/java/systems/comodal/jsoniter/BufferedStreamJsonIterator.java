@@ -517,11 +517,6 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
     }
     final var peek = new String(buf, peekStart, head - peekStart);
     final var bufString = new String(buf, 0, tail);
-    final var headPeekBuf = "head: " + head + ", peek: " + peek + ", buf: " + bufString;
-    try {
-      return headPeekBuf + ", remaining: " + new String(in.readAllBytes());
-    } catch (final IOException ioEx) {
-      return headPeekBuf;
-    }
+    return "head: " + head + ", peek: " + peek + ", buf: " + bufString;
   }
 }
