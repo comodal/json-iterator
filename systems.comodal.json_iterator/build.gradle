@@ -6,6 +6,7 @@ apply plugin: 'pl.allegro.tech.build.axion-release'
 scmVersion {
   tag {
     prefix = project.name
+    serialize = {config, version -> version}
   }
   repository {
     if (project.hasProperty("AXION_RELEASE_GITHUB_TOKEN")) {
