@@ -62,6 +62,8 @@ public interface JsonIterator extends Closeable {
 
   String readString() throws IOException;
 
+  String readString(final BiIntFunction<char[], String> strLengthToString) throws IOException;
+
   String readObject() throws IOException;
 
   float readFloat() throws IOException;

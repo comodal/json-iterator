@@ -179,13 +179,13 @@ class BytesJsonIterator implements JsonIterator {
     byte c = nextToken();
     if (c == '-') {
       c = readByte();
-      if(INT_DIGITS[c] == 0) {
+      if (INT_DIGITS[c] == 0) {
         assertNotLeadingZero();
         return 0;
       }
       return readLong(c);
     }
-    if(INT_DIGITS[c] == 0) {
+    if (INT_DIGITS[c] == 0) {
       assertNotLeadingZero();
       return 0;
     }
@@ -297,8 +297,15 @@ class BytesJsonIterator implements JsonIterator {
     throw reportError("readArrayCB", "expect [ or n, but found: " + (char) c);
   }
 
+  private static final BiIntFunction<char[], String> READ_STRING_FUNCTION = (count, _reusableChars) -> new String(_reusableChars, 0, count);
+
   @Override
   public String readString() throws IOException {
+    return readString(READ_STRING_FUNCTION);
+  }
+
+  @Override
+  public String readString(final BiIntFunction<char[], String> strLengthToString) throws IOException {
     final byte c = nextToken();
     if (c != '"') {
       if (c == 'n') {
@@ -308,7 +315,7 @@ class BytesJsonIterator implements JsonIterator {
       throw reportError("readString", "expect string or null, but " + (char) c);
     }
     final int count = parse();
-    return new String(reusableChars, 0, count);
+    return strLengthToString.apply(count, reusableChars);
   }
 
   private int parse() throws IOException {
