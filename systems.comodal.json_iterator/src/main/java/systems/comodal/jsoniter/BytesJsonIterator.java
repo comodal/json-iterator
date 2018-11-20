@@ -298,14 +298,15 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   private static final BiIntFunction<char[], String> READ_STRING_FUNCTION = (count, _reusableChars) -> new String(_reusableChars, 0, count);
+  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, _reusableChars) -> new BigDecimal(_reusableChars, 0, count);
 
   @Override
   public String readString() throws IOException {
-    return readString(READ_STRING_FUNCTION);
+    return readChars(READ_STRING_FUNCTION);
   }
 
   @Override
-  public String readString(final BiIntFunction<char[], String> strLengthToString) throws IOException {
+  public final <T> T readChars(final BiIntFunction<char[], T> applyChars) throws IOException {
     final byte c = nextToken();
     if (c != '"') {
       if (c == 'n') {
@@ -315,7 +316,7 @@ class BytesJsonIterator implements JsonIterator {
       throw reportError("readString", "expect string or null, but " + (char) c);
     }
     final int count = parse();
-    return strLengthToString.apply(count, reusableChars);
+    return applyChars.apply(count, reusableChars);
   }
 
   private int parse() throws IOException {
@@ -350,7 +351,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public String readObject() throws IOException {
+  public String readObjField() throws IOException {
     byte c = nextToken();
     switch (c) {
       case 'n':
@@ -428,11 +429,14 @@ class BytesJsonIterator implements JsonIterator {
       skip();
       return null;
     }
-    if (valueType != ValueType.NUMBER) {
-      throw reportError("readBigDecimal", "not number");
+    if (valueType == ValueType.NUMBER) {
+      final var numberChars = readNumber();
+      return new BigDecimal(numberChars.chars, 0, numberChars.charsLength);
     }
-    final var numberChars = readNumber();
-    return new BigDecimal(numberChars.chars, 0, numberChars.charsLength);
+    if (valueType == ValueType.STRING) {
+      return readChars(READ_BIG_DECIMAL_FUNCTION);
+    }
+    throw reportError("readBigDecimal", "Must be a number or a string, found " + valueType);
   }
 
   @Override

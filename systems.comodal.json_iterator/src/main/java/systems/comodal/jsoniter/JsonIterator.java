@@ -62,9 +62,21 @@ public interface JsonIterator extends Closeable {
 
   String readString() throws IOException;
 
-  String readString(final BiIntFunction<char[], String> strLengthToString) throws IOException;
+  /**
+   * Construct an Object of your choice directly from the char[] representing the next String value.
+   *
+   * @param applyChars This array buffer is reused throughout the life of this iterator.
+   * @param <T>        Resulting Object Type.
+   * @return Object constructed from applyChars.
+   * @throws IOException needed in case the underlying data is a stream.
+   */
+  <T> T readChars(final BiIntFunction<char[], T> applyChars) throws IOException;
 
-  String readObject() throws IOException;
+  default String readObject() throws IOException {
+    return readObjField();
+  }
+
+  String readObjField() throws IOException;
 
   float readFloat() throws IOException;
 
