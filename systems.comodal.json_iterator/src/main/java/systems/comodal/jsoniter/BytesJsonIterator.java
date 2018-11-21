@@ -298,7 +298,6 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   private static final BiIntFunction<char[], String> READ_STRING_FUNCTION = (count, _reusableChars) -> new String(_reusableChars, 0, count);
-  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, _reusableChars) -> new BigDecimal(_reusableChars, 0, count);
 
   @Override
   public String readString() throws IOException {
@@ -421,37 +420,45 @@ class BytesJsonIterator implements JsonIterator {
     return (float) readDouble();
   }
 
+  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, _reusableChars) -> new BigDecimal(_reusableChars, 0, count);
+
   @Override
   public BigDecimal readBigDecimal() throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
-    if (valueType == ValueType.NULL) {
-      skip();
-      return null;
+    if (valueType == ValueType.STRING) {
+      return readChars(READ_BIG_DECIMAL_FUNCTION);
     }
     if (valueType == ValueType.NUMBER) {
       final var numberChars = readNumber();
       return new BigDecimal(numberChars.chars, 0, numberChars.charsLength);
     }
-    if (valueType == ValueType.STRING) {
-      return readChars(READ_BIG_DECIMAL_FUNCTION);
+    if (valueType == ValueType.NULL) {
+      skip();
+      return null;
     }
     throw reportError("readBigDecimal", "Must be a number or a string, found " + valueType);
   }
+
+
+  private static final BiIntFunction<char[], BigInteger> READ_BIG_INTEGER_FUNCTION = (count, _reusableChars) -> new BigInteger(new String(_reusableChars, 0, count));
 
   @Override
   public BigInteger readBigInteger() throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
+    if (valueType == ValueType.NUMBER) {
+      final var numberChars = readNumber();
+      return new BigInteger(new String(numberChars.chars, 0, numberChars.charsLength));
+    }
+    if (valueType == ValueType.STRING) {
+      return readChars(READ_BIG_INTEGER_FUNCTION);
+    }
     if (valueType == ValueType.NULL) {
       skip();
       return null;
     }
-    if (valueType != ValueType.NUMBER) {
-      throw reportError("readBigDecimal", "not number");
-    }
-    final var numberChars = readNumber();
-    return new BigInteger(new String(numberChars.chars, 0, numberChars.charsLength));
+    throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
   }
 
   @Override
