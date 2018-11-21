@@ -104,7 +104,7 @@ class BytesJsonIterator implements JsonIterator {
     head--;
   }
 
-  JsonException reportError(final String op, final String msg) {
+  final JsonException reportError(final String op, final String msg) {
     int peekStart = head - 10;
     if (peekStart < 0) {
       peekStart = 0;
@@ -123,12 +123,12 @@ class BytesJsonIterator implements JsonIterator {
     if (peekStart < 0) {
       peekStart = 0;
     }
-    final String peek = new String(buf, peekStart, head - peekStart);
+    final var peek = new String(buf, peekStart, head - peekStart);
     return "head: " + head + ", peek: " + peek + ", buf: " + new String(buf);
   }
 
   @Override
-  public boolean readNull() throws IOException {
+  public final boolean readNull() throws IOException {
     final byte c = nextToken();
     if (c != 'n') {
       unreadByte();
@@ -139,7 +139,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public boolean readBoolean() throws IOException {
+  public final boolean readBoolean() throws IOException {
     final byte c = nextToken();
     if ('t' == c) {
       skipFixedBytes(3); // true
@@ -153,7 +153,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public short readShort() throws IOException {
+  public final short readShort() throws IOException {
     final int v = readInt();
     if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
       return (short) v;
@@ -162,7 +162,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public int readInt() throws IOException {
+  public final int readInt() throws IOException {
     final byte c = nextToken();
     if (c == '-') {
       return readInt(readByte());
@@ -175,7 +175,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public long readLong() throws IOException {
+  public final long readLong() throws IOException {
     byte c = nextToken();
     if (c == '-') {
       c = readByte();
@@ -197,7 +197,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public boolean readArray() throws IOException {
+  public final boolean readArray() throws IOException {
     byte c = nextToken();
     switch (c) {
       case '[':
@@ -219,7 +219,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public String readNumberAsString() throws IOException {
+  public final String readNumberAsString() throws IOException {
     final var numberChars = readNumber();
     return new String(numberChars.chars, 0, numberChars.charsLength);
   }
@@ -300,7 +300,7 @@ class BytesJsonIterator implements JsonIterator {
   private static final BiIntFunction<char[], String> READ_STRING_FUNCTION = (count, _reusableChars) -> new String(_reusableChars, 0, count);
 
   @Override
-  public String readString() throws IOException {
+  public final String readString() throws IOException {
     return readChars(READ_STRING_FUNCTION);
   }
 
@@ -350,7 +350,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public String readObjField() throws IOException {
+  public final String readObjField() throws IOException {
     byte c = nextToken();
     switch (c) {
       case 'n':
@@ -416,22 +416,21 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public float readFloat() throws IOException {
+  public final float readFloat() throws IOException {
     return (float) readDouble();
   }
 
   private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, _reusableChars) -> new BigDecimal(_reusableChars, 0, count);
 
   @Override
-  public BigDecimal readBigDecimal() throws IOException {
+  public final BigDecimal readBigDecimal() throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
     if (valueType == ValueType.STRING) {
       return readChars(READ_BIG_DECIMAL_FUNCTION);
     }
     if (valueType == ValueType.NUMBER) {
-      final var numberChars = readNumber();
-      return new BigDecimal(numberChars.chars, 0, numberChars.charsLength);
+      return new BigDecimal(readNumberAsString());
     }
     if (valueType == ValueType.NULL) {
       skip();
@@ -444,12 +443,11 @@ class BytesJsonIterator implements JsonIterator {
   private static final BiIntFunction<char[], BigInteger> READ_BIG_INTEGER_FUNCTION = (count, _reusableChars) -> new BigInteger(new String(_reusableChars, 0, count));
 
   @Override
-  public BigInteger readBigInteger() throws IOException {
+  public final BigInteger readBigInteger() throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
     if (valueType == ValueType.NUMBER) {
-      final var numberChars = readNumber();
-      return new BigInteger(new String(numberChars.chars, 0, numberChars.charsLength));
+      return new BigInteger(readNumberAsString());
     }
     if (valueType == ValueType.STRING) {
       return readChars(READ_BIG_INTEGER_FUNCTION);
@@ -462,7 +460,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public Object read() throws IOException {
+  public final Object read() throws IOException {
     try {
       final var valueType = whatIsNext();
       switch (valueType) {
@@ -505,14 +503,14 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public ValueType whatIsNext() throws IOException {
+  public final ValueType whatIsNext() throws IOException {
     final var valueType = VALUE_TYPES[nextToken()];
     unreadByte();
     return valueType;
   }
 
   @Override
-  public JsonIterator skip() throws IOException {
+  public final JsonIterator skip() throws IOException {
     final byte c = nextToken();
     switch (c) {
       case '"':
@@ -959,7 +957,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public double readDouble() throws IOException {
+  public final double readDouble() throws IOException {
     final byte c = nextToken();
     if (c == '-') {
       return -readDoubleNoSign();
@@ -1007,7 +1005,7 @@ class BytesJsonIterator implements JsonIterator {
     }
   }
 
-  double readDoubleSlowPath() throws IOException {
+  final double readDoubleSlowPath() throws IOException {
     try {
       final var numberChars = readNumber();
       if (numberChars.charsLength == 0 && whatIsNext() == ValueType.STRING) {
