@@ -89,22 +89,22 @@ final class TestFloat {
     assertEquals(BigDecimal.ZERO, JsonIterator.parse("0.0").readBigDecimalStripTrailingZeroes());
     assertEquals(BigDecimal.ZERO, JsonIterator.parse("0.").readBigDecimalStripTrailingZeroes());
 
-    assertEquals(new BigDecimal("100.100"), JsonIterator.parse("\"100.100\"").readBigDecimal());
-    assertEquals(new BigDecimal("100.1"), JsonIterator.parse("\"100.1000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("100"), JsonIterator.parse("\"100.000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("1000"), JsonIterator.parse("\"1000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(BigDecimal.ONE.movePointRight(10).toPlainString(), JsonIterator.parse("\"1e10\"").readBigDecimalStripTrailingZeroes().toPlainString());
-    assertEquals(BigDecimal.ZERO, JsonIterator.parse("\"0000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(BigDecimal.ZERO, JsonIterator.parse("\"0.000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(BigDecimal.ZERO, JsonIterator.parse("\"0.0\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(BigDecimal.ZERO, JsonIterator.parse("\"0.\"").readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("100.100"), JsonIterator.parse(`"100.100"`).readBigDecimal());
+    assertEquals(new BigDecimal("100.1"), JsonIterator.parse(`"100.1000"`).readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("100"), JsonIterator.parse(`"100.000"`).readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("1000"), JsonIterator.parse(`"1000"`).readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ONE.movePointRight(10).toPlainString(), JsonIterator.parse(`"1e10"`).readBigDecimalStripTrailingZeroes().toPlainString());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse(`"0000"`).readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse(`"0.000"`).readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse(`"0.0"`).readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse(`"0."`).readBigDecimalStripTrailingZeroes());
   }
 
   @Test
   void testInfinity() throws IOException {
-    assertEquals(JsonIterator.parse("\"-infinity\"").readDouble(), Double.NEGATIVE_INFINITY);
-    assertEquals(JsonIterator.parse("\"-infinity\"").readFloat(), Float.NEGATIVE_INFINITY);
-    assertEquals(JsonIterator.parse("\"infinity\"").readDouble(), Double.POSITIVE_INFINITY);
-    assertEquals(JsonIterator.parse("\"infinity\"").readFloat(), Float.POSITIVE_INFINITY);
+    assertEquals(JsonIterator.parse(`"-infinity"`).readDouble(), Double.NEGATIVE_INFINITY);
+    assertEquals(JsonIterator.parse(`"-infinity"`).readFloat(), Float.NEGATIVE_INFINITY);
+    assertEquals(JsonIterator.parse(`"infinity"`).readDouble(), Double.POSITIVE_INFINITY);
+    assertEquals(JsonIterator.parse(`"infinity"`).readFloat(), Float.POSITIVE_INFINITY);
   }
 }

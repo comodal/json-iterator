@@ -62,27 +62,23 @@ final class TestInteger {
 
 
   private static int parseInt(final String mode, final String input) throws IOException {
-    switch (mode) {
-      case "STREAMING":
-        return JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2).readInt();
-      default:
-        final var iter = (BytesJsonIterator) JsonIterator.parse(input);
-        final int v = iter.readInt();
-        assertEquals(input.length(), iter.head); // iterator head should point on next non-parsed byte
-        return v;
+    if ("STREAMING".equals(mode)) {
+      return JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2).readInt();
     }
+    final var iter = (BytesJsonIterator) JsonIterator.parse(input);
+    final int v = iter.readInt();
+    assertEquals(input.length(), iter.head); // iterator head should point on next non-parsed byte
+    return v;
   }
 
   private static long parseLong(final String mode, final String input) throws IOException {
-    switch (mode) {
-      case "STREAMING":
-        return JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2).readLong();
-      default:
-        final var iter = (BytesJsonIterator) JsonIterator.parse(input);
-        long v = iter.readLong();
-        assertEquals(input.length(), iter.head); // iterator head should point on next non-parsed byte
-        return v;
+    if ("STREAMING".equals(mode)) {
+      return JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2).readLong();
     }
+    final var iter = (BytesJsonIterator) JsonIterator.parse(input);
+    long v = iter.readLong();
+    assertEquals(input.length(), iter.head); // iterator head should point on next non-parsed byte
+    return v;
   }
 
   @Test

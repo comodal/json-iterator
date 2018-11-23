@@ -40,9 +40,9 @@ final class TestDemo {
 
   @Test
   void test_readme() throws IOException {
-    JsonIterator jsonIterator = JsonIterator.parse("{\"hello\": \"world\"}");
-    String fieldName = jsonIterator.readObject();
-    String fieldValue = jsonIterator.readString();
+    var jsonIterator = JsonIterator.parse(`{"hello": "world"}`);
+    var fieldName = jsonIterator.readObject();
+    var fieldValue = jsonIterator.readString();
     System.out.println(fieldName + ' ' + fieldValue);
   }
 }

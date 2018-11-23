@@ -10,13 +10,13 @@ final class TestArray {
 
   @Test
   void test_empty_array() throws IOException {
-    JsonIterator iter = JsonIterator.parse("[]");
+    var iter = JsonIterator.parse("[]");
     assertFalse(iter.readArray());
   }
 
   @Test
   void test_one_element() throws IOException {
-    JsonIterator iter = JsonIterator.parse("[1]");
+    var iter = JsonIterator.parse("[1]");
     assertTrue(iter.readArray());
     assertEquals(1, iter.readInt());
     assertFalse(iter.readArray());
@@ -24,7 +24,7 @@ final class TestArray {
 
   @Test
   void test_two_elements() throws IOException {
-    JsonIterator iter = JsonIterator.parse(" [ 1 , 2 ] ");
+    var iter = JsonIterator.parse(" [ 1 , 2 ] ");
     assertTrue(iter.readArray());
     assertEquals(1, iter.readInt());
     assertTrue(iter.readArray());
@@ -34,7 +34,7 @@ final class TestArray {
 
   @Test
   void test_three_elements() throws IOException {
-    JsonIterator iter = JsonIterator.parse(" [ 1 , 2, 3 ] ");
+    var iter = JsonIterator.parse(" [ 1 , 2, 3 ] ");
     assertTrue(iter.readArray());
     assertEquals(1, iter.readInt());
     assertTrue(iter.readArray());
@@ -46,7 +46,7 @@ final class TestArray {
 
   @Test
   void test_four_elements() throws IOException {
-    JsonIterator iter = JsonIterator.parse(" [ 1 , 2, 3, 4 ] ");
+    var iter = JsonIterator.parse(" [ 1 , 2, 3, 4 ] ");
     assertTrue(iter.readArray());
     assertEquals(1, iter.readInt());
     assertTrue(iter.readArray());
@@ -60,7 +60,7 @@ final class TestArray {
 
   @Test
   void test_five_elements() throws IOException {
-    JsonIterator iter = JsonIterator.parse(" [ 1 , 2, 3, 4, 5  ] ");
+    var iter = JsonIterator.parse(" [ 1 , 2, 3, 4, 5  ] ");
     assertTrue(iter.readArray());
     assertEquals(1, iter.readInt());
     assertTrue(iter.readArray());

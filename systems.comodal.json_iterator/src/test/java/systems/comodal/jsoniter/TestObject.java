@@ -11,13 +11,13 @@ final class TestObject {
 
   @Test
   void test_empty_object() throws IOException {
-    JsonIterator iter = JsonIterator.parse("{}");
+    var iter = JsonIterator.parse("{}");
     assertNull(iter.readObject());
   }
 
   @Test
   void test_one_field() throws IOException {
-    JsonIterator iter = JsonIterator.parse("{ 'field1'\r:\n\t'hello' }".replace('\'', '"'));
+    var iter = JsonIterator.parse("{ 'field1'\r:\n\t'hello' }".replace('\'', '"'));
     assertEquals("field1", iter.readObject());
     assertEquals("hello", iter.readString());
     assertNull(iter.readObject());
@@ -28,7 +28,7 @@ final class TestObject {
 
   @Test
   void test_two_fields() throws IOException {
-    JsonIterator iter = JsonIterator.parse("{ 'field1' : 'hello' , 'field2': 'world' }".replace('\'', '"'));
+    var iter = JsonIterator.parse("{ 'field1' : 'hello' , 'field2': 'world' }".replace('\'', '"'));
     assertEquals("field1", iter.readObject());
     assertEquals("hello", iter.readString());
     assertEquals("field2", iter.readObject());
@@ -38,7 +38,7 @@ final class TestObject {
 
   @Test
   void test_read_null() throws IOException {
-    JsonIterator iter = JsonIterator.parse("null".replace('\'', '"'));
+    var iter = JsonIterator.parse("null".replace('\'', '"'));
     assertTrue(iter.readNull());
   }
 }

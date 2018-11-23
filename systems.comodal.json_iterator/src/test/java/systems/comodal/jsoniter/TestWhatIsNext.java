@@ -10,7 +10,7 @@ final class TestWhatIsNext {
 
   @Test
   void test() throws IOException {
-    JsonIterator parser = JsonIterator.parse("{}");
+    var parser = JsonIterator.parse("{}");
     assertEquals(ValueType.OBJECT, parser.whatIsNext());
   }
 }

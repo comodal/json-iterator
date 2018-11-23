@@ -13,6 +13,8 @@ scmVersion {
   }
 }
 
+sourceCompatibility = JavaVersion.VERSION_11
+
 project.version = scmVersion.version
 project.group = 'systems.comodal'
 
@@ -24,8 +26,6 @@ ext {
   moduleName = 'systems.comodal.json_iterator'
 }
 
-sourceCompatibility = JavaVersion.VERSION_11
-
 repositories {
   mavenCentral()
 }
@@ -36,9 +36,24 @@ dependencies {
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:+'
 }
 
+compileTestJava {
+  sourceCompatibility = JavaVersion.VERSION_12
+  options.compilerArgs = ['--enable-preview']
+}
 
 test {
+  moduleOptions {
+    runOnClasspath = true
+  }
+  sourceCompatibility = JavaVersion.VERSION_12
+  jvmArgs = ['--enable-preview', '-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
   useJUnitPlatform()
+  maxParallelForks = 4
+  testLogging {
+    events "passed", "skipped", "failed", "standardOut", "standardError"
+    exceptionFormat "full"
+    showStandardStreams true
+  }
 }
 
 afterEvaluate {

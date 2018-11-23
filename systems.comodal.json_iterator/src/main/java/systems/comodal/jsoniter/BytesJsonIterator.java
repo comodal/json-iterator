@@ -459,7 +459,7 @@ class BytesJsonIterator implements JsonIterator {
     return readBigDecimal(READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION);
   }
 
-  public final BigDecimal readBigDecimal(final BiIntFunction<char[], BigDecimal> parseChars) throws IOException {
+  private BigDecimal readBigDecimal(final BiIntFunction<char[], BigDecimal> parseChars) throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
     if (valueType == ValueType.STRING) {

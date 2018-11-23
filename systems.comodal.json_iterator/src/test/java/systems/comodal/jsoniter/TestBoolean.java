@@ -12,7 +12,7 @@ final class TestBoolean {
 
   @Test
   void test_streaming() throws IOException {
-    JsonIterator iter = JsonIterator.parse(new ByteArrayInputStream("[true,false,null,true]".getBytes()), 3);
+    var iter = JsonIterator.parse(new ByteArrayInputStream("[true,false,null,true]".getBytes()), 3);
     iter.readArray();
     assertTrue(iter.readBoolean());
     iter.readArray();
