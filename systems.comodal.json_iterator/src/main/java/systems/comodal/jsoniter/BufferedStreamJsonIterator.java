@@ -86,8 +86,7 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
       }
       final byte nextByte = readByte();
       unreadByte();
-      final int ind2 = INT_DIGITS[nextByte];
-      if (ind2 == INVALID_CHAR_FOR_NUMBER) {
+      if (INT_DIGITS[nextByte] == INVALID_CHAR_FOR_NUMBER) {
         return;
       }
       throw reportError("assertNotLeadingZero", "leading zero is invalid");
@@ -100,8 +99,8 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   long readLongSlowPath(long value) throws IOException {
     value = -value; // add negatives to avoid redundant checks for Long.MIN_VALUE on each iteration
     do {
-      for (int i = head; i < tail; i++) {
-        final int ind = INT_DIGITS[buf[i]];
+      for (int i = head, ind; i < tail; i++) {
+        ind = INT_DIGITS[buf[i]];
         if (ind == INVALID_CHAR_FOR_NUMBER) {
           head = i;
           return value;
@@ -136,8 +135,8 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   int readIntSlowPath(int value) throws IOException {
     value = -value; // add negatives to avoid redundant checks for Integer.MIN_VALUE on each iteration
     do {
-      for (int i = head; i < tail; i++) {
-        final int ind = INT_DIGITS[buf[i]];
+      for (int i = head, ind; i < tail; i++) {
+        ind = INT_DIGITS[buf[i]];
         if (ind == INVALID_CHAR_FOR_NUMBER) {
           head = i;
           return value;
@@ -165,13 +164,12 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
     int j = 0;
     boolean dotFound = false;
     do {
+      byte c;
       for (int i = head; i < tail; i++) {
         if (j == reusableChars.length) {
-          final char[] newBuf = new char[reusableChars.length * 2];
-          System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-          reusableChars = newBuf;
+          doubleReusableCharBuffer();
         }
-        final byte c = buf[i];
+        c = buf[i];
         switch (c) {
           case ' ':
             continue;
@@ -205,7 +203,7 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
-  void skipArray() throws IOException {
+  JsonIterator skipArray() throws IOException {
     int level = 1;
     do {
       for (int i = head; i < tail; i++) {
@@ -220,20 +218,20 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
             break;
           case ']': // If close symbol, increase level
             level--;
-
             // If we have returned to the original level, we're done
             if (level == 0) {
               head = i + 1;
-              return;
+              return this;
             }
             break;
         }
       }
     } while (loadMore());
+    return this;
   }
 
   @Override
-  void skipObject() throws IOException {
+  JsonIterator skipObject() throws IOException {
     int level = 1;
     do {
       for (int i = head; i < tail; i++) {
@@ -251,16 +249,17 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
             // If we have returned to the original level, we're done
             if (level == 0) {
               head = i + 1;
-              return;
+              return this;
             }
             break;
         }
       }
     } while (loadMore());
+    return this;
   }
 
   @Override
-  void skipString() throws IOException {
+  JsonIterator skipString() throws IOException {
     for (; ; ) {
       int end = findStringEnd();
       if (end == -1) {
@@ -292,30 +291,38 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
         }
       } else {
         head = end;
-        return;
+        return this;
       }
     }
   }
 
   @Override
-  void skipUntilBreak() throws IOException {
-    // true, false, null, number
+  JsonIterator skipUntilBreak() throws IOException {
     do {
       for (int i = head; i < tail; i++) {
-        if (BREAKS[buf[i]]) {
-          head = i;
-          return;
+        switch (buf[i]) {
+          case ' ':
+          case '\t':
+          case '\n':
+          case '\r':
+          case ',':
+          case '}':
+          case ']':
+            head = i;
+            return this;
         }
       }
     } while (loadMore());
     head = tail;
+    return this;
   }
 
   @Override
   byte nextToken() throws IOException {
     do {
+      byte c;
       for (int i = head; i < tail; i++) {
-        final byte c = buf[i];
+        c = buf[i];
         switch (c) {
           case ' ':
           case '\n':
@@ -342,19 +349,20 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
-  void skipFixedBytes(final int n) throws IOException {
+  JsonIterator skipFixedBytes(final int n) throws IOException {
     head += n;
     if (head >= tail) {
       final int more = head - tail;
       if (!loadMore()) {
         if (more == 0) {
           head = tail;
-          return;
+          return this;
         }
         throw reportError("skipFixedBytes", "unexpected end");
       }
       head += more;
     }
+    return this;
   }
 
   @Override
@@ -439,15 +447,11 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
               // split surrogates
               final int sup = bc - 0x10000;
               if (reusableChars.length == j) {
-                final char[] newBuf = new char[reusableChars.length * 2];
-                System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-                reusableChars = newBuf;
+                doubleReusableCharBuffer();
               }
               reusableChars[j++] = (char) ((sup >>> 10) + 0xd800);
               if (reusableChars.length == j) {
-                final char[] newBuf = new char[reusableChars.length * 2];
-                System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-                reusableChars = newBuf;
+                doubleReusableCharBuffer();
               }
               reusableChars[j++] = (char) ((sup & 0x3ff) + 0xdc00);
               continue;
@@ -456,9 +460,7 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
         }
       }
       if (reusableChars.length == j) {
-        final char[] newBuf = new char[reusableChars.length * 2];
-        System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-        reusableChars = newBuf;
+        doubleReusableCharBuffer();
       }
       reusableChars[j++] = (char) bc;
     }

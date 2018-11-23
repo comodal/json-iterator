@@ -13,7 +13,7 @@ scmVersion {
   }
 }
 
-sourceCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_12
 
 project.version = scmVersion.version
 project.group = 'systems.comodal'
@@ -36,8 +36,11 @@ dependencies {
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:+'
 }
 
+compileJava {
+  options.compilerArgs = ['--enable-preview']
+}
+
 compileTestJava {
-  sourceCompatibility = JavaVersion.VERSION_12
   options.compilerArgs = ['--enable-preview']
 }
 
@@ -45,7 +48,6 @@ test {
   moduleOptions {
     runOnClasspath = true
   }
-  sourceCompatibility = JavaVersion.VERSION_12
   jvmArgs = ['--enable-preview', '-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
   useJUnitPlatform()
   maxParallelForks = 4

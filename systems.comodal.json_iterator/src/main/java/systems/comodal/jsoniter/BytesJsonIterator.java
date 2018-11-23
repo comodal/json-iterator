@@ -10,18 +10,6 @@ import static systems.comodal.jsoniter.ValueType.VALUE_TYPES;
 
 class BytesJsonIterator implements JsonIterator {
 
-  static final boolean[] BREAKS = new boolean[127];
-
-  static {
-    BREAKS[' '] = true;
-    BREAKS['\t'] = true;
-    BREAKS['\n'] = true;
-    BREAKS['\r'] = true;
-    BREAKS[','] = true;
-    BREAKS['}'] = true;
-    BREAKS[']'] = true;
-  }
-
   private static final long[] POW10 = {
       1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
       1000000000, 10000000000L, 100000000000L, 1000000000000L,
@@ -198,24 +186,19 @@ class BytesJsonIterator implements JsonIterator {
 
   @Override
   public final boolean readArray() throws IOException {
-    byte c = nextToken();
-    switch (c) {
-      case '[':
-        c = nextToken();
-        if (c != ']') {
-          unreadByte();
-          return true;
+    final byte c = nextToken();
+    return switch (c) {
+      case '[' -> {
+        if (nextToken() == ']') {
+          break false;
         }
-        return false;
-      case ']':
-        return false;
-      case ',':
-        return true;
-      case 'n':
-        return false;
-      default:
-        throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
-    }
+        unreadByte();
+        break true;
+      }
+      case ']','n' -> false;
+      case ',' -> true;
+      default -> throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
+    };
   }
 
   @Override
@@ -242,9 +225,7 @@ class BytesJsonIterator implements JsonIterator {
     boolean dotFound = false;
     for (int i = head; i < tail; i++) {
       if (j == reusableChars.length) {
-        final char[] newBuf = new char[reusableChars.length * 2];
-        System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-        reusableChars = newBuf;
+        doubleReusableCharBuffer();
       }
       final byte c = buf[i];
       switch (c) {
@@ -420,33 +401,33 @@ class BytesJsonIterator implements JsonIterator {
     return (float) readDouble();
   }
 
-  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, _reusableChars) -> new BigDecimal(_reusableChars, 0, count);
-  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (count, _reusableChars) -> {
+  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, chars) -> new BigDecimal(chars, 0, count);
+  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (count, chars) -> {
     if (count == 1) {
-      return _reusableChars[count] == '0'
+      return chars[count] == '0'
           ? BigDecimal.ZERO
-          : new BigDecimal(_reusableChars, 0, count);
+          : new BigDecimal(chars, 0, count);
     }
-    if (_reusableChars[count - 1] != '0') {
-      return new BigDecimal(_reusableChars, 0, count);
+    if (chars[count - 1] != '0') {
+      return new BigDecimal(chars, 0, count);
     }
     int i = count - 2;
-    char c = _reusableChars[i];
+    char c = chars[i];
     while (c == '0') {
       if (i == 0) {
         return BigDecimal.ZERO;
       }
-      c = _reusableChars[--i];
+      c = chars[--i];
     }
-    for (int j = i; c != '.'; c = _reusableChars[--j]) {
+    for (int j = i; c != '.'; c = chars[--j]) {
       if ((c == 'e') || (c == 'E')) {
-        return new BigDecimal(_reusableChars, 0, count).stripTrailingZeros();
+        return new BigDecimal(chars, 0, count).stripTrailingZeros();
       }
       if (j == 0) { // Not a decimal
-        return new BigDecimal(_reusableChars, 0, count);
+        return new BigDecimal(chars, 0, count);
       }
     }
-    return new BigDecimal(_reusableChars, 0, i + 1);
+    return new BigDecimal(chars, 0, i + 1);
   };
 
   @Override
@@ -462,37 +443,37 @@ class BytesJsonIterator implements JsonIterator {
   private BigDecimal readBigDecimal(final BiIntFunction<char[], BigDecimal> parseChars) throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
-    if (valueType == ValueType.STRING) {
-      return readChars(parseChars);
+    switch (valueType) {
+      case STRING:
+        return readChars(parseChars);
+      case NUMBER:
+        final var numberChars = readNumber();
+        return parseChars.apply(numberChars.charsLength, numberChars.chars);
+      case NULL:
+        skip();
+        return null;
+      default:
+        throw reportError("readBigDecimal", "Must be a number or a string, found " + valueType);
     }
-    if (valueType == ValueType.NUMBER) {
-      final var numberChars = readNumber();
-      return parseChars.apply(numberChars.charsLength, numberChars.chars);
-    }
-    if (valueType == ValueType.NULL) {
-      skip();
-      return null;
-    }
-    throw reportError("readBigDecimal", "Must be a number or a string, found " + valueType);
   }
 
-  private static final BiIntFunction<char[], BigInteger> READ_BIG_INTEGER_FUNCTION = (count, _reusableChars) -> new BigInteger(new String(_reusableChars, 0, count));
+  private static final BiIntFunction<char[], BigInteger> READ_BIG_INTEGER_FUNCTION = (count, chars) -> new BigInteger(new String(chars, 0, count));
 
   @Override
   public final BigInteger readBigInteger() throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
-    if (valueType == ValueType.NUMBER) {
-      return new BigInteger(readNumberAsString());
-    }
-    if (valueType == ValueType.STRING) {
-      return readChars(READ_BIG_INTEGER_FUNCTION);
-    }
-    if (valueType == ValueType.NULL) {
-      skip();
-      return null;
-    }
-    throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
+    return switch (valueType) {
+      case NUMBER -> new BigInteger(readNumberAsString())
+        ;
+      case STRING -> readChars(READ_BIG_INTEGER_FUNCTION)
+        ;
+      case NULL -> {
+        skip();
+        break null;
+      }
+      default -> throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
+    };
   }
 
   @Override
@@ -547,42 +528,18 @@ class BytesJsonIterator implements JsonIterator {
   @Override
   public final JsonIterator skip() throws IOException {
     final byte c = nextToken();
-    switch (c) {
-      case '"':
-        skipString();
-        return this;
-      case '-':
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        skipUntilBreak();
-        return this;
-      case 't':
-      case 'n':
-        skipFixedBytes(3); // true or null
-        return this;
-      case 'f':
-        skipFixedBytes(4); // false
-        return this;
-      case '[':
-        skipArray();
-        return this;
-      case '{':
-        skipObject();
-        return this;
-      default:
-        throw reportError("IterImplSkip", "do not know how to skip: " + c);
-    }
+    return switch (c) {
+      case '"' -> skipString();
+      case '-','0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> skipUntilBreak();
+      case 't','n' -> skipFixedBytes(3); // true or null
+      case 'f' -> skipFixedBytes(4); // false
+      case '[' -> skipArray();
+      case '{' -> skipObject();
+      default -> throw reportError("IterImplSkip", "do not know how to skip: " + c);
+    };
   }
 
-  void skipArray() throws IOException {
+  JsonIterator skipArray() throws IOException {
     int level = 1;
     for (int i = head; i < tail; i++) {
       switch (buf[i]) {
@@ -599,7 +556,7 @@ class BytesJsonIterator implements JsonIterator {
           // If we have returned to the original level, we're done
           if (level == 0) {
             head = i + 1;
-            return;
+            return this;
           }
           break;
       }
@@ -607,9 +564,8 @@ class BytesJsonIterator implements JsonIterator {
     throw reportError("skipArray", "incomplete array");
   }
 
-  void skipObject() throws IOException {
-    int level = 1;
-    for (int i = head; i < tail; i++) {
+  JsonIterator skipObject() throws IOException {
+    for (int i = head, level = 1; i < tail; i++) {
       switch (buf[i]) {
         case '"': // If inside string, skip it
           head = i + 1;
@@ -624,7 +580,7 @@ class BytesJsonIterator implements JsonIterator {
           // If we have returned to the original level, we're done
           if (level == 0) {
             head = i + 1;
-            return;
+            return this;
           }
           break;
       }
@@ -632,12 +588,13 @@ class BytesJsonIterator implements JsonIterator {
     throw reportError("skipObject", "incomplete object");
   }
 
-  void skipString() throws IOException {
+  JsonIterator skipString() throws IOException {
     final int end = findStringEnd();
     if (end == -1) {
       throw reportError("skipString", "incomplete string");
     }
     head = end;
+    return this;
   }
 
   // adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
@@ -673,20 +630,28 @@ class BytesJsonIterator implements JsonIterator {
     return -1;
   }
 
-  void skipUntilBreak() throws IOException {
-    // true, false, null, number
+  JsonIterator skipUntilBreak() throws IOException {
     for (int i = head; i < tail; i++) {
-      if (BREAKS[buf[i]]) {
-        head = i;
-        return;
+      switch (buf[i]) {
+        case ' ':
+        case '\t':
+        case '\n':
+        case '\r':
+        case ',':
+        case '}':
+        case ']':
+          head = i;
+          return this;
       }
     }
     head = tail;
+    return this;
   }
 
   byte nextToken() throws IOException {
+    byte c;
     for (int i = head; ; ) {
-      final byte c = buf[i++];
+      c = buf[i++];
       switch (c) {
         case ' ':
         case '\n':
@@ -704,15 +669,16 @@ class BytesJsonIterator implements JsonIterator {
     return buf[head++];
   }
 
-  void skipFixedBytes(final int n) throws IOException {
+  JsonIterator skipFixedBytes(final int n) throws IOException {
     head += n;
+    return this;
   }
 
   int readStringSlowPath(int j) throws IOException {
     try {
       boolean isExpectingLowSurrogate = false;
-      for (int i = head; i < tail; ) {
-        int bc = buf[i++];
+      for (int i = head, bc; i < tail; ) {
+        bc = buf[i++];
         if (bc == '"') {
           head = i;
           return j;
@@ -785,15 +751,11 @@ class BytesJsonIterator implements JsonIterator {
                 // split surrogates
                 final int sup = bc - 0x10000;
                 if (reusableChars.length == j) {
-                  final char[] newBuf = new char[reusableChars.length * 2];
-                  System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-                  reusableChars = newBuf;
+                  doubleReusableCharBuffer();
                 }
                 reusableChars[j++] = (char) ((sup >>> 10) + 0xd800);
                 if (reusableChars.length == j) {
-                  final char[] newBuf = new char[reusableChars.length * 2];
-                  System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-                  reusableChars = newBuf;
+                  doubleReusableCharBuffer();
                 }
                 reusableChars[j++] = (char) ((sup & 0x3ff) + 0xdc00);
                 continue;
@@ -802,9 +764,7 @@ class BytesJsonIterator implements JsonIterator {
           }
         }
         if (reusableChars.length == j) {
-          final char[] newBuf = new char[reusableChars.length * 2];
-          System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-          reusableChars = newBuf;
+          doubleReusableCharBuffer();
         }
         reusableChars[j++] = (char) bc;
       }
@@ -814,6 +774,12 @@ class BytesJsonIterator implements JsonIterator {
     }
   }
 
+  final void doubleReusableCharBuffer() {
+    final char[] newBuf = new char[reusableChars.length << 1];
+    System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
+    reusableChars = newBuf;
+  }
+
   void assertNotLeadingZero() throws IOException {
     try {
       if (head == buf.length) {
@@ -821,8 +787,7 @@ class BytesJsonIterator implements JsonIterator {
       }
       final byte nextByte = readByte();
       unreadByte();
-      final int ind2 = INT_DIGITS[nextByte];
-      if (ind2 == INVALID_CHAR_FOR_NUMBER) {
+      if (INT_DIGITS[nextByte] == INVALID_CHAR_FOR_NUMBER) {
         return;
       }
       throw reportError("assertNotLeadingZero", "leading zero is invalid");
@@ -895,8 +860,8 @@ class BytesJsonIterator implements JsonIterator {
 
   int readIntSlowPath(int value) throws IOException {
     value = -value; // add negatives to avoid redundant checks for Integer.MIN_VALUE on each iteration
-    for (int i = head; i < tail; i++) {
-      final int ind = INT_DIGITS[buf[i]];
+    for (int i = head, ind; i < tail; i++) {
+      ind = INT_DIGITS[buf[i]];
       if (ind == INVALID_CHAR_FOR_NUMBER) {
         head = i;
         return value;
@@ -973,8 +938,8 @@ class BytesJsonIterator implements JsonIterator {
 
   long readLongSlowPath(long value) throws IOException {
     value = -value; // add negatives to avoid redundant checks for Long.MIN_VALUE on each iteration
-    for (int i = head; i < tail; i++) {
-      final int ind = INT_DIGITS[buf[i]];
+    for (int i = head, ind; i < tail; i++) {
+      ind = INT_DIGITS[buf[i]];
       if (ind == INVALID_CHAR_FOR_NUMBER) {
         head = i;
         return value;
@@ -993,8 +958,7 @@ class BytesJsonIterator implements JsonIterator {
 
   @Override
   public final double readDouble() throws IOException {
-    final byte c = nextToken();
-    if (c == '-') {
+    if (nextToken() == '-') {
       return -readDoubleNoSign();
     }
     unreadByte();
