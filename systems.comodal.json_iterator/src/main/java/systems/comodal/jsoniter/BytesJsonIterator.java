@@ -329,7 +329,7 @@ class BytesJsonIterator implements JsonIterator {
         return j;
       }
       // If we encounter a backslash, which is a beginning of an escape sequence
-      // or a high bit was set - indicating an UTF-8 encoded multibyte character,
+      // or a high bit was set - indicating an UTF-8 encoded multi-byte character,
       // there is no chance that we can decode the string without instantiating
       // a temporary buffer, so quit this loop
       if ((c ^ '\\') < 1) {
@@ -421,16 +421,53 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, _reusableChars) -> new BigDecimal(_reusableChars, 0, count);
+  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (count, _reusableChars) -> {
+    if (count == 1) {
+      return _reusableChars[count] == '0'
+          ? BigDecimal.ZERO
+          : new BigDecimal(_reusableChars, 0, count);
+    }
+    if (_reusableChars[count - 1] != '0') {
+      return new BigDecimal(_reusableChars, 0, count);
+    }
+    int i = count - 2;
+    char c = _reusableChars[i];
+    while (c == '0') {
+      if (i == 0) {
+        return BigDecimal.ZERO;
+      }
+      c = _reusableChars[--i];
+    }
+    for (int j = i; c != '.'; c = _reusableChars[--j]) {
+      if ((c == 'e') || (c == 'E')) {
+        return new BigDecimal(_reusableChars, 0, count).stripTrailingZeros();
+      }
+      if (j == 0) { // Not a decimal
+        return new BigDecimal(_reusableChars, 0, count);
+      }
+    }
+    return new BigDecimal(_reusableChars, 0, i + 1);
+  };
 
   @Override
   public final BigDecimal readBigDecimal() throws IOException {
+    return readBigDecimal(READ_BIG_DECIMAL_FUNCTION);
+  }
+
+  @Override
+  public final BigDecimal readBigDecimalStripTrailingZeroes() throws IOException {
+    return readBigDecimal(READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION);
+  }
+
+  public final BigDecimal readBigDecimal(final BiIntFunction<char[], BigDecimal> parseChars) throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
     if (valueType == ValueType.STRING) {
-      return readChars(READ_BIG_DECIMAL_FUNCTION);
+      return readChars(parseChars);
     }
     if (valueType == ValueType.NUMBER) {
-      return new BigDecimal(readNumberAsString());
+      final var numberChars = readNumber();
+      return parseChars.apply(numberChars.charsLength, numberChars.chars);
     }
     if (valueType == ValueType.NULL) {
       skip();
@@ -438,7 +475,6 @@ class BytesJsonIterator implements JsonIterator {
     }
     throw reportError("readBigDecimal", "Must be a number or a string, found " + valueType);
   }
-
 
   private static final BiIntFunction<char[], BigInteger> READ_BIG_INTEGER_FUNCTION = (count, _reusableChars) -> new BigInteger(new String(_reusableChars, 0, count));
 
@@ -468,11 +504,10 @@ class BytesJsonIterator implements JsonIterator {
           return readString();
         case NUMBER:
           final var numberChars = readNumber();
-          final var number = Double.valueOf(new String(numberChars.chars, 0, numberChars.charsLength));
+          final var doubleNumber = Double.parseDouble(new String(numberChars.chars, 0, numberChars.charsLength));
           if (numberChars.dotFound) {
-            return number;
+            return doubleNumber;
           }
-          final double doubleNumber = number;
           if (doubleNumber == Math.floor(doubleNumber) && !Double.isInfinite(doubleNumber)) {
             final long longNumber = (long) doubleNumber;
             if (longNumber <= Integer.MAX_VALUE && longNumber >= Integer.MIN_VALUE) {
@@ -480,7 +515,7 @@ class BytesJsonIterator implements JsonIterator {
             }
             return longNumber;
           }
-          return number;
+          return doubleNumber;
         case NULL:
           skipFixedBytes(4);
           return null;

@@ -84,5 +84,7 @@ public interface JsonIterator extends Closeable {
 
   BigDecimal readBigDecimal() throws IOException;
 
+  BigDecimal readBigDecimalStripTrailingZeroes() throws IOException;
+
   BigInteger readBigInteger() throws IOException;
 }

@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TestFloat {
 
@@ -65,28 +64,41 @@ final class TestFloat {
   }
 
   private float parseFloat(final String mode, final String input) throws IOException {
-    switch (mode) {
-      case "STREAMING":
-        return JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2).readFloat();
-      default:
-        return JsonIterator.parse(input).readFloat();
+    if ("STREAMING".equals(mode)) {
+      return JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2).readFloat();
     }
+    return JsonIterator.parse(input).readFloat();
   }
 
   private double parseDouble(final String mode, final String input) throws IOException {
-    switch (mode) {
-      case "STREAMING":
-        return JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2).readDouble();
-      default:
-        return JsonIterator.parse(input).readDouble();
+    if ("STREAMING".equals(mode)) {
+      return JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2).readDouble();
     }
+    return JsonIterator.parse(input).readDouble();
   }
 
   @Test
   void testBigDecimal() throws IOException {
-    assertEquals(new BigDecimal("100.1"), JsonIterator.parse("100.1").readBigDecimal());
-  }
+    assertEquals(new BigDecimal("100.100"), JsonIterator.parse("100.100").readBigDecimal());
+    assertEquals(new BigDecimal("100.1"), JsonIterator.parse("100.1000").readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("100"), JsonIterator.parse("100.000").readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("1000"), JsonIterator.parse("1000").readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ONE.movePointRight(10).toPlainString(), JsonIterator.parse("1e10").readBigDecimalStripTrailingZeroes().toPlainString());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse("0000").readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse("0.000").readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse("0.0").readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse("0.").readBigDecimalStripTrailingZeroes());
 
+    assertEquals(new BigDecimal("100.100"), JsonIterator.parse("\"100.100\"").readBigDecimal());
+    assertEquals(new BigDecimal("100.1"), JsonIterator.parse("\"100.1000\"").readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("100"), JsonIterator.parse("\"100.000\"").readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("1000"), JsonIterator.parse("\"1000\"").readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ONE.movePointRight(10).toPlainString(), JsonIterator.parse("\"1e10\"").readBigDecimalStripTrailingZeroes().toPlainString());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse("\"0000\"").readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse("\"0.000\"").readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse("\"0.0\"").readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ZERO, JsonIterator.parse("\"0.\"").readBigDecimalStripTrailingZeroes());
+  }
 
   @Test
   void testInfinity() throws IOException {
