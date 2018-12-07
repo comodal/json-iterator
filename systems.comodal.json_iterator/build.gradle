@@ -3,6 +3,7 @@ apply plugin: 'org.javamodularity.moduleplugin'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'pl.allegro.tech.build.axion-release'
+apply plugin: 'me.champeau.gradle.jmh'
 
 scmVersion {
   tag {
@@ -31,9 +32,31 @@ repositories {
 }
 
 dependencies {
+  components.all(DependenciesAlignmentRule)
+
   testImplementation 'org.junit.jupiter:junit-jupiter-api:+'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:+'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:+'
+
+  jmh 'org.openjdk.jmh:jmh-core:+'
+  jmh 'org.openjdk.jmh:jmh-generator-annprocess:+'
+}
+
+jmh {
+  include = ['BenchStyles']
+  jmhVersion = '+'
+  jvmArgs = ['--enable-preview']
+
+  resultFormat = 'JSON'
+  includeTests = false
+}
+
+jmhCompileGeneratedClasses {
+  options.compilerArgs = ['--enable-preview']
+}
+
+compileJmhJava {
+  options.compilerArgs = ['--enable-preview']
 }
 
 compileJava {
@@ -48,7 +71,7 @@ test {
   moduleOptions {
     runOnClasspath = true
   }
-  jvmArgs = ['--enable-preview', '-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
+  jvmArgs = ['--enable-preview']
   useJUnitPlatform()
   maxParallelForks = 4
   testLogging {
@@ -58,53 +81,65 @@ test {
   }
 }
 
-afterEvaluate {
-  task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-  }
 
-  task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-  }
-
-  artifacts {
-    archives sourcesJar
-  }
-
-  publishing {
-    publications {
-      mavenJava(MavenPublication) {
-        from components.java
-        artifact sourcesJar
-        groupId project.group
-        artifactId project.name
-        version = project.version
+final class DependenciesAlignmentRule implements ComponentMetadataRule {
+  void execute(ComponentMetadataContext ctx) {
+    ctx.details.with {
+      if (id.group.startsWith("org.junit.jupiter")) {
+        belongsTo("org.junit.jupiter:junit-platform:${id.version}")
+      } else if (id.group.startsWith("org.openjdk.jmh")) {
+        belongsTo("org.openjdk.jmh:jmh-platform:${id.version}")
       }
     }
   }
-  bintray {
-    user = project.hasProperty("bintrayUser") ? bintrayUser : System.getenv('BINTRAY_USER')
-    key = project.hasProperty("bintrayApiKey") ? bintrayApiKey : System.getenv('BINTRAY_API_KEY')
-    publications = ['mavenJava']
-    pkg {
-      userOrg = project.bintrayOrg
-      repo = project.bintrayRepo
-      name = project.name
-      desc = project.desc
-      vcsUrl = project.vcsUrl
-      websiteUrl = project.vcsUrl
-      issueTrackerUrl = project.vcsUrl + '/issues'
-      licenses = ["MIT License"]
-      publish = true
-      version {
-        name = project.version
-        vcsTag = project.name + '-' + project.version
-        gpg {
-          sign = true
-          passphrase = project.hasProperty("bintrayGPGPassphrase") ? bintrayGPGPassphrase : System.getenv('BINTRAY_GPG_PASSPHRASE')
-        }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+artifacts {
+  archives sourcesJar
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+      artifact sourcesJar
+      groupId project.group
+      artifactId project.name
+      version = project.version
+    }
+  }
+}
+
+bintray {
+  user = project.hasProperty("bintrayUser") ? bintrayUser : System.getenv('BINTRAY_USER')
+  key = project.hasProperty("bintrayApiKey") ? bintrayApiKey : System.getenv('BINTRAY_API_KEY')
+  publications = ['mavenJava']
+  pkg {
+    userOrg = project.bintrayOrg
+    repo = project.bintrayRepo
+    name = project.name
+    desc = project.desc
+    vcsUrl = project.vcsUrl
+    websiteUrl = project.vcsUrl
+    issueTrackerUrl = project.vcsUrl + '/issues'
+    licenses = ["MIT License"]
+    publish = true
+    version {
+      name = project.version
+      vcsTag = project.name + '-' + project.version
+      gpg {
+        sign = true
+        passphrase = project.hasProperty("bintrayGPGPassphrase") ? bintrayGPGPassphrase : System.getenv('BINTRAY_GPG_PASSPHRASE')
       }
     }
   }
