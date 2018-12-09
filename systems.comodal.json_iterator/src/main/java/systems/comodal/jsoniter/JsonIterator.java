@@ -58,6 +58,12 @@ public interface JsonIterator extends Closeable {
 
   boolean readArray() throws IOException;
 
+  JsonIterator openArray() throws IOException;
+
+  JsonIterator continueArray() throws IOException;
+
+  JsonIterator closeArray() throws IOException;
+
   String readNumberAsString() throws IOException;
 
   String readString() throws IOException;

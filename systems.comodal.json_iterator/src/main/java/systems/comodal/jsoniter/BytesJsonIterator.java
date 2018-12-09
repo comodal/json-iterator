@@ -187,18 +187,44 @@ class BytesJsonIterator implements JsonIterator {
   @Override
   public final boolean readArray() throws IOException {
     final byte c = nextToken();
-    return switch (c) {
-      case '[' ->{
-        if (nextToken() == ']') {
-          break false;
-        }
-        unreadByte();
-        break true;
+    if (c == '[') {
+      if (nextToken() == ']') {
+        return false;
       }
-      case ']','n' ->false;
-      case ',' ->true;
-      default ->throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
-    } ;
+      unreadByte();
+      return true;
+    }
+    if (c == ']' || c == 'n') {
+      return false;
+    }
+    if (c == ',') {
+      return true;
+    }
+    throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
+  }
+
+  public final JsonIterator openArray() throws IOException {
+    final byte c = nextToken();
+    if (c == '[') {
+      return this;
+    }
+    throw reportError("readArray", "expected '[' but found: " + (char) c);
+  }
+
+  public final JsonIterator continueArray() throws IOException {
+    final byte c = nextToken();
+    if (c == ',') {
+      return this;
+    }
+    throw reportError("readArray", "expected ',' but found: " + (char) c);
+  }
+
+  public final JsonIterator closeArray() throws IOException {
+    final byte c = nextToken();
+    if (c == ']') {
+      return this;
+    }
+    throw reportError("readArray", "expected ']' but found: " + (char) c);
   }
 
   @Override

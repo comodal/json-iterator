@@ -12,6 +12,10 @@ final class TestArray {
   void test_empty_array() throws IOException {
     var iter = JsonIterator.parse("[]");
     assertFalse(iter.readArray());
+
+    iter = JsonIterator.parse("[]");
+    assertEquals(iter, iter.openArray());
+    assertEquals(iter, iter.closeArray());
   }
 
   @Test
@@ -20,6 +24,11 @@ final class TestArray {
     assertTrue(iter.readArray());
     assertEquals(1, iter.readInt());
     assertFalse(iter.readArray());
+
+    iter = JsonIterator.parse("[1]");
+    assertEquals(iter, iter.openArray());
+    assertEquals(1, iter.readInt());
+    assertEquals(iter, iter.closeArray());
   }
 
   @Test
@@ -30,6 +39,13 @@ final class TestArray {
     assertTrue(iter.readArray());
     assertEquals(2, iter.readInt());
     assertFalse(iter.readArray());
+
+    iter = JsonIterator.parse(" [ 1 , 2 ] ");
+    assertEquals(iter, iter.openArray());
+    assertEquals(1, iter.readInt());
+    assertEquals(iter, iter.continueArray());
+    assertEquals(2, iter.readInt());
+    assertEquals(iter, iter.closeArray());
   }
 
   @Test
@@ -42,6 +58,15 @@ final class TestArray {
     assertTrue(iter.readArray());
     assertEquals(3, iter.readInt());
     assertFalse(iter.readArray());
+
+    iter = JsonIterator.parse(" [ 1 , 2, 3 ] ");
+    assertEquals(iter, iter.openArray());
+    assertEquals(1, iter.readInt());
+    assertEquals(iter, iter.continueArray());
+    assertEquals(2, iter.readInt());
+    assertEquals(iter, iter.continueArray());
+    assertEquals(3, iter.readInt());
+    assertEquals(iter, iter.closeArray());
   }
 
   @Test
