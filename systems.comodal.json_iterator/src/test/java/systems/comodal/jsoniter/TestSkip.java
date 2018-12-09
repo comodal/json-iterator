@@ -21,7 +21,7 @@ final class TestSkip {
 
   @Test
   void test_skip_string() throws IOException {
-    var iter = JsonIterator.parse("['hello',2]".replace('\'', '"'));
+    var iter = JsonIterator.parse(`["hello",2]`);
     assertTrue(iter.readArray());
     iter.skip();
     assertTrue(iter.readArray());
@@ -48,7 +48,7 @@ final class TestSkip {
 
   @Test
   void test_skip_object() throws IOException {
-    var iter = JsonIterator.parse("[{'hello': {'world': 'a'}},2]".replace('\'', '"'));
+    var iter = JsonIterator.parse(`[{"hello": {"world": "a"}},2]`);
     assertTrue(iter.readArray());
     iter.skip();
     assertTrue(iter.readArray());
@@ -58,7 +58,7 @@ final class TestSkip {
 
   @Test
   void test_skip_array() throws IOException {
-    var iter = JsonIterator.parse("[ [1,  3] ,2]".replace('\'', '"'));
+    var iter = JsonIterator.parse("[ [1,  3] ,2]");
     assertTrue(iter.readArray());
     iter.skip();
     assertTrue(iter.readArray());
@@ -68,7 +68,7 @@ final class TestSkip {
 
   @Test
   void test_skip_nested() throws IOException {
-    var iter = JsonIterator.parse("[ [1, {'a': ['b'] },  3] ,2]".replace('\'', '"'));
+    var iter = JsonIterator.parse(`[ [1, {"a": ["b"] },  3] ,2]`);
     assertTrue(iter.readArray());
     iter.skip();
     assertTrue(iter.readArray());

@@ -70,13 +70,17 @@ public interface JsonIterator extends Closeable {
    * @return Object constructed from applyChars.
    * @throws IOException needed in case the underlying data is a stream.
    */
-  <T> T readChars(final BiIntFunction<char[], T> applyChars) throws IOException;
+  <T> T readChars(final CharBufferFunction<T> applyChars) throws IOException;
 
   default String readObject() throws IOException {
     return readObjField();
   }
 
   String readObjField() throws IOException;
+
+  JsonIterator skipObjField() throws IOException;
+
+  <R, C> R applyObjField(final C context, final FieldBufferFunction<C, R> fieldBufferFunction) throws IOException;
 
   float readFloat() throws IOException;
 

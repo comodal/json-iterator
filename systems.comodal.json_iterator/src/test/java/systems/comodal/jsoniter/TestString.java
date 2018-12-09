@@ -11,20 +11,20 @@ final class TestString {
 
   @Test
   void test_ascii_string() throws IOException {
-    var iter = JsonIterator.parse("'hello''world'".replace('\'', '"'));
+    var iter = JsonIterator.parse(`"hello""world"`);
     assertEquals("hello", iter.readString());
     assertEquals("world", iter.readString());
   }
 
   @Test
   void test_ascii_string_with_escape() throws IOException {
-    var iter = JsonIterator.parse(`'he\tllo'`.replace('\'', '"'));
+    var iter = JsonIterator.parse(`"he\tllo"`);
     assertEquals("he\tllo", iter.readString());
   }
 
   @Test
   void test_utf8_string() throws IOException {
-    var iter = JsonIterator.parse("'中文'".replace('\'', '"'));
+    var iter = JsonIterator.parse(`"中文"`);
     assertEquals("中文", iter.readString());
   }
 
@@ -42,13 +42,13 @@ final class TestString {
 
   @Test
   void test_larger_than_buffer() throws IOException {
-    var iter = JsonIterator.parse("'0123456789012345678901234567890123'".replace('\'', '"'));
+    var iter = JsonIterator.parse(`"0123456789012345678901234567890123"`);
     assertEquals("0123456789012345678901234567890123", iter.readString());
   }
 
   @Test
   void test_string_across_buffer() throws IOException {
-    var iter = JsonIterator.parse(new ByteArrayInputStream("'hello''world'".replace('\'', '"').getBytes()), 2);
+    var iter = JsonIterator.parse(new ByteArrayInputStream(`"hello""world"`.getBytes()), 2);
     assertEquals("hello", iter.readString());
     assertEquals("world", iter.readString());
   }
@@ -76,7 +76,7 @@ final class TestString {
 
   @Test
   void test_null_string() throws IOException {
-    var iter = JsonIterator.parse("null".replace('\'', '"'));
+    var iter = JsonIterator.parse("null");
     assertNull(iter.readString());
   }
 

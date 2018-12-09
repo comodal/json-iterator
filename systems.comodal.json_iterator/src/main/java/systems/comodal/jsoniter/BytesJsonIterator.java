@@ -188,17 +188,17 @@ class BytesJsonIterator implements JsonIterator {
   public final boolean readArray() throws IOException {
     final byte c = nextToken();
     return switch (c) {
-      case '[' -> {
+      case '[' ->{
         if (nextToken() == ']') {
           break false;
         }
         unreadByte();
         break true;
       }
-      case ']','n' -> false;
-      case ',' -> true;
-      default -> throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
-    };
+      case ']','n' ->false;
+      case ',' ->true;
+      default ->throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
+    } ;
   }
 
   @Override
@@ -278,7 +278,7 @@ class BytesJsonIterator implements JsonIterator {
     throw reportError("readArrayCB", "expect [ or n, but found: " + (char) c);
   }
 
-  private static final BiIntFunction<char[], String> READ_STRING_FUNCTION = (count, _reusableChars) -> new String(_reusableChars, 0, count);
+  private static final CharBufferFunction<String> READ_STRING_FUNCTION = (count, _reusableChars) -> new String(_reusableChars, 0, count);
 
   @Override
   public final String readString() throws IOException {
@@ -286,7 +286,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final <T> T readChars(final BiIntFunction<char[], T> applyChars) throws IOException {
+  public final <T> T readChars(final CharBufferFunction<T> applyChars) throws IOException {
     final byte c = nextToken();
     if (c != '"') {
       if (c == 'n') {
@@ -342,23 +342,96 @@ class BytesJsonIterator implements JsonIterator {
         if (c == '"') {
           unreadByte();
           final var field = readString();
-          if (nextToken() != ':') {
-            throw reportError("readObject", "expect :");
+          if ((c = nextToken()) != ':') {
+            throw reportError("readObject", "expect , but " + ((char) c));
           }
           return field;
         }
         if (c == '}') {
           return null; // end of object
         }
-        throw reportError("readObject", "expect \" after {");
+        throw reportError("readObject", `expect " after {`);
       case ',':
         final var field = readString();
-        if (nextToken() != ':') {
-          throw reportError("readObject", "expect :");
+        if ((c = nextToken()) != ':') {
+          throw reportError("readObject", "expect , but " + ((char) c));
         }
         return field;
       case '}':
         return null; // end of object
+      default:
+        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+    }
+  }
+
+  public final JsonIterator skipObjField() throws IOException {
+    byte c = nextToken();
+    switch (c) {
+      case 'n':
+        skipFixedBytes(3);
+        return null;
+      case '{':
+        c = nextToken();
+        if (c == '"') {
+          parse();
+          if ((c = nextToken()) != ':') {
+            throw reportError("readObject", "expect :, but " + ((char) c));
+          }
+          return this;
+        }
+        if (c == '}') { // end of object
+          return null;
+        }
+        throw reportError("readObject", `expect " after {`);
+      case ',':
+        c = nextToken();
+        if (c != '"') {
+          throw reportError("readObject", "expect string field, but " + (char) c);
+        }
+        parse();
+        if ((c = nextToken()) != ':') {
+          throw reportError("readObject", "expect :, but " + ((char) c));
+        }
+        return this;
+      case '}': // end of object
+        return null;
+      default:
+        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+    }
+  }
+
+  @Override
+  public final <R, C> R applyObjField(final C context, final FieldBufferFunction<C, R> fieldBufferFunction) throws IOException {
+    byte c = nextToken();
+    switch (c) {
+      case 'n':
+        skipFixedBytes(3);
+        return fieldBufferFunction.apply(context, -1, null, this);
+      case '{':
+        c = nextToken();
+        if (c == '"') {
+          final int count = parse();
+          if ((c = nextToken()) != ':') {
+            throw reportError("readObject", "expect :, but " + ((char) c));
+          }
+          return fieldBufferFunction.apply(context, count, reusableChars, this);
+        }
+        if (c == '}') { // end of object
+          return fieldBufferFunction.apply(context, -1, null, this);
+        }
+        throw reportError("readObject", `expect " after {`);
+      case ',':
+        c = nextToken();
+        if (c != '"') {
+          throw reportError("readObject", "expect string field, but " + (char) c);
+        }
+        final int count = parse();
+        if ((c = nextToken()) != ':') {
+          throw reportError("readObject", "expect :, but " + ((char) c));
+        }
+        return fieldBufferFunction.apply(context, count, reusableChars, this);
+      case '}': // end of object
+        return fieldBufferFunction.apply(context, -1, null, this);
       default:
         throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
     }
@@ -387,7 +460,7 @@ class BytesJsonIterator implements JsonIterator {
       if ('}' == c) {
         return;
       }
-      throw reportError("readObjectCB", "expect \" after {");
+      throw reportError("readObjectCB", `expect " after {`);
     }
     if ('n' == c) {
       skipFixedBytes(3);
@@ -401,8 +474,8 @@ class BytesJsonIterator implements JsonIterator {
     return (float) readDouble();
   }
 
-  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, chars) -> new BigDecimal(chars, 0, count);
-  private static final BiIntFunction<char[], BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (count, chars) -> {
+  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, chars) -> new BigDecimal(chars, 0, count);
+  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (count, chars) -> {
     if (count == 1) {
       return chars[count] == '0'
           ? BigDecimal.ZERO
@@ -440,7 +513,7 @@ class BytesJsonIterator implements JsonIterator {
     return readBigDecimal(READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION);
   }
 
-  private BigDecimal readBigDecimal(final BiIntFunction<char[], BigDecimal> parseChars) throws IOException {
+  private BigDecimal readBigDecimal(final CharBufferFunction<BigDecimal> parseChars) throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
     switch (valueType) {
@@ -457,7 +530,7 @@ class BytesJsonIterator implements JsonIterator {
     }
   }
 
-  private static final BiIntFunction<char[], BigInteger> READ_BIG_INTEGER_FUNCTION = (count, chars) -> new BigInteger(new String(chars, 0, count));
+  private static final CharBufferFunction<BigInteger> READ_BIG_INTEGER_FUNCTION = (count, chars) -> new BigInteger(new String(chars, 0, count));
 
   @Override
   public final BigInteger readBigInteger() throws IOException {
@@ -472,8 +545,8 @@ class BytesJsonIterator implements JsonIterator {
         skip();
         break null;
       }
-      default -> throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
-    };
+      default ->throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
+    } ;
   }
 
   @Override
@@ -529,14 +602,14 @@ class BytesJsonIterator implements JsonIterator {
   public final JsonIterator skip() throws IOException {
     final byte c = nextToken();
     return switch (c) {
-      case '"' -> skipString();
-      case '-','0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> skipUntilBreak();
-      case 't','n' -> skipFixedBytes(3); // true or null
-      case 'f' -> skipFixedBytes(4); // false
-      case '[' -> skipArray();
-      case '{' -> skipObject();
-      default -> throw reportError("IterImplSkip", "do not know how to skip: " + c);
-    };
+      case '"' ->skipString();
+      case '-','0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ->skipUntilBreak();
+      case 't','n' ->skipFixedBytes(3); // true or null
+      case 'f' ->skipFixedBytes(4); // false
+      case '[' ->skipArray();
+      case '{' ->skipObject();
+      default ->throw reportError("IterImplSkip", "do not know how to skip: " + c);
+    } ;
   }
 
   JsonIterator skipArray() throws IOException {

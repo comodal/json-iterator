@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+import static java.lang.Boolean.TRUE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 final class TestNull {
@@ -13,6 +15,13 @@ final class TestNull {
     var iter = JsonIterator.parse(`{"field":null}`);
     iter.readObject();
     assertNull(iter.readString());
+
+    iter = JsonIterator.parse(`{"field":null}`);
+    assertNull(iter.applyObjField(TRUE, ((context, len, buf, jsonIterator) -> {
+      assertEquals("field", new String(buf, 0, len));
+      assertEquals(TRUE, context);
+      return jsonIterator.readString();
+    })));
   }
 
   @Test
