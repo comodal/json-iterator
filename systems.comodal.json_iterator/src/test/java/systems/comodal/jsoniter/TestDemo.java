@@ -40,7 +40,7 @@ final class TestDemo {
   }
 
   @Test
-  void test_iterator2() throws IOException {
+  void test_iterator_apply() throws IOException {
     final var iter = JsonIterator.parse(`{"numbers": ["1", "2", ["3", "4"]]}`);
     final var last = iter.applyObjField(TRUE, (context, len, buf, _iter) -> {
       assertEquals(TRUE, context);
@@ -62,6 +62,24 @@ final class TestDemo {
       return _last;
     });
     assertEquals("4", last);
+  }
+
+  @Test
+  void test_iterator_consume() throws IOException {
+    final var iter = JsonIterator.parse(`{"numbers": ["1", "2", ["3", "4"]]}`);
+    final var context = iter.consumeObject(TRUE, (_context, len, buf, _iter) -> {
+      assertEquals(TRUE, _context);
+      assertEquals("numbers", new String(buf, 0, len));
+      assertEquals("1", _iter.openArray().readString());
+      assertEquals("2", _iter.continueArray().readString());
+      assertEquals(ValueType.ARRAY, _iter.continueArray().whatIsNext());
+      assertEquals(ValueType.STRING, _iter.openArray().whatIsNext());
+      assertEquals("3", _iter.readString());
+      assertEquals("4", iter.continueArray().readString());
+      iter.closeArray().closeArray();
+      return true;
+    });
+    assertEquals(TRUE, context);
   }
 
   @Test

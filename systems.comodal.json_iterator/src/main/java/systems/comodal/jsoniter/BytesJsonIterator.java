@@ -427,12 +427,12 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final <C> JsonIterator consumeObject(final C context, final FieldBufferPredicate<C> fieldBufferFunction) throws IOException {
+  public final <C> C consumeObject(final C context, final FieldBufferPredicate<C> fieldBufferFunction) throws IOException {
     for (byte c = nextToken(); ; c = nextToken()) {
       switch (c) {
         case 'n':
           skipFixedBytes(3);
-          return this;
+          return context;
         case '{':
           c = nextToken();
           if (c == '"') {
@@ -443,10 +443,10 @@ class BytesJsonIterator implements JsonIterator {
             if (fieldBufferFunction.apply(context, count, reusableChars, this)) {
               continue;
             }
-            return this;
+            return context;
           }
           if (c == '}') { // end of object
-            return this;
+            return context;
           }
           throw reportError("readObject", `expect " after {`);
         case ',':
@@ -461,9 +461,9 @@ class BytesJsonIterator implements JsonIterator {
           if (fieldBufferFunction.apply(context, count, reusableChars, this)) {
             continue;
           }
-          return this;
+          return context;
         case '}': // end of object
-          return this;
+          return context;
         default:
           throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
       }
