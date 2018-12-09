@@ -432,7 +432,7 @@ class BytesJsonIterator implements JsonIterator {
     switch (c) {
       case 'n':
         skipFixedBytes(3);
-        return fieldBufferFunction.apply(context, -1, null, this);
+        return null;
       case '{':
         c = nextToken();
         if (c == '"') {
@@ -443,7 +443,7 @@ class BytesJsonIterator implements JsonIterator {
           return fieldBufferFunction.apply(context, count, reusableChars, this);
         }
         if (c == '}') { // end of object
-          return fieldBufferFunction.apply(context, -1, null, this);
+          return null;
         }
         throw reportError("readObject", `expect " after {`);
       case ',':
@@ -457,7 +457,7 @@ class BytesJsonIterator implements JsonIterator {
         }
         return fieldBufferFunction.apply(context, count, reusableChars, this);
       case '}': // end of object
-        return fieldBufferFunction.apply(context, -1, null, this);
+        return null;
       default:
         throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
     }
