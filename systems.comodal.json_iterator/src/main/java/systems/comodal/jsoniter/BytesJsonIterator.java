@@ -427,6 +427,50 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
+  public final <C> JsonIterator consumeObject(final C context, final FieldBufferPredicate<C> fieldBufferFunction) throws IOException {
+    for (byte c = nextToken(); ; c = nextToken()) {
+      switch (c) {
+        case 'n':
+          skipFixedBytes(3);
+          return this;
+        case '{':
+          c = nextToken();
+          if (c == '"') {
+            final int count = parse();
+            if ((c = nextToken()) != ':') {
+              throw reportError("readObject", "expect :, but " + ((char) c));
+            }
+            if (fieldBufferFunction.apply(context, count, reusableChars, this)) {
+              continue;
+            }
+            return this;
+          }
+          if (c == '}') { // end of object
+            return this;
+          }
+          throw reportError("readObject", `expect " after {`);
+        case ',':
+          c = nextToken();
+          if (c != '"') {
+            throw reportError("readObject", "expect string field, but " + (char) c);
+          }
+          final int count = parse();
+          if ((c = nextToken()) != ':') {
+            throw reportError("readObject", "expect :, but " + ((char) c));
+          }
+          if (fieldBufferFunction.apply(context, count, reusableChars, this)) {
+            continue;
+          }
+          return this;
+        case '}': // end of object
+          return this;
+        default:
+          throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+      }
+    }
+  }
+
+  @Override
   public final <R, C> R applyObjField(final C context, final FieldBufferFunction<C, R> fieldBufferFunction) throws IOException {
     byte c = nextToken();
     switch (c) {
