@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
-import static systems.comodal.jsoniter.ValueType.VALUE_TYPES;
+import static systems.comodal.jsoniter.ValueType.*;
 
 class BytesJsonIterator implements JsonIterator {
 
@@ -542,18 +542,18 @@ class BytesJsonIterator implements JsonIterator {
   private BigDecimal readBigDecimal(final CharBufferFunction<BigDecimal> parseChars) throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
-    switch (valueType) {
-      case STRING:
-        return readChars(parseChars);
-      case NUMBER:
-        final var numberChars = readNumber();
-        return parseChars.apply(numberChars.charsLength, numberChars.chars);
-      case NULL:
-        skip();
-        return null;
-      default:
-        throw reportError("readBigDecimal", "Must be a number or a string, found " + valueType);
+    if (valueType == STRING) {
+      return readChars(parseChars);
     }
+    if (valueType == NUMBER) {
+      final var numberChars = readNumber();
+      return parseChars.apply(numberChars.charsLength, numberChars.chars);
+    }
+    if (valueType == NULL) {
+      skip();
+      return null;
+    }
+    throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
   }
 
   private static final CharBufferFunction<BigInteger> READ_BIG_INTEGER_FUNCTION = (count, chars) -> new BigInteger(new String(chars, 0, count));
@@ -562,17 +562,17 @@ class BytesJsonIterator implements JsonIterator {
   public final BigInteger readBigInteger() throws IOException {
     // skip whitespace by read next
     final var valueType = whatIsNext();
-    return switch (valueType) {
-      case NUMBER -> new BigInteger(readNumberAsString())
-        ;
-      case STRING -> readChars(READ_BIG_INTEGER_FUNCTION)
-        ;
-      case NULL -> {
-        skip();
-        break null;
-      }
-      default ->throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
-    } ;
+    if (valueType == NUMBER) {
+      return new BigInteger(readNumberAsString());
+    }
+    if (valueType == STRING) {
+      return readChars(READ_BIG_INTEGER_FUNCTION);
+    }
+    if (valueType == NULL) {
+      skip();
+      return null;
+    }
+    throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
   }
 
   @Override
@@ -1106,7 +1106,7 @@ class BytesJsonIterator implements JsonIterator {
   final double readDoubleSlowPath() throws IOException {
     try {
       final var numberChars = readNumber();
-      if (numberChars.charsLength == 0 && whatIsNext() == ValueType.STRING) {
+      if (numberChars.charsLength == 0 && whatIsNext() == STRING) {
         final var possibleInf = readString();
         if ("infinity".equals(possibleInf)) {
           return Double.POSITIVE_INFINITY;
