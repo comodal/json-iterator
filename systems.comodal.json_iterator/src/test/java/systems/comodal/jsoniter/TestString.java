@@ -18,15 +18,11 @@ final class TestString {
 
   @Test
   void test_escapes_string() throws IOException {
-    var escaped = "even" + `\`.repeat(42);
-    var expected = "even" + `\`.repeat(21);
-    var iter = JsonIterator.parse('"' + escaped + '"');
-    assertEquals(expected, iter.readString());
+    var iter = JsonIterator.parse(`"even` + `\`.repeat(42) + '"');
+    assertEquals("even" + `\`.repeat(21), iter.readString());
 
-    escaped = "odd" + `\`.repeat(11) + '"';
-    expected = "odd" + `\`.repeat(5) + '"';
-    iter = JsonIterator.parse('"' + escaped + '"');
-    assertEquals(expected, iter.readString());
+    iter = JsonIterator.parse(`"odd` + `\`.repeat(11) + `""`);
+    assertEquals("odd" + `\`.repeat(5) + '"', iter.readString());
 
     iter = JsonIterator.parse(`"even\\"`);
     assertEquals(`even\`, iter.readString());

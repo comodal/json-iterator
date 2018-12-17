@@ -78,7 +78,7 @@ public interface JsonIterator extends Closeable {
    */
   <T> T readChars(final CharBufferFunction<T> applyChars) throws IOException;
 
-  boolean readChars(final CharBufferPredicate testChars) throws IOException;
+  boolean testChars(final CharBufferPredicate testChars) throws IOException;
 
   default String readObject() throws IOException {
     return readObjField();

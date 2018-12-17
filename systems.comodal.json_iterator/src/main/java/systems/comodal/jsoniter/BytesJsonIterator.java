@@ -326,7 +326,7 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final boolean readChars(final CharBufferPredicate testChars) throws IOException {
+  public final boolean testChars(final CharBufferPredicate testChars) throws IOException {
     final byte c = nextToken();
     if (c != '"') {
       if (c == 'n') {
