@@ -17,6 +17,28 @@ final class TestString {
   }
 
   @Test
+  void test_escapes_string() throws IOException {
+    var escaped = "even" + `\`.repeat(42);
+    var expected = "even" + `\`.repeat(21);
+    var iter = JsonIterator.parse('"' + escaped + '"');
+    assertEquals(expected, iter.readString());
+
+    escaped = "odd" + `\`.repeat(11) + '"';
+    expected = "odd" + `\`.repeat(5) + '"';
+    iter = JsonIterator.parse('"' + escaped + '"');
+    assertEquals(expected, iter.readString());
+
+    iter = JsonIterator.parse(`"even\\"`);
+    assertEquals(`even\`, iter.readString());
+
+    iter = JsonIterator.parse(`"odd\\\""`);
+    assertEquals(`odd\"`, iter.readString());
+
+    iter = JsonIterator.parse(`"odd\""`);
+    assertEquals(`odd"`, iter.readString());
+  }
+
+  @Test
   void test_ascii_string_with_escape() throws IOException {
     var iter = JsonIterator.parse(`"he\tllo"`);
     assertEquals("he\tllo", iter.readString());

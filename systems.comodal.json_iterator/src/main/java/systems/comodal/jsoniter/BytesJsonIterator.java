@@ -758,30 +758,29 @@ class BytesJsonIterator implements JsonIterator {
   // Tries to find the end of string
   // Support if string contains escaped quote symbols.
   final int findStringEnd() {
-    boolean escaped = false;
+    byte c;
+    ESCAPED:
     for (int i = head; i < tail; i++) {
-      final byte c = buf[i];
+      c = buf[i];
       if (c == '"') {
-        if (!escaped) {
-          return i + 1;
-        }
-        int j = i - 1;
-        for (; ; ) {
-          if (j < head || buf[j] != '\\') {
-            // even number of backslashes
-            // either end of buffer, or " found
-            return i + 1;
+        return i + 1;
+      }
+      if (c == '\\') {
+        for (int numEscapes = 1; ; ++numEscapes) {
+          if (++i == tail) {
+            return -1;
           }
-          j--;
-          if (j < head || buf[j] != '\\') {
-            // odd number of backslashes
-            // it is \" or \\\"
-            break;
+          c = buf[i];
+          if (c == '"') {
+            if ((numEscapes & 1) == 0) {
+              return i + 1;
+            }
+            continue ESCAPED;
           }
-          j--;
+          if (c != '\\') {
+            continue ESCAPED;
+          }
         }
-      } else if (c == '\\') {
-        escaped = true;
       }
     }
     return -1;
