@@ -325,6 +325,20 @@ class BytesJsonIterator implements JsonIterator {
     return applyChars.apply(count, reusableChars);
   }
 
+  @Override
+  public final boolean readChars(final CharBufferPredicate testChars) throws IOException {
+    final byte c = nextToken();
+    if (c != '"') {
+      if (c == 'n') {
+        skipFixedBytes(3);
+        return false;
+      }
+      throw reportError("readString", "expect string or null, but " + (char) c);
+    }
+    final int count = parse();
+    return testChars.apply(count, reusableChars);
+  }
+
   private int parse() throws IOException {
     byte c;// try fast path first
     int i = head;
@@ -678,7 +692,7 @@ class BytesJsonIterator implements JsonIterator {
       case 'f' ->skipFixedBytes(4); // false
       case '[' ->skipArray();
       case '{' ->skipObject();
-      default ->throw reportError("IterImplSkip", "do not know how to skip: " + c);
+      default ->throw reportError("skip", "do not know how to skip: " + c);
     } ;
   }
 

@@ -6,12 +6,8 @@ apply plugin: 'pl.allegro.tech.build.axion-release'
 apply plugin: 'me.champeau.gradle.jmh'
 
 scmVersion {
-  tag {
-    prefix = ''
-  }
-  repository {
-    pushTagsOnly = true
-  }
+  tag.prefix = ''
+  repository.pushTagsOnly = true
 }
 
 sourceCompatibility = JavaVersion.VERSION_12
@@ -20,6 +16,7 @@ project.version = scmVersion.version
 project.group = 'systems.comodal'
 
 ext {
+  javaCompilerExecutable = System.env['JAVA_HOME'] ? System.env['JAVA_HOME'] + '/bin/javac' : 'javac'
   desc = 'Json Parser'
   bintrayOrg = 'comodal'
   bintrayRepo = 'libraries'
@@ -46,17 +43,25 @@ jmh {
   include = ['BenchStyles']
   jmhVersion = '+'
   jvmArgs = ['--enable-preview']
-
+  fork = 1
   resultFormat = 'JSON'
   includeTests = false
 }
 
 jmhCompileGeneratedClasses {
   options.compilerArgs = ['--enable-preview']
+  options.fork = true
+  options.debug = true
+  options.forkOptions.executable = javaCompilerExecutable
+  options.warnings = false
 }
 
 compileJmhJava {
   options.compilerArgs = ['--enable-preview']
+  options.fork = true
+  options.debug = true
+  options.forkOptions.executable = javaCompilerExecutable
+  options.warnings = false
 }
 
 compileJava {
