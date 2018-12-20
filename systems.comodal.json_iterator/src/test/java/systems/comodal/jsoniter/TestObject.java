@@ -19,22 +19,22 @@ final class TestObject {
 
   @Test
   void test_one_field() throws IOException {
-    var iter = JsonIterator.parse(`{ "field1"
-:
-	"hello" }`);
+    var iter = JsonIterator.parse("{ \"field1\"\n" +
+        ":\n" +
+        "\t\"hello\" }");
     assertEquals("field1", iter.readObject());
     assertEquals("hello", iter.readString());
     assertNull(iter.readObject());
 
-    iter = JsonIterator.parse(`{ "field1"
-:
-	"hello" }`);
+    iter = JsonIterator.parse("{ \"field1\"\n" +
+        ":\n" +
+        "\t\"hello\" }");
     assertEquals("hello", ((Map) iter.read()).get("field1"));
 
 
-    iter = JsonIterator.parse(`{ "field1"
-:
-	"hello" }`);
+    iter = JsonIterator.parse("{ \"field1\"\n" +
+        ":\n" +
+        "\t\"hello\" }");
     assertNull(iter.applyObjField(TRUE, ((context, len, buf, jsonIterator) -> {
       assertEquals(TRUE, context);
       assertEquals("field1", new String(buf, 0, len));
@@ -47,9 +47,9 @@ final class TestObject {
       });
     })));
 
-    iter = JsonIterator.parse(`{ "field1"
-:
-	"hello" }`);
+    iter = JsonIterator.parse("{ \"field1\"\n" +
+        ":\n" +
+        "\t\"hello\" }");
     assertEquals(iter, iter.skipObjField());
     assertEquals("hello", iter.readString());
     assertNull(iter.skipObjField());
@@ -57,7 +57,7 @@ final class TestObject {
 
   @Test
   void test_two_fields() throws IOException {
-    var iter = JsonIterator.parse(`{ "field1" : "hello" , "field2": "world" }`);
+    var iter = JsonIterator.parse("{ \"field1\" : \"hello\" , \"field2\": \"world\" }");
     assertEquals("field1", iter.readObject());
     assertEquals("hello", iter.readString());
     assertEquals("field2", iter.readObject());

@@ -390,7 +390,7 @@ class BytesJsonIterator implements JsonIterator {
         if (c == '}') {
           return null; // end of object
         }
-        throw reportError("readObject", `expect " after {`);
+        throw reportError("readObject", "expect \" after {");
       case ',':
         final var field = readString();
         if ((c = nextToken()) != ':') {
@@ -422,7 +422,7 @@ class BytesJsonIterator implements JsonIterator {
         if (c == '}') { // end of object
           return null;
         }
-        throw reportError("readObject", `expect " after {`);
+        throw reportError("readObject", "expect \" after {");
       case ',':
         c = nextToken();
         if (c != '"') {
@@ -462,7 +462,7 @@ class BytesJsonIterator implements JsonIterator {
           if (c == '}') { // end of object
             return context;
           }
-          throw reportError("readObject", `expect " after {`);
+          throw reportError("readObject", "expect \" after {");
         case ',':
           c = nextToken();
           if (c != '"') {
@@ -503,7 +503,7 @@ class BytesJsonIterator implements JsonIterator {
         if (c == '}') { // end of object
           return null;
         }
-        throw reportError("readObject", `expect " after {`);
+        throw reportError("readObject", "expect \" after {");
       case ',':
         c = nextToken();
         if (c != '"') {
@@ -544,7 +544,7 @@ class BytesJsonIterator implements JsonIterator {
       if ('}' == c) {
         return;
       }
-      throw reportError("readObjectCB", `expect " after {`);
+      throw reportError("readObjectCB", "expect \" after {");
     }
     if ('n' == c) {
       skipFixedBytes(3);
@@ -685,15 +685,48 @@ class BytesJsonIterator implements JsonIterator {
   @Override
   public final JsonIterator skip() throws IOException {
     final byte c = nextToken();
-    return switch (c) {
-      case '"' ->skipString();
-      case '-','0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ->skipUntilBreak();
-      case 't','n' ->skipFixedBytes(3); // true or null
-      case 'f' ->skipFixedBytes(4); // false
-      case '[' ->skipArray();
-      case '{' ->skipObject();
-      default ->throw reportError("skip", "do not know how to skip: " + c);
-    } ;
+    switch (c) {
+      case '"':
+        skipString();
+        return this;
+      case '-':
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        skipUntilBreak();
+        return this;
+      case 't':
+      case 'n':
+        skipFixedBytes(3); // true or null
+        return this;
+      case 'f':
+        skipFixedBytes(4); // false
+        return this;
+      case '[':
+        skipArray();
+        return this;
+      case '{':
+        skipObject();
+        return this;
+      default:
+        throw reportError("skip", "do not know how to skip: " + c);
+    }
+//    return switch (c) {
+//      case '"' ->skipString();
+//      case '-','0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ->skipUntilBreak();
+//      case 't','n' ->skipFixedBytes(3); // true or null
+//      case 'f' ->skipFixedBytes(4); // false
+//      case '[' ->skipArray();
+//      case '{' ->skipObject();
+//      default ->throw reportError("skip", "do not know how to skip: " + c);
+//    } ;
   }
 
   JsonIterator skipArray() throws IOException {

@@ -42,41 +42,15 @@ dependencies {
 jmh {
   include = ['BenchStyles']
   jmhVersion = '+'
-  jvmArgs = ['--enable-preview']
   fork = 1
   resultFormat = 'JSON'
   includeTests = false
-}
-
-jmhCompileGeneratedClasses {
-  options.compilerArgs = ['--enable-preview']
-  options.fork = true
-  options.debug = true
-  options.forkOptions.executable = javaCompilerExecutable
-  options.warnings = false
-}
-
-compileJmhJava {
-  options.compilerArgs = ['--enable-preview']
-  options.fork = true
-  options.debug = true
-  options.forkOptions.executable = javaCompilerExecutable
-  options.warnings = false
-}
-
-compileJava {
-  options.compilerArgs = ['--enable-preview']
-}
-
-compileTestJava {
-  options.compilerArgs = ['--enable-preview']
 }
 
 test {
   moduleOptions {
     runOnClasspath = true
   }
-  jvmArgs = ['--enable-preview']
   useJUnitPlatform()
   maxParallelForks = 4
   testLogging {

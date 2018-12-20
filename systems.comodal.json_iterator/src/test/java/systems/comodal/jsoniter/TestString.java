@@ -11,62 +11,62 @@ final class TestString {
 
   @Test
   void test_ascii_string() throws IOException {
-    var iter = JsonIterator.parse(`"hello""world"`);
+    var iter = JsonIterator.parse("\"hello\"\"world\"");
     assertEquals("hello", iter.readString());
     assertEquals("world", iter.readString());
   }
 
   @Test
   void test_escapes_string() throws IOException {
-    var iter = JsonIterator.parse(`"even` + `\`.repeat(42) + '"');
-    assertEquals("even" + `\`.repeat(21), iter.readString());
+    var iter = JsonIterator.parse("\"even" + "\\".repeat(42) + '"');
+    assertEquals("even" + "\\".repeat(21), iter.readString());
 
-    iter = JsonIterator.parse(`"odd` + `\`.repeat(11) + `""`);
-    assertEquals("odd" + `\`.repeat(5) + '"', iter.readString());
+    iter = JsonIterator.parse("\"odd" + "\\".repeat(11) + "\"\"");
+    assertEquals("odd" + "\\".repeat(5) + '"', iter.readString());
 
-    iter = JsonIterator.parse(`"even\\"`);
-    assertEquals(`even\`, iter.readString());
+    iter = JsonIterator.parse("\"even\\\\\"");
+    assertEquals("even\\", iter.readString());
 
-    iter = JsonIterator.parse(`"odd\\\""`);
-    assertEquals(`odd\"`, iter.readString());
+    iter = JsonIterator.parse("\"odd\\\\\\\"\"");
+    assertEquals("odd\\\"", iter.readString());
 
-    iter = JsonIterator.parse(`"odd\""`);
-    assertEquals(`odd"`, iter.readString());
+    iter = JsonIterator.parse("\"odd\\\"\"");
+    assertEquals("odd\"", iter.readString());
   }
 
   @Test
   void test_ascii_string_with_escape() throws IOException {
-    var iter = JsonIterator.parse(`"he\tllo"`);
+    var iter = JsonIterator.parse("\"he\\tllo\"");
     assertEquals("he\tllo", iter.readString());
   }
 
   @Test
   void test_utf8_string() throws IOException {
-    var iter = JsonIterator.parse(`"中文"`);
+    var iter = JsonIterator.parse("\"中文\"");
     assertEquals("中文", iter.readString());
   }
 
   @Test
   void test_incomplete_escape() {
-    var iter = JsonIterator.parse(`"\`);
+    var iter = JsonIterator.parse("\"\\");
     assertThrows(JsonException.class, iter::readString);
   }
 
   @Test
   void test_surrogate() throws IOException {
-    var iter = JsonIterator.parse(`"👊"`);
+    var iter = JsonIterator.parse("\"\uD83D\uDC4A\"");
     assertEquals("\ud83d\udc4a", iter.readString());
   }
 
   @Test
   void test_larger_than_buffer() throws IOException {
-    var iter = JsonIterator.parse(`"0123456789012345678901234567890123"`);
+    var iter = JsonIterator.parse("\"0123456789012345678901234567890123\"");
     assertEquals("0123456789012345678901234567890123", iter.readString());
   }
 
   @Test
   void test_string_across_buffer() throws IOException {
-    var iter = JsonIterator.parse(new ByteArrayInputStream(`"hello""world"`.getBytes()), 2);
+    var iter = JsonIterator.parse(new ByteArrayInputStream("\"hello\"\"world\"".getBytes()), 2);
     assertEquals("hello", iter.readString());
     assertEquals("world", iter.readString());
   }
@@ -100,13 +100,13 @@ final class TestString {
 
   @Test
   void test_long_string() throws IOException {
-    var iter = JsonIterator.parse(`"[\"LL\",\"MM\\\/LW\",\"JY\",\"S\",\"C\",\"IN\",\"ME \\\/ LE\"]"`);
-    assertEquals(`["LL","MM\/LW","JY","S","C","IN","ME \/ LE"]`, iter.readString());
+    var iter = JsonIterator.parse("\"[\\\"LL\\\",\\\"MM\\\\\\/LW\\\",\\\"JY\\\",\\\"S\\\",\\\"C\\\",\\\"IN\\\",\\\"ME \\\\\\/ LE\\\"]\"");
+    assertEquals("[\"LL\",\"MM\\/LW\",\"JY\",\"S\",\"C\",\"IN\",\"ME \\/ LE\"]", iter.readString());
   }
 
   @Test
   void test_long_string_in_streaming() throws IOException {
-    var iter = JsonIterator.parse(new ByteArrayInputStream(`"[\"LL\",\"MM\\\/LW\",\"JY\",\"S\",\"C\",\"IN\",\"ME \\\/ LE\"]"`.getBytes()), 2);
-    assertEquals(`["LL","MM\/LW","JY","S","C","IN","ME \/ LE"]`, iter.readString());
+    var iter = JsonIterator.parse(new ByteArrayInputStream("\"[\\\"LL\\\",\\\"MM\\\\\\/LW\\\",\\\"JY\\\",\\\"S\\\",\\\"C\\\",\\\"IN\\\",\\\"ME \\\\\\/ LE\\\"]\"".getBytes()), 2);
+    assertEquals("[\"LL\",\"MM\\/LW\",\"JY\",\"S\",\"C\",\"IN\",\"ME \\/ LE\"]", iter.readString());
   }
 }

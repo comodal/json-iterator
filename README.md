@@ -6,8 +6,6 @@ JSON Iterator is a minimal Java 12 adaption of the original [jsoniter JsonIterat
 
 ### Usage
 ```java
-var jsonIterator = JsonIterator.parse(`{"hello": "world"}`);
-var fieldName = jsonIterator.readObject();
-var fieldValue = jsonIterator.readString();
-System.out.println(fieldName + ' ' + fieldValue);
+var jsonIterator = JsonIterator.parse("{\"hello\": \"world\"}");
+System.out.println(jsonIterator.readObjField() + ' ' + jsonIterator.readString());
 ```
