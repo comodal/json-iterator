@@ -10,14 +10,14 @@ System.out.println(jsonIterator.readObjField() + ' ' + jsonIterator.readString()
 
 ### Recommended Usage
 
-If the presence and ordering of the JSON object fields are gauranteed to always be the same, follow the [`StaticFieldOrdering`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/StaticFieldOrdering.java) style and simply skip over object field entries.
+If the presence and ordering of the JSON object fields are guaranteed to always be the same, follow the [`StaticFieldOrdering`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/StaticFieldOrdering.java) style and simply skip over object field entries.
 
 Otherwise, follow the [`IocLoopCompareStringFieldToCharsIf`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/IocLoopCompareStringFieldToCharsIf.java) style, which uses inversion of control to iterate over  object fields in conjunction with comparing expected field strings against a field char-buffer array.  The advantage of this strategy is that it avoids constructing Strings for object fields.
 
-##### Style Comparison Parsing [exchangeInfo.json](systems.comodal.json_iterator/build/resources/jmh/exchangeInfo.json)
+##### Style Comparison Parsing [exchangeInfo.json](systems.comodal.json_iterator/build/resources/jmh/exchangeInfo.json) (View on [JMH Visualizer](http://jmh.morethan.io/?source=https://raw.githubusercontent.com/comodal/json-iterator/master/benchmark-results/BenchStyles/results.json))
 ![Standard Style Comparision](benchmark-results/BenchStyles/parse_exchange_info_style_comparison.png)
 
 If the first character for all of an objects' fields are unique, follow either the [`IocLoopCharIf`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/IocLoopCharIf.java) or [`IocLoopCharSwitch`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/IocLoopCharSwitch.java) style.  Similar to the style `IocLoopCompareStringFieldToCharsIf`, these styles avoid constructing Strings for object fields.  Between the two, it is arguably easier to read a switch statement than a sequential chain of if/else-if statements.
 
-##### Style Comparison Parsing [compactFieldsExchangeInfo.json](systems.comodal.json_iterator/build/resources/jmh/compactFieldsExchangeInfo.json)
+##### Style Comparison Parsing [compactFieldsExchangeInfo.json](systems.comodal.json_iterator/build/resources/jmh/compactFieldsExchangeInfo.json) (View on [JMH Visualizer](http://jmh.morethan.io/?source=https://raw.githubusercontent.com/comodal/json-iterator/master/benchmark-results/BenchCompactFieldsStyles/results.json))
 ![Compact Style Comparision](benchmark-results/BenchCompactFieldsStyles/parse_exchange_info_style_comparison.png)
