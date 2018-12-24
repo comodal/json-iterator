@@ -102,7 +102,7 @@ class BytesJsonIterator implements JsonIterator {
       peekSize = tail - peekStart;
     }
     final String peek = new String(buf, peekStart, peekSize);
-    throw new JsonException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
+    throw new JsonException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf, 0, Math.min(buf.length, 1_024)));
   }
 
   @Override
@@ -112,7 +112,7 @@ class BytesJsonIterator implements JsonIterator {
       peekStart = 0;
     }
     final var peek = new String(buf, peekStart, head - peekStart);
-    return "head: " + head + ", peek: " + peek + ", buf: " + new String(buf);
+    return "head: " + head + ", peek: " + peek + ", buf: " + new String(buf, 0, Math.min(buf.length, 1_024));
   }
 
   @Override
@@ -208,7 +208,7 @@ class BytesJsonIterator implements JsonIterator {
     if (c == '[') {
       return this;
     }
-    throw reportError("readArray", "expected '[' but found: " + (char) c);
+    throw reportError("openArray", "expected '[' but found: " + (char) c);
   }
 
   public final JsonIterator continueArray() throws IOException {
@@ -216,7 +216,7 @@ class BytesJsonIterator implements JsonIterator {
     if (c == ',') {
       return this;
     }
-    throw reportError("readArray", "expected ',' but found: " + (char) c);
+    throw reportError("continueArray", "expected ',' but found: " + (char) c);
   }
 
   public final JsonIterator closeArray() throws IOException {
@@ -224,7 +224,7 @@ class BytesJsonIterator implements JsonIterator {
     if (c == ']') {
       return this;
     }
-    throw reportError("readArray", "expected ']' but found: " + (char) c);
+    throw reportError("closeArray", "expected ']' but found: " + (char) c);
   }
 
   @Override
@@ -438,6 +438,15 @@ class BytesJsonIterator implements JsonIterator {
       default:
         throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
     }
+  }
+
+  @Override
+  public final JsonIterator closeObj() throws IOException {
+    final byte c = nextToken();
+    if (c == '}') {
+      return this;
+    }
+    throw reportError("closeObj", "expected '}' but found: " + (char) c);
   }
 
   @Override

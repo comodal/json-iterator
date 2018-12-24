@@ -88,6 +88,8 @@ public interface JsonIterator extends Closeable {
 
   JsonIterator skipObjField() throws IOException;
 
+  JsonIterator closeObj() throws IOException;
+
   <R, C> R applyObjField(final C context, final FieldBufferFunction<C, R> fieldBufferFunction) throws IOException;
 
   <C> C consumeObject(final C context, final FieldBufferPredicate<C> fieldBufferFunction) throws IOException;

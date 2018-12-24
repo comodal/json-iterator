@@ -1,22 +1,23 @@
-apply plugin: 'java-library'
-apply plugin: 'org.javamodularity.moduleplugin'
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'pl.allegro.tech.build.axion-release'
-apply plugin: 'me.champeau.gradle.jmh'
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+  id "com.jfrog.bintray"
+  id "pl.allegro.tech.build.axion-release"
+  id "org.javamodularity.moduleplugin"
+  id "me.champeau.gradle.jmh"
+}
+
+sourceCompatibility = JavaVersion.VERSION_12
 
 scmVersion {
   tag.prefix = ''
   repository.pushTagsOnly = true
 }
 
-sourceCompatibility = JavaVersion.VERSION_12
-
 project.version = scmVersion.version
 project.group = 'systems.comodal'
 
 ext {
-  javaCompilerExecutable = System.env['JAVA_HOME'] ? System.env['JAVA_HOME'] + '/bin/javac' : 'javac'
   desc = 'Json Parser'
   bintrayOrg = 'comodal'
   bintrayRepo = 'libraries'
@@ -25,7 +26,7 @@ ext {
 }
 
 repositories {
-  mavenCentral()
+  jcenter()
 }
 
 dependencies {
