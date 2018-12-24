@@ -9,13 +9,16 @@ final class ExchangeInfoVal implements ExchangeInfo {
   private final TimeZone timeZone;
   private final long serverTime;
   private final List<RateLimit> rateLimits;
+  private final List<ProductSymbol> productSymbols;
 
   private ExchangeInfoVal(final TimeZone timeZone,
                           final long serverTime,
-                          final List<RateLimit> rateLimits) {
+                          final List<RateLimit> rateLimits,
+                          final List<ProductSymbol> productSymbols) {
     this.timeZone = timeZone;
     this.serverTime = serverTime;
     this.rateLimits = rateLimits;
+    this.productSymbols = productSymbols;
   }
 
   @Override
@@ -33,18 +36,26 @@ final class ExchangeInfoVal implements ExchangeInfo {
     return rateLimits;
   }
 
+  @Override
+  public List<ProductSymbol> getProductSymbols() {
+    return productSymbols;
+  }
+
   static final class ExchangeInfoBuilder implements ExchangeInfo.Builder {
 
     private TimeZone timeZone;
     private long serverTime;
     private List<RateLimit> rateLimits;
+    private List<ProductSymbol> productSymbols;
 
     ExchangeInfoBuilder() {
     }
 
     @Override
     public ExchangeInfo create() {
-      return new ExchangeInfoVal(timeZone, serverTime, rateLimits);
+      return new ExchangeInfoVal(timeZone, serverTime,
+          rateLimits == null ? List.of() : rateLimits,
+          productSymbols == null ? List.of() : productSymbols);
     }
 
     @Override
@@ -69,6 +80,15 @@ final class ExchangeInfoVal implements ExchangeInfo {
     }
 
     @Override
+    public Builder productSymbol(final ProductSymbol productSymbol) {
+      if (productSymbols == null) {
+        this.productSymbols = new ArrayList<>();
+      }
+      productSymbols.add(productSymbol);
+      return this;
+    }
+
+    @Override
     public TimeZone getTimeZone() {
       return timeZone;
     }
@@ -81,6 +101,11 @@ final class ExchangeInfoVal implements ExchangeInfo {
     @Override
     public List<RateLimit> getRateLimits() {
       return rateLimits;
+    }
+
+    @Override
+    public List<ProductSymbol> getProductSymbols() {
+      return productSymbols;
     }
   }
 }

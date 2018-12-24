@@ -24,6 +24,18 @@ public interface JsonIterator extends Closeable {
     return parse(str.getBytes());
   }
 
+  static boolean fieldEquals(final String str, final char[] buf, final int len) {
+    if (str.length() != len) {
+      return false;
+    }
+    for (int i = 0; i < len; i++) {
+      if (str.charAt(i) != buf[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   boolean supportsMarkReset();
 
   int mark();

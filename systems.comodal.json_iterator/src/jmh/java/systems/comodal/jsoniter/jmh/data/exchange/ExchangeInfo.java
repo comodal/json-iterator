@@ -11,6 +11,8 @@ public interface ExchangeInfo {
 
   List<RateLimit> getRateLimits();
 
+  List<ProductSymbol> getProductSymbols();
+
   static ExchangeInfo.Builder build() {
     return new ExchangeInfoVal.ExchangeInfoBuilder();
   }
@@ -24,5 +26,7 @@ public interface ExchangeInfo {
     Builder serverTime(final long serverTime);
 
     Builder rateLimit(final RateLimit rateLimit);
+
+    Builder productSymbol(final ProductSymbol productSymbol);
   }
 }

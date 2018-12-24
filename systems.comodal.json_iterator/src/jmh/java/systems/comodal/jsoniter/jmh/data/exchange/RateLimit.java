@@ -9,7 +9,7 @@ public interface RateLimit {
   }
 
   enum Type {
-    REQUESTS_WEIGHT, ORDERS, RAW_REQUESTS
+    REQUEST_WEIGHT, ORDERS, RAW_REQUESTS
   }
 
   Type getType();
