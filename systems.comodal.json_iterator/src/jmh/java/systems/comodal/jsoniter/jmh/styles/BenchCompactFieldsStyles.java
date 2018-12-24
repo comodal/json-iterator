@@ -18,7 +18,7 @@ import static systems.comodal.jsoniter.jmh.styles.BenchStyles.createJsonIterator
 @Measurement(iterations = 5, time = 7)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-public class BenchStylesCompactFields {
+public class BenchCompactFieldsStyles {
 
   private static final byte[] BENCH_LARGE_COMPACT_FIELDS_JSON;
 
@@ -32,8 +32,9 @@ public class BenchStylesCompactFields {
   }
 
   @Param({
+      "StaticFieldOrdering",
       "IocLoopCharSwitch",
-      "StaticFieldOrdering"
+      "IocLoopCharIf"
   })
   private String style;
   private JsonIterParser<ExchangeInfo> parser;

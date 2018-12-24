@@ -1,4 +1,4 @@
-package systems.comodal.jsoniter;
+package systems.comodal.jsoniter.jmh.data.exchange;
 
 import java.time.Duration;
 

@@ -13,7 +13,7 @@ public interface JsonIterParserFactory<T> {
     return (JsonIterParser<T>) ServiceLoader.load(JsonIterParserFactory.class).stream()
         .filter(factory -> factory.type().getSimpleName().startsWith(prefixFilter))
         .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("No parser factory found filter by name beginning with " + prefixFilter))
+        .orElseThrow(() -> new IllegalArgumentException("No parser factory found filtering by name beginning with " + prefixFilter))
         .get().create(parserType);
   }
 

@@ -41,8 +41,10 @@ dependencies {
 }
 
 jmh {
-  include = ['BenchStyles']
+//  include = ['BenchStyles']
+  include = ['BenchCompactFieldsStyles']
   jmhVersion = '+'
+//  jvmArgsPrepend = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
   fork = 1
   resultFormat = 'JSON'
   includeTests = false
