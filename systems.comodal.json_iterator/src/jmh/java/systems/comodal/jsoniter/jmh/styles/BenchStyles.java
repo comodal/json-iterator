@@ -60,4 +60,8 @@ public class BenchStyles {
       JSON_ITERATOR_POOL.add(ji);
     }
   }
+
+  public JsonIterator getLoadedJsonIterator() {
+    return createJsonIterator(BENCH_LARGE_JSON);
+  }
 }

@@ -35,19 +35,32 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-api:+'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:+'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:+'
+  testImplementation 'org.openjdk.jmh:jmh-core:+'
+  testImplementation 'org.openjdk.jmh:jmh-generator-annprocess:+'
 
   jmh 'org.openjdk.jmh:jmh-core:+'
   jmh 'org.openjdk.jmh:jmh-generator-annprocess:+'
 }
 
 jmh {
-//  include = ['BenchStyles']
-  include = ['BenchCompactFieldsStyles']
+  include = ['BenchStyles']
+//  include = ['BenchCharFieldsStyles']
   jmhVersion = '+'
 //  jvmArgsPrepend = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
   fork = 1
   resultFormat = 'JSON'
   includeTests = false
+}
+
+sourceSets {
+  test {
+    java {
+      srcDirs = ['src/test/java', 'src/jmh/java']
+    }
+    resources {
+      srcDirs = ['src/test/resources', 'src/jmh/resources']
+    }
+  }
 }
 
 test {

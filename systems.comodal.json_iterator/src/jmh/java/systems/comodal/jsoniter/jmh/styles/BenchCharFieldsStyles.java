@@ -2,6 +2,7 @@ package systems.comodal.jsoniter.jmh.styles;
 
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
+import systems.comodal.jsoniter.JsonIterator;
 import systems.comodal.jsoniter.factory.JsonIterParser;
 import systems.comodal.jsoniter.factory.JsonIterParserFactory;
 import systems.comodal.jsoniter.jmh.data.exchange.ExchangeInfo;
@@ -18,7 +19,7 @@ import static systems.comodal.jsoniter.jmh.styles.BenchStyles.createJsonIterator
 @Measurement(iterations = 5, time = 7)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-public class BenchCompactFieldsStyles {
+public class BenchCharFieldsStyles {
 
   private static final byte[] BENCH_LARGE_COMPACT_FIELDS_JSON;
 
@@ -52,5 +53,9 @@ public class BenchCompactFieldsStyles {
     } finally {
       JSON_ITERATOR_POOL.add(ji);
     }
+  }
+
+  public JsonIterator getLoadedJsonIterator() {
+    return createJsonIterator(BENCH_LARGE_COMPACT_FIELDS_JSON);
   }
 }
