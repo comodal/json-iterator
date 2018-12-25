@@ -5,6 +5,7 @@ plugins {
   id "pl.allegro.tech.build.axion-release"
   id "org.javamodularity.moduleplugin"
   id "me.champeau.gradle.jmh"
+  id "io.morethan.jmhreport"
 }
 
 sourceCompatibility = JavaVersion.VERSION_12
@@ -23,6 +24,8 @@ ext {
   bintrayRepo = 'libraries'
   vcsUrl = 'https://github.com/comodal/json-iterator'
   moduleName = 'systems.comodal.json_iterator'
+  bench = 'BenchCharFieldStyles'
+  jmhResultsFile = 'tmp.results.json'
 }
 
 repositories {
@@ -43,14 +46,25 @@ dependencies {
 }
 
 jmh {
-  include = ['BenchStyles']
-//  include = ['BenchCharFieldsStyles']
+  include = [project.bench]
   jmhVersion = '+'
 //  jvmArgsPrepend = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
   fork = 1
   resultFormat = 'JSON'
+  resultsFile = project.parent.file("benchmark-results/$bench/$jmhResultsFile")
   includeTests = false
 }
+
+jmhReport {
+  jmhResultPath = jmh.resultsFile
+  def reportDir = project.parent.file("benchmark-results/$bench/jmh_report/")
+  jmhReportOutput = reportDir
+  if(!reportDir.exists()) {
+    reportDir.mkdirs()
+  }
+}
+
+tasks.jmh.finalizedBy tasks.jmhReport
 
 sourceSets {
   test {

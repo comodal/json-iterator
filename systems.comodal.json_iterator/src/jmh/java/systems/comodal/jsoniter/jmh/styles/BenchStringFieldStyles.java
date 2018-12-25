@@ -17,13 +17,13 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 5, time = 7)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-public class BenchStyles {
+public class BenchStringFieldStyles {
 
   private static final byte[] BENCH_LARGE_JSON;
 
   static {
     try {
-      BENCH_LARGE_JSON = new String(BenchStyles.class.getResourceAsStream("/exchangeInfo.json").readAllBytes())
+      BENCH_LARGE_JSON = new String(BenchStringFieldStyles.class.getResourceAsStream("/exchangeInfo.json").readAllBytes())
           .replaceAll("\\s+", "").getBytes();
     } catch (IOException e) {
       throw new UncheckedIOException(e);

@@ -4,8 +4,8 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import systems.comodal.jsoniter.factory.JsonIterParserFactory;
 import systems.comodal.jsoniter.jmh.data.exchange.ExchangeInfo;
-import systems.comodal.jsoniter.jmh.styles.BenchCharFieldsStyles;
-import systems.comodal.jsoniter.jmh.styles.BenchStyles;
+import systems.comodal.jsoniter.jmh.styles.BenchCharFieldStyles;
+import systems.comodal.jsoniter.jmh.styles.BenchStringFieldStyles;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -24,7 +24,7 @@ final class TestExchangeInfoParsers {
 
   @TestFactory
   Stream<DynamicTest> testStringFieldParsers() {
-    final var bench = new BenchStyles();
+    final var bench = new BenchStringFieldStyles();
     return Set.of("StaticFieldOrdering", "IocLoopCompareStringFieldToCharsIf", "LoopStringSwitch", "LoopStringIf")
         .parallelStream()
         .map(filter -> JsonIterParserFactory.loadParser(ExchangeInfo.class, filter))
@@ -33,7 +33,7 @@ final class TestExchangeInfoParsers {
 
   @TestFactory
   Stream<DynamicTest> testCharFieldParsers() {
-    final var bench = new BenchCharFieldsStyles();
+    final var bench = new BenchCharFieldStyles();
     return Set.of("StaticFieldOrdering", "IocLoopCharSwitch", "IocLoopCharIf")
         .parallelStream()
         .map(filter -> JsonIterParserFactory.loadParser(ExchangeInfo.class, filter))
@@ -76,18 +76,22 @@ final class TestExchangeInfoParsers {
     assertTrue(symbol.isIcebergAllowed());
     assertEquals(10, symbol.getIcebergPartsLimit());
     assertEquals(5, symbol.getMaxNumAlgoOrders());
+
     var priceFilter = symbol.getPriceFilter();
     assertEquals(new BigDecimal("0.00000000"), priceFilter.getMinPrice());
     assertEquals(new BigDecimal("0.00000000"), priceFilter.getMaxPrice());
     assertEquals(new BigDecimal("0.00000100"), priceFilter.getTickSize());
+
     var percentPriceFilter = symbol.getPercentPriceFilter();
     assertEquals(new BigDecimal("10"), percentPriceFilter.getMultiplierUp());
     assertEquals(new BigDecimal("0.1"), percentPriceFilter.getMultiplierDown());
     assertEquals(5, percentPriceFilter.getAvgPriceMins());
+
     var lotSizeFilter = symbol.getLotSizeFilter();
     assertEquals(new BigDecimal("0.00100000"), lotSizeFilter.getMinQty());
     assertEquals(new BigDecimal("100000.00000000"), lotSizeFilter.getMaxQty());
     assertEquals(new BigDecimal("0.00100000"), lotSizeFilter.getStepSize());
+
     var minNotionalFilter = symbol.getMinNotionalFilter();
     assertEquals(new BigDecimal("0.00100000"), minNotionalFilter.getMinNotional());
     assertTrue(minNotionalFilter.applyToMarket());
@@ -104,18 +108,22 @@ final class TestExchangeInfoParsers {
     assertTrue(symbol.isIcebergAllowed());
     assertEquals(10, symbol.getIcebergPartsLimit());
     assertEquals(5, symbol.getMaxNumAlgoOrders());
+
     priceFilter = symbol.getPriceFilter();
     assertEquals(new BigDecimal("0.00001000"), priceFilter.getMinPrice());
     assertEquals(new BigDecimal("10000.00000000"), priceFilter.getMaxPrice());
     assertEquals(new BigDecimal("0.00001000"), priceFilter.getTickSize());
+
     percentPriceFilter = symbol.getPercentPriceFilter();
     assertEquals(new BigDecimal("10"), percentPriceFilter.getMultiplierUp());
     assertEquals(new BigDecimal("0.1"), percentPriceFilter.getMultiplierDown());
     assertEquals(5, percentPriceFilter.getAvgPriceMins());
+
     lotSizeFilter = symbol.getLotSizeFilter();
     assertEquals(new BigDecimal("0.10000000"), lotSizeFilter.getMinQty());
     assertEquals(new BigDecimal("90000000.00000000"), lotSizeFilter.getMaxQty());
     assertEquals(new BigDecimal("0.10000000"), lotSizeFilter.getStepSize());
+
     minNotionalFilter = symbol.getMinNotionalFilter();
     assertEquals(new BigDecimal("1.00000000"), minNotionalFilter.getMinNotional());
     assertTrue(minNotionalFilter.applyToMarket());

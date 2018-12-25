@@ -11,21 +11,21 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.concurrent.TimeUnit;
 
-import static systems.comodal.jsoniter.jmh.styles.BenchStyles.JSON_ITERATOR_POOL;
-import static systems.comodal.jsoniter.jmh.styles.BenchStyles.createJsonIterator;
+import static systems.comodal.jsoniter.jmh.styles.BenchStringFieldStyles.JSON_ITERATOR_POOL;
+import static systems.comodal.jsoniter.jmh.styles.BenchStringFieldStyles.createJsonIterator;
 
 @State(Scope.Benchmark)
 @Warmup(iterations = 4, time = 6)
 @Measurement(iterations = 5, time = 7)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-public class BenchCharFieldsStyles {
+public class BenchCharFieldStyles {
 
   private static final byte[] BENCH_LARGE_COMPACT_FIELDS_JSON;
 
   static {
     try {
-      BENCH_LARGE_COMPACT_FIELDS_JSON = new String(BenchStyles.class.getResourceAsStream("/compactFieldsExchangeInfo.json").readAllBytes())
+      BENCH_LARGE_COMPACT_FIELDS_JSON = new String(BenchStringFieldStyles.class.getResourceAsStream("/compactFieldsExchangeInfo.json").readAllBytes())
           .replaceAll("\\s+", "").getBytes();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
