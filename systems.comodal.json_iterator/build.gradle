@@ -24,8 +24,7 @@ ext {
   bintrayRepo = 'libraries'
   vcsUrl = 'https://github.com/comodal/json-iterator'
   moduleName = 'systems.comodal.json_iterator'
-  bench = 'BenchCharFieldStyles'
-  jmhResultsFile = 'tmp.results.json'
+  bench = project.properties['bench'] ?: 'BenchCharFieldStyles'
 }
 
 repositories {
@@ -46,12 +45,20 @@ dependencies {
 }
 
 jmh {
+  if(project.properties['bench.graal'] == 'true') {
+    jvmArgsPrepend = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
+    resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/graal_results.json")
+  } else {
+    resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/results.json")
+  }
+  warmupIterations = 4
+  warmup = '5s'
+  iterations = 5
+  timeOnIteration = '7s'
+  fork = 1
   include = [project.bench]
   jmhVersion = '+'
-//  jvmArgsPrepend = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
-  fork = 1
   resultFormat = 'JSON'
-  resultsFile = project.parent.file("benchmark-results/$bench/$jmhResultsFile")
   includeTests = false
 }
 
