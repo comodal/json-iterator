@@ -56,8 +56,6 @@ public interface JsonIterator extends Closeable {
 
   JsonIterator skip() throws IOException;
 
-  Object read() throws IOException;
-
   boolean readNull() throws IOException;
 
   boolean readBoolean() throws IOException;

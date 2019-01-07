@@ -3,7 +3,6 @@ package systems.comodal.jsoniter;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.Map;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -25,12 +24,6 @@ final class TestObject {
     assertEquals("field1", iter.readObject());
     assertEquals("hello", iter.readString());
     assertNull(iter.readObject());
-
-    iter = JsonIterator.parse("{ \"field1\"\n" +
-        ":\n" +
-        "\t\"hello\" }");
-    assertEquals("hello", ((Map) iter.read()).get("field1"));
-
 
     iter = JsonIterator.parse("{ \"field1\"\n" +
         ":\n" +

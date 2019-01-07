@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Arrays;
 
 import static systems.comodal.jsoniter.ValueType.*;
 
@@ -285,25 +285,6 @@ class BytesJsonIterator implements JsonIterator {
     return new NumberChars(reusableChars, j, dotFound);
   }
 
-  private void readArrayCB(final List<Object> attachment) throws IOException {
-    byte c = nextToken();
-    if (c == '[') {
-      c = nextToken();
-      if (c != ']') {
-        unreadByte();
-        do {
-          attachment.add(read());
-        } while (nextToken() == ',');
-        return;
-      }
-      return;
-    }
-    if (c == 'n') {
-      return;
-    }
-    throw reportError("readArrayCB", "expect [ or n, but found: " + (char) c);
-  }
-
   private static final CharBufferFunction<String> READ_STRING_FUNCTION = (count, _reusableChars) -> new String(_reusableChars, 0, count);
 
   @Override
@@ -530,38 +511,6 @@ class BytesJsonIterator implements JsonIterator {
     }
   }
 
-  private void readObjectCB(final Map<String, Object> attachment) throws IOException {
-    byte c = nextToken();
-    if ('{' == c) {
-      c = nextToken();
-      if ('"' == c) {
-        unreadByte();
-        var field = readString();
-        if (nextToken() != ':') {
-          throw reportError("readObject", "expect :");
-        }
-        attachment.put(field, read());
-        while (nextToken() == ',') {
-          field = readString();
-          if (nextToken() != ':') {
-            throw reportError("readObject", "expect :");
-          }
-          attachment.put(field, read());
-        }
-        return;
-      }
-      if ('}' == c) {
-        return;
-      }
-      throw reportError("readObjectCB", "expect \" after {");
-    }
-    if ('n' == c) {
-      skipFixedBytes(3);
-      return;
-    }
-    throw reportError("readObjectCB", "expect { or n");
-  }
-
   @Override
   public final float readFloat() throws IOException {
     return (float) readDouble();
@@ -640,48 +589,6 @@ class BytesJsonIterator implements JsonIterator {
       return null;
     }
     throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
-  }
-
-  @Override
-  public final Object read() throws IOException {
-    try {
-      final var valueType = whatIsNext();
-      switch (valueType) {
-        case STRING:
-          return readString();
-        case NUMBER:
-          final var numberChars = readNumber();
-          final var doubleNumber = Double.parseDouble(new String(numberChars.chars, 0, numberChars.charsLength));
-          if (numberChars.dotFound) {
-            return doubleNumber;
-          }
-          if (doubleNumber == Math.floor(doubleNumber) && !Double.isInfinite(doubleNumber)) {
-            final long longNumber = (long) doubleNumber;
-            if (longNumber <= Integer.MAX_VALUE && longNumber >= Integer.MIN_VALUE) {
-              return (int) longNumber;
-            }
-            return longNumber;
-          }
-          return doubleNumber;
-        case NULL:
-          skipFixedBytes(4);
-          return null;
-        case BOOLEAN:
-          return readBoolean();
-        case ARRAY:
-          final var list = new ArrayList<>(4);
-          readArrayCB(list);
-          return list;
-        case OBJECT:
-          final var map = new HashMap<String, Object>(4);
-          readObjectCB(map);
-          return map;
-        default:
-          throw reportError("read", "unexpected value type: " + valueType);
-      }
-    } catch (final ArrayIndexOutOfBoundsException e) {
-      throw reportError("read", "premature end");
-    }
   }
 
   @Override
