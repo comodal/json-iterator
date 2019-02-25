@@ -203,7 +203,7 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
-  JsonIterator skipArray() throws IOException {
+  void skipArray() throws IOException {
     int level = 1;
     do {
       for (int i = head; i < tail; i++) {
@@ -221,17 +221,16 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
             // If we have returned to the original level, we're done
             if (level == 0) {
               head = i + 1;
-              return this;
+              return;
             }
             break;
         }
       }
     } while (loadMore());
-    return this;
   }
 
   @Override
-  JsonIterator skipObject() throws IOException {
+  void skipObject() throws IOException {
     int level = 1;
     do {
       for (int i = head; i < tail; i++) {
@@ -249,17 +248,16 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
             // If we have returned to the original level, we're done
             if (level == 0) {
               head = i + 1;
-              return this;
+              return;
             }
             break;
         }
       }
     } while (loadMore());
-    return this;
   }
 
   @Override
-  JsonIterator skipString() throws IOException {
+  void skipString() throws IOException {
     for (; ; ) {
       int end = findStringEnd();
       if (end == -1) {
@@ -291,13 +289,13 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
         }
       } else {
         head = end;
-        return this;
+        return;
       }
     }
   }
 
   @Override
-  JsonIterator skipUntilBreak() throws IOException {
+  void skipUntilBreak() throws IOException {
     do {
       for (int i = head; i < tail; i++) {
         switch (buf[i]) {
@@ -309,12 +307,11 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
           case '}':
           case ']':
             head = i;
-            return this;
+            return;
         }
       }
     } while (loadMore());
     head = tail;
-    return this;
   }
 
   @Override
@@ -349,20 +346,19 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
-  JsonIterator skipFixedBytes(final int n) throws IOException {
+  void skipFixedBytes(final int n) throws IOException {
     head += n;
     if (head >= tail) {
       final int more = head - tail;
       if (!loadMore()) {
         if (more == 0) {
           head = tail;
-          return this;
+          return;
         }
         throw reportError("skipFixedBytes", "unexpected end");
       }
       head += more;
     }
-    return this;
   }
 
   @Override

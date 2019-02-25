@@ -645,7 +645,7 @@ class BytesJsonIterator implements JsonIterator {
 //    } ;
   }
 
-  JsonIterator skipArray() throws IOException {
+  void skipArray() throws IOException {
     int level = 1;
     for (int i = head; i < tail; i++) {
       switch (buf[i]) {
@@ -662,7 +662,7 @@ class BytesJsonIterator implements JsonIterator {
           // If we have returned to the original level, we're done
           if (level == 0) {
             head = i + 1;
-            return this;
+            return;
           }
           break;
       }
@@ -670,7 +670,7 @@ class BytesJsonIterator implements JsonIterator {
     throw reportError("skipArray", "incomplete array");
   }
 
-  JsonIterator skipObject() throws IOException {
+  void skipObject() throws IOException {
     for (int i = head, level = 1; i < tail; i++) {
       switch (buf[i]) {
         case '"': // If inside string, skip it
@@ -686,7 +686,7 @@ class BytesJsonIterator implements JsonIterator {
           // If we have returned to the original level, we're done
           if (level == 0) {
             head = i + 1;
-            return this;
+            return;
           }
           break;
       }
@@ -694,13 +694,12 @@ class BytesJsonIterator implements JsonIterator {
     throw reportError("skipObject", "incomplete object");
   }
 
-  JsonIterator skipString() throws IOException {
+  void skipString() throws IOException {
     final int end = findStringEnd();
     if (end == -1) {
       throw reportError("skipString", "incomplete string");
     }
     head = end;
-    return this;
   }
 
   // adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
@@ -735,7 +734,7 @@ class BytesJsonIterator implements JsonIterator {
     return -1;
   }
 
-  JsonIterator skipUntilBreak() throws IOException {
+  void skipUntilBreak() throws IOException {
     for (int i = head; i < tail; i++) {
       switch (buf[i]) {
         case ' ':
@@ -746,11 +745,10 @@ class BytesJsonIterator implements JsonIterator {
         case '}':
         case ']':
           head = i;
-          return this;
+          return;
       }
     }
     head = tail;
-    return this;
   }
 
   byte nextToken() throws IOException {
@@ -774,9 +772,8 @@ class BytesJsonIterator implements JsonIterator {
     return buf[head++];
   }
 
-  JsonIterator skipFixedBytes(final int n) throws IOException {
+  void skipFixedBytes(final int n) throws IOException {
     head += n;
-    return this;
   }
 
   int readStringSlowPath(int j) throws IOException {
