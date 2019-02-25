@@ -519,7 +519,7 @@ class BytesJsonIterator implements JsonIterator {
   private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, chars) -> new BigDecimal(chars, 0, count);
   private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (count, chars) -> {
     if (count == 1) {
-      return chars[count] == '0'
+      return chars[0] == '0'
           ? BigDecimal.ZERO
           : new BigDecimal(chars, 0, count);
     }
