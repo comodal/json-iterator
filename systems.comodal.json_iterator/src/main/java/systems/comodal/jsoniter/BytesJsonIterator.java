@@ -300,7 +300,7 @@ class BytesJsonIterator implements JsonIterator {
         skipFixedBytes(3);
         return null;
       }
-      throw reportError("readString", "expect string or null, but " + (char) c);
+      throw reportError("readChars", "expect string or null, but " + (char) c);
     }
     final int count = parse();
     return applyChars.apply(count, reusableChars);
@@ -314,10 +314,53 @@ class BytesJsonIterator implements JsonIterator {
         skipFixedBytes(3);
         return false;
       }
-      throw reportError("readString", "expect string or null, but " + (char) c);
+      throw reportError("testChars", "expect string or null, but " + (char) c);
     }
     final int count = parse();
     return testChars.apply(count, reusableChars);
+  }
+
+  private boolean testField(final CharBufferPredicate testField) throws IOException {
+    final byte c = nextToken();
+    if (c != '"') {
+      throw reportError("testField", "expected field string, but " + (char) c);
+    }
+    final int count = parse();
+    return testField.apply(count, reusableChars);
+  }
+
+  @Override
+  public final boolean testObjField(final CharBufferPredicate testField) throws IOException {
+    byte c = nextToken();
+    switch (c) {
+      case 'n':
+        skipFixedBytes(3);
+        return false;
+      case '{':
+        c = nextToken();
+        if (c == '"') {
+          unreadByte();
+          final boolean result = testField(testField);
+          if ((c = nextToken()) != ':') {
+            throw reportError("readObject", "expect , but " + ((char) c));
+          }
+          return result;
+        }
+        if (c == '}') {
+          return false; // end of object
+        }
+        throw reportError("readObject", "expect \" after {");
+      case ',':
+        final boolean result = testField(testField);
+        if ((c = nextToken()) != ':') {
+          throw reportError("readObject", "expect , but " + ((char) c));
+        }
+        return result;
+      case '}':
+        return false; // end of object
+      default:
+        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+    }
   }
 
   private int parse() throws IOException {
@@ -351,6 +394,14 @@ class BytesJsonIterator implements JsonIterator {
     return bound;
   }
 
+  private String readField() throws IOException {
+    final byte c = nextToken();
+    if (c != '"') {
+      throw reportError("readField", "expected field string, but " + (char) c);
+    }
+    return new String(reusableChars, 0, parse());
+  }
+
   @Override
   public final String readObjField() throws IOException {
     byte c = nextToken();
@@ -362,7 +413,7 @@ class BytesJsonIterator implements JsonIterator {
         c = nextToken();
         if (c == '"') {
           unreadByte();
-          final var field = readString();
+          final var field = readField();
           if ((c = nextToken()) != ':') {
             throw reportError("readObject", "expect , but " + ((char) c));
           }
@@ -373,7 +424,7 @@ class BytesJsonIterator implements JsonIterator {
         }
         throw reportError("readObject", "expect \" after {");
       case ',':
-        final var field = readString();
+        final var field = readField();
         if ((c = nextToken()) != ':') {
           throw reportError("readObject", "expect , but " + ((char) c));
         }

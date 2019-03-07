@@ -96,6 +96,8 @@ public interface JsonIterator extends Closeable {
 
   String readObjField() throws IOException;
 
+  boolean testObjField(final CharBufferPredicate testField) throws IOException;
+
   JsonIterator skipObjField() throws IOException;
 
   JsonIterator closeObj() throws IOException;
