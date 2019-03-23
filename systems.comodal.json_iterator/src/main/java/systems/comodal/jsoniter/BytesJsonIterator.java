@@ -376,6 +376,49 @@ class BytesJsonIterator implements JsonIterator {
     testChars.accept(context, count, reusableChars);
   }
 
+  @Override
+  public JsonIterator skipUntil(final String field) throws IOException {
+    for (byte c = nextToken(); ; c = nextToken()) {
+      switch (c) {
+        case '{':
+          c = nextToken();
+          if (c == '"') {
+            final int count = parse();
+            if ((c = nextToken()) != ':') {
+              throw reportError("readObject", "expect :, but " + ((char) c));
+            }
+            if (JsonIterator.fieldEquals(field, reusableChars, count)) {
+              return this;
+            }
+            skip();
+            continue;
+          }
+          if (c == '}') { // end of object
+            return null;
+          }
+          throw reportError("readObject", "expect \" after {");
+        case ',':
+          c = nextToken();
+          if (c != '"') {
+            throw reportError("readObject", "expect string field, but " + (char) c);
+          }
+          final int count = parse();
+          if ((c = nextToken()) != ':') {
+            throw reportError("readObject", "expect :, but " + ((char) c));
+          }
+          if (JsonIterator.fieldEquals(field, reusableChars, count)) {
+            return this;
+          }
+          skip();
+          continue;
+        case '}': // end of object
+          return null;
+        default:
+          throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+      }
+    }
+  }
+
   private boolean testField(final CharBufferPredicate testField) throws IOException {
     final byte c = nextToken();
     if (c != '"') {

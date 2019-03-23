@@ -56,6 +56,15 @@ final class TestObject {
     assertEquals("field2", iter.readObject());
     assertEquals("world", iter.readString());
     assertNull(iter.readObject());
+
+    iter.reset(0);
+    assertEquals("world", iter.skipUntil("field2").readString());
+  }
+
+  @Test
+  void test_skip_until() throws IOException {
+    var iter = JsonIterator.parse("{ \"field1\" : \"hello\" , \"field2\": {\"nested1\" : \"blah\", \"nested2\": \"world\"} }");
+    assertEquals("world", iter.skipUntil("field2").skipUntil("nested2").readString());
   }
 
   @Test

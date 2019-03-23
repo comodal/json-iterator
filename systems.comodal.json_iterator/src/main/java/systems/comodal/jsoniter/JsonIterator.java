@@ -111,6 +111,8 @@ public interface JsonIterator extends Closeable {
 
   <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException;
 
+  JsonIterator skipUntil(final String field) throws IOException;
+
   default String readObject() throws IOException {
     return readObjField();
   }
