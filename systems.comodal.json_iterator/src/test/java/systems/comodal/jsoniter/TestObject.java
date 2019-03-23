@@ -28,11 +28,11 @@ final class TestObject {
     iter = JsonIterator.parse("{ \"field1\"\n" +
         ":\n" +
         "\t\"hello\" }");
-    assertNull(iter.applyObjField(TRUE, ((context, len, buf, jsonIterator) -> {
+    assertNull(iter.applyObject(TRUE, ((context, len, buf, jsonIterator) -> {
       assertEquals(TRUE, context);
       assertEquals("field1", new String(buf, 0, len));
       assertEquals("hello", jsonIterator.readString());
-      return jsonIterator.applyObjField(FALSE, (_context, _len, _buf, _jsonIterator) -> {
+      return jsonIterator.applyObject(FALSE, (_context, _len, _buf, _jsonIterator) -> {
         assertEquals(FALSE, _context);
         assertEquals(-1, _len);
         assertNull(_buf);

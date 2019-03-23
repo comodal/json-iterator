@@ -17,7 +17,7 @@ final class TestNull {
     assertNull(iter.readString());
 
     iter = JsonIterator.parse("{\"field\":null}");
-    assertNull(iter.applyObjField(TRUE, ((context, len, buf, jsonIterator) -> {
+    assertNull(iter.applyObject(TRUE, ((context, len, buf, jsonIterator) -> {
       assertEquals("field", new String(buf, 0, len));
       assertEquals(TRUE, context);
       return jsonIterator.readString();

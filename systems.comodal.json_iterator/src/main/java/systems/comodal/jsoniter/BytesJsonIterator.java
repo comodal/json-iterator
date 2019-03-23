@@ -289,21 +289,35 @@ class BytesJsonIterator implements JsonIterator {
 
   @Override
   public final String readString() throws IOException {
-    return readChars(READ_STRING_FUNCTION);
+    return applyChars(READ_STRING_FUNCTION);
   }
 
   @Override
-  public final <T> T readChars(final CharBufferFunction<T> applyChars) throws IOException {
+  public final <R> R applyChars(final CharBufferFunction<R> applyChars) throws IOException {
     final byte c = nextToken();
     if (c != '"') {
       if (c == 'n') {
         skipFixedBytes(3);
         return null;
       }
-      throw reportError("readChars", "expect string or null, but " + (char) c);
+      throw reportError("applyChars", "expect string or null, but " + (char) c);
     }
     final int count = parse();
     return applyChars.apply(count, reusableChars);
+  }
+
+  @Override
+  public <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException {
+    final byte c = nextToken();
+    if (c != '"') {
+      if (c == 'n') {
+        skipFixedBytes(3);
+        return null;
+      }
+      throw reportError("applyChars", "expect string or null, but " + (char) c);
+    }
+    final int count = parse();
+    return applyChars.apply(context, count, reusableChars);
   }
 
   @Override
@@ -318,6 +332,48 @@ class BytesJsonIterator implements JsonIterator {
     }
     final int count = parse();
     return testChars.apply(count, reusableChars);
+  }
+
+  @Override
+  public <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException {
+    final byte c = nextToken();
+    if (c != '"') {
+      if (c == 'n') {
+        skipFixedBytes(3);
+        return false;
+      }
+      throw reportError("testChars", "expect string or null, but " + (char) c);
+    }
+    final int count = parse();
+    return testChars.apply(context, count, reusableChars);
+  }
+
+  @Override
+  public void consumeChars(final CharBufferConsumer testChars) throws IOException {
+    final byte c = nextToken();
+    if (c != '"') {
+      if (c == 'n') {
+        skipFixedBytes(3);
+        return;
+      }
+      throw reportError("testChars", "expect string or null, but " + (char) c);
+    }
+    final int count = parse();
+    testChars.accept(count, reusableChars);
+  }
+
+  @Override
+  public <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException {
+    final byte c = nextToken();
+    if (c != '"') {
+      if (c == 'n') {
+        skipFixedBytes(3);
+        return;
+      }
+      throw reportError("testChars", "expect string or null, but " + (char) c);
+    }
+    final int count = parse();
+    testChars.accept(context, count, reusableChars);
   }
 
   private boolean testField(final CharBufferPredicate testField) throws IOException {
@@ -482,7 +538,51 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final <C> C consumeObject(final C context, final FieldBufferPredicate<C> fieldBufferFunction) throws IOException {
+  public final void testObject(final FieldBufferPredicate fieldBufferFunction) throws IOException {
+    for (byte c = nextToken(); ; c = nextToken()) {
+      switch (c) {
+        case 'n':
+          skipFixedBytes(3);
+          return;
+        case '{':
+          c = nextToken();
+          if (c == '"') {
+            final int count = parse();
+            if ((c = nextToken()) != ':') {
+              throw reportError("readObject", "expect :, but " + ((char) c));
+            }
+            if (fieldBufferFunction.test(count, reusableChars, this)) {
+              continue;
+            }
+            return;
+          }
+          if (c == '}') { // end of object
+            return;
+          }
+          throw reportError("readObject", "expect \" after {");
+        case ',':
+          c = nextToken();
+          if (c != '"') {
+            throw reportError("readObject", "expect string field, but " + (char) c);
+          }
+          final int count = parse();
+          if ((c = nextToken()) != ':') {
+            throw reportError("readObject", "expect :, but " + ((char) c));
+          }
+          if (fieldBufferFunction.test(count, reusableChars, this)) {
+            continue;
+          }
+          return;
+        case '}': // end of object
+          return;
+        default:
+          throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+      }
+    }
+  }
+
+  @Override
+  public final <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction) throws IOException {
     for (byte c = nextToken(); ; c = nextToken()) {
       switch (c) {
         case 'n':
@@ -495,7 +595,7 @@ class BytesJsonIterator implements JsonIterator {
             if ((c = nextToken()) != ':') {
               throw reportError("readObject", "expect :, but " + ((char) c));
             }
-            if (fieldBufferFunction.apply(context, count, reusableChars, this)) {
+            if (fieldBufferFunction.test(context, count, reusableChars, this)) {
               continue;
             }
             return context;
@@ -513,7 +613,7 @@ class BytesJsonIterator implements JsonIterator {
           if ((c = nextToken()) != ':') {
             throw reportError("readObject", "expect :, but " + ((char) c));
           }
-          if (fieldBufferFunction.apply(context, count, reusableChars, this)) {
+          if (fieldBufferFunction.test(context, count, reusableChars, this)) {
             continue;
           }
           return context;
@@ -526,7 +626,44 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final <R, C> R applyObjField(final C context, final FieldBufferFunction<C, R> fieldBufferFunction) throws IOException {
+  public final <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction) throws IOException {
+    byte c = nextToken();
+    switch (c) {
+      case 'n':
+        skipFixedBytes(3);
+        return null;
+      case '{':
+        c = nextToken();
+        if (c == '"') {
+          final int count = parse();
+          if ((c = nextToken()) != ':') {
+            throw reportError("readObject", "expect :, but " + ((char) c));
+          }
+          return fieldBufferFunction.apply(count, reusableChars, this);
+        }
+        if (c == '}') { // end of object
+          return null;
+        }
+        throw reportError("readObject", "expect \" after {");
+      case ',':
+        c = nextToken();
+        if (c != '"') {
+          throw reportError("readObject", "expect string field, but " + (char) c);
+        }
+        final int count = parse();
+        if ((c = nextToken()) != ':') {
+          throw reportError("readObject", "expect :, but " + ((char) c));
+        }
+        return fieldBufferFunction.apply(count, reusableChars, this);
+      case '}': // end of object
+        return null;
+      default:
+        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+    }
+  }
+
+  @Override
+  public final <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction) throws IOException {
     byte c = nextToken();
     switch (c) {
       case 'n':
@@ -610,7 +747,7 @@ class BytesJsonIterator implements JsonIterator {
     // skip whitespace by read next
     final var valueType = whatIsNext();
     if (valueType == STRING) {
-      return readChars(parseChars);
+      return applyChars(parseChars);
     }
     if (valueType == NUMBER) {
       final var numberChars = readNumber();
@@ -633,7 +770,7 @@ class BytesJsonIterator implements JsonIterator {
       return new BigInteger(readNumberAsString());
     }
     if (valueType == STRING) {
-      return readChars(READ_BIG_INTEGER_FUNCTION);
+      return applyChars(READ_BIG_INTEGER_FUNCTION);
     }
     if (valueType == NULL) {
       skip();

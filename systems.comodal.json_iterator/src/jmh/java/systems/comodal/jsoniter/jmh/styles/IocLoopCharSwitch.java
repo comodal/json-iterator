@@ -1,6 +1,6 @@
 package systems.comodal.jsoniter.jmh.styles;
 
-import systems.comodal.jsoniter.FieldBufferPredicate;
+import systems.comodal.jsoniter.ContextFieldBufferPredicate;
 import systems.comodal.jsoniter.JsonIterator;
 import systems.comodal.jsoniter.factory.JsonIterParser;
 import systems.comodal.jsoniter.jmh.data.exchange.ExchangeInfo;
@@ -21,10 +21,10 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
   }
 
   static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
-    return ji.consumeObject(ExchangeInfo.build(), EXCHANGE_INFO_CHAR_FIELD_PARSER).create();
+    return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_CHAR_FIELD_PARSER).create();
   }
 
-  private static final FieldBufferPredicate<Filter.Builder> FILTER_CHAR_FIELD_PARSER = (filter, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<Filter.Builder> FILTER_CHAR_FIELD_PARSER = (filter, len, buf, ji) -> {
     switch (buf[0]) {
       case 'f':
         filter.type(ji.readString());
@@ -73,7 +73,7 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
     }
   };
 
-  private static final FieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_CHAR_FIELD_PARSER = (symbol, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_CHAR_FIELD_PARSER = (symbol, len, buf, ji) -> {
     switch (buf[0]) {
       case 'p':
         symbol.symbol(ji.readString());
@@ -103,7 +103,7 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
         return true;
       case 'f':
         while (ji.readArray()) {
-          symbol.filter(ji.consumeObject(Filter.build(), FILTER_CHAR_FIELD_PARSER));
+          symbol.filter(ji.testObject(Filter.build(), FILTER_CHAR_FIELD_PARSER));
         }
         return true;
       default:
@@ -111,7 +111,7 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
     }
   };
 
-  private static final FieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_CHAR_FIELD_PARSER = (rateLimit, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_CHAR_FIELD_PARSER = (rateLimit, len, buf, ji) -> {
     switch (buf[0]) {
       case 't':
         rateLimit.type(ji.readString());
@@ -130,7 +130,7 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
     }
   };
 
-  private static final FieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_CHAR_FIELD_PARSER = (info, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_CHAR_FIELD_PARSER = (info, len, buf, ji) -> {
     switch (buf[0]) {
       case 't':
         info.timezone(ji.readString());
@@ -140,7 +140,7 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
         return true;
       case 'r':
         while (ji.readArray()) {
-          info.rateLimit(ji.consumeObject(RateLimit.build(), RATE_LIMIT_CHAR_FIELD_PARSER).create());
+          info.rateLimit(ji.testObject(RateLimit.build(), RATE_LIMIT_CHAR_FIELD_PARSER).create());
         }
         return true;
       case 'e':
@@ -150,7 +150,7 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
         return true;
       case 'p':
         while (ji.readArray()) {
-          info.productSymbol(ji.consumeObject(ProductSymbol.build(), PRODUCT_SYMBOL_CHAR_FIELD_PARSER).create());
+          info.productSymbol(ji.testObject(ProductSymbol.build(), PRODUCT_SYMBOL_CHAR_FIELD_PARSER).create());
         }
         return true;
       default:

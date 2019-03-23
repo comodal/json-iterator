@@ -1,6 +1,6 @@
 package systems.comodal.jsoniter.jmh.styles;
 
-import systems.comodal.jsoniter.FieldBufferPredicate;
+import systems.comodal.jsoniter.ContextFieldBufferPredicate;
 import systems.comodal.jsoniter.JsonIterator;
 import systems.comodal.jsoniter.factory.JsonIterParser;
 import systems.comodal.jsoniter.jmh.data.exchange.ExchangeInfo;
@@ -23,10 +23,10 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
   }
 
   static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
-    return ji.consumeObject(ExchangeInfo.build(), EXCHANGE_INFO_IF_PARSER).create();
+    return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_IF_PARSER).create();
   }
 
-  private static final FieldBufferPredicate<Filter.Builder> FILTER_IF_PARSER = (filter, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<Filter.Builder> FILTER_IF_PARSER = (filter, len, buf, ji) -> {
     if (fieldEquals("filterType", buf, len)) {
       filter.type(ji.readString());
       return true;
@@ -86,7 +86,7 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
     throw new IllegalStateException("Unhandled filter field " + new String(buf, 0, len));
   };
 
-  private static final FieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_IF_PARSER = (symbol, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_IF_PARSER = (symbol, len, buf, ji) -> {
     if (fieldEquals("symbol", buf, len)) {
       symbol.symbol(ji.readString());
       return true;
@@ -123,14 +123,14 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
     }
     if (fieldEquals("filters", buf, len)) {
       while (ji.readArray()) {
-        symbol.filter(ji.consumeObject(Filter.build(), FILTER_IF_PARSER));
+        symbol.filter(ji.testObject(Filter.build(), FILTER_IF_PARSER));
       }
       return true;
     }
     throw new IllegalStateException("Unhandled symbol field " + new String(buf, 0, len));
   };
 
-  private static final FieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_IF_PARSER = (rateLimit, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_IF_PARSER = (rateLimit, len, buf, ji) -> {
     if (fieldEquals("rateLimitType", buf, len)) {
       rateLimit.type(ji.readString());
       return true;
@@ -150,7 +150,7 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
     throw new IllegalStateException("Unhandled rate limit field " + new String(buf, 0, len));
   };
 
-  private static final FieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_IF_PARSER = (info, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_IF_PARSER = (info, len, buf, ji) -> {
     if (fieldEquals("timezone", buf, len)) {
       info.timezone(ji.readString());
       return true;
@@ -161,7 +161,7 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
     }
     if (fieldEquals("rateLimits", buf, len)) {
       while (ji.readArray()) {
-        info.rateLimit(ji.consumeObject(RateLimit.build(), RATE_LIMIT_IF_PARSER).create());
+        info.rateLimit(ji.testObject(RateLimit.build(), RATE_LIMIT_IF_PARSER).create());
       }
       return true;
     }
@@ -173,7 +173,7 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
     }
     if (fieldEquals("symbols", buf, len)) {
       while (ji.readArray()) {
-        info.productSymbol(ji.consumeObject(ProductSymbol.build(), PRODUCT_SYMBOL_IF_PARSER).create());
+        info.productSymbol(ji.testObject(ProductSymbol.build(), PRODUCT_SYMBOL_IF_PARSER).create());
       }
       return true;
     }

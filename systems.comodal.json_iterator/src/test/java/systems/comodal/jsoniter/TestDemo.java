@@ -42,7 +42,7 @@ final class TestDemo {
   @Test
   void test_iterator_apply() throws IOException {
     final var iter = JsonIterator.parse("{\"numbers\": [\"1\", \"2\", [\"3\", \"4\"]]}");
-    final var last = iter.applyObjField(TRUE, (context, len, buf, _iter) -> {
+    final var last = iter.applyObject(TRUE, (context, len, buf, _iter) -> {
       assertEquals(TRUE, context);
       assertEquals("numbers", new String(buf, 0, len));
       assertTrue(_iter.readArray());
@@ -67,7 +67,7 @@ final class TestDemo {
   @Test
   void test_iterator_consume() throws IOException {
     final var iter = JsonIterator.parse("{\"numbers\": [\"1\", \"2\", [\"3\", \"4\"]]}");
-    final var context = iter.consumeObject(TRUE, (_context, len, buf, _iter) -> {
+    final var context = iter.testObject(TRUE, (_context, len, buf, _iter) -> {
       assertEquals(TRUE, _context);
       assertEquals("numbers", new String(buf, 0, len));
       assertEquals("1", _iter.openArray().readString());

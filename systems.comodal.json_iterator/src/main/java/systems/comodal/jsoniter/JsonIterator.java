@@ -36,6 +36,19 @@ public interface JsonIterator extends Closeable {
     return true;
   }
 
+  static boolean regionMatches(final String str, final char[] buf, final int from, final int to) {
+    final int len = to - from;
+    if (str.length() != len) {
+      return false;
+    }
+    for (int i = 0, j = from; i < len; i++, j++) {
+      if (str.charAt(i) != buf[j]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   boolean supportsMarkReset();
 
   int mark();
@@ -82,13 +95,21 @@ public interface JsonIterator extends Closeable {
    * Construct an Object of your choice directly from the char[] representing the next String value.
    *
    * @param applyChars This array buffer is reused throughout the life of this iterator.
-   * @param <T>        Resulting Object Type.
+   * @param <R>        Resulting Object Type.
    * @return Object constructed from applyChars.
    * @throws IOException needed in case the underlying data is a stream.
    */
-  <T> T readChars(final CharBufferFunction<T> applyChars) throws IOException;
+  <R> R applyChars(final CharBufferFunction<R> applyChars) throws IOException;
+
+  <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException;
 
   boolean testChars(final CharBufferPredicate testChars) throws IOException;
+
+  <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException;
+
+  void consumeChars(final CharBufferConsumer testChars) throws IOException;
+
+  <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException;
 
   default String readObject() throws IOException {
     return readObjField();
@@ -102,9 +123,13 @@ public interface JsonIterator extends Closeable {
 
   JsonIterator closeObj() throws IOException;
 
-  <R, C> R applyObjField(final C context, final FieldBufferFunction<C, R> fieldBufferFunction) throws IOException;
+  <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction) throws IOException;
 
-  <C> C consumeObject(final C context, final FieldBufferPredicate<C> fieldBufferFunction) throws IOException;
+  <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction) throws IOException;
+
+  <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction) throws IOException;
+
+  void testObject(final FieldBufferPredicate fieldBufferFunction) throws IOException;
 
   float readFloat() throws IOException;
 

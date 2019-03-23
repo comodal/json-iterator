@@ -1,6 +1,6 @@
 package systems.comodal.jsoniter.jmh.styles;
 
-import systems.comodal.jsoniter.FieldBufferPredicate;
+import systems.comodal.jsoniter.ContextFieldBufferPredicate;
 import systems.comodal.jsoniter.JsonIterator;
 import systems.comodal.jsoniter.factory.JsonIterParser;
 import systems.comodal.jsoniter.jmh.data.exchange.ExchangeInfo;
@@ -21,10 +21,10 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
   }
 
   static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
-    return ji.consumeObject(ExchangeInfo.build(), EXCHANGE_INFO_CHAR_FIELD_PARSER).create();
+    return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_CHAR_FIELD_PARSER).create();
   }
 
-  private static final FieldBufferPredicate<Filter.Builder> FILTER_CHAR_FIELD_PARSER = (filter, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<Filter.Builder> FILTER_CHAR_FIELD_PARSER = (filter, len, buf, ji) -> {
     final char f = buf[0];
     if (f == 'f') {
       filter.type(ji.readString());
@@ -60,7 +60,7 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
     return true;
   };
 
-  private static final FieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_CHAR_FIELD_PARSER = (symbol, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_CHAR_FIELD_PARSER = (symbol, len, buf, ji) -> {
     final char f = buf[0];
     if (f == 'p') {
       symbol.symbol(ji.readString());
@@ -82,7 +82,7 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
       symbol.icebergAllowed(ji.readBoolean());
     } else if (f == 'f') {
       while (ji.readArray()) {
-        symbol.filter(ji.consumeObject(Filter.build(), FILTER_CHAR_FIELD_PARSER));
+        symbol.filter(ji.testObject(Filter.build(), FILTER_CHAR_FIELD_PARSER));
       }
     } else {
       throw new IllegalStateException("Unhandled symbol field " + f);
@@ -90,7 +90,7 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
     return true;
   };
 
-  private static final FieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_CHAR_FIELD_PARSER = (rateLimit, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_CHAR_FIELD_PARSER = (rateLimit, len, buf, ji) -> {
     final char f = buf[0];
     if (f == 't') {
       rateLimit.type(ji.readString());
@@ -106,7 +106,7 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
     return true;
   };
 
-  private static final FieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_CHAR_FIELD_PARSER = (info, len, buf, ji) -> {
+  private static final ContextFieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_CHAR_FIELD_PARSER = (info, len, buf, ji) -> {
     final char f = buf[0];
     if (f == 't') {
       info.timezone(ji.readString());
@@ -114,7 +114,7 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
       info.serverTime(ji.readLong());
     } else if (f == 'r') {
       while (ji.readArray()) {
-        info.rateLimit(ji.consumeObject(RateLimit.build(), RATE_LIMIT_CHAR_FIELD_PARSER).create());
+        info.rateLimit(ji.testObject(RateLimit.build(), RATE_LIMIT_CHAR_FIELD_PARSER).create());
       }
     } else if (f == 'e') {
       while (ji.readArray()) {
@@ -122,7 +122,7 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
       }
     } else if (f == 'p') {
       while (ji.readArray()) {
-        info.productSymbol(ji.consumeObject(ProductSymbol.build(), PRODUCT_SYMBOL_CHAR_FIELD_PARSER).create());
+        info.productSymbol(ji.testObject(ProductSymbol.build(), PRODUCT_SYMBOL_CHAR_FIELD_PARSER).create());
       }
     } else {
       throw new IllegalStateException("Unhandled field " + f);
