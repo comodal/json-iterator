@@ -295,89 +295,81 @@ class BytesJsonIterator implements JsonIterator {
   @Override
   public final <R> R applyChars(final CharBufferFunction<R> applyChars) throws IOException {
     final byte c = nextToken();
-    if (c != '"') {
-      if (c == 'n') {
-        skipFixedBytes(3);
-        return null;
-      }
-      throw reportError("applyChars", "expect string or null, but " + (char) c);
+    if (c == '"') {
+      return applyChars.apply(parse(), reusableChars);
     }
-    final int count = parse();
-    return applyChars.apply(count, reusableChars);
+    if (c == 'n') {
+      skipFixedBytes(3);
+      return null;
+    }
+    throw reportError("applyChars", "expect string or null, but " + (char) c);
   }
 
   @Override
-  public <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException {
+  public final <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException {
     final byte c = nextToken();
-    if (c != '"') {
-      if (c == 'n') {
-        skipFixedBytes(3);
-        return null;
-      }
-      throw reportError("applyChars", "expect string or null, but " + (char) c);
+    if (c == '"') {
+      return applyChars.apply(context, parse(), reusableChars);
     }
-    final int count = parse();
-    return applyChars.apply(context, count, reusableChars);
+    if (c == 'n') {
+      skipFixedBytes(3);
+      return null;
+    }
+    throw reportError("applyChars", "expect string or null, but " + (char) c);
   }
 
   @Override
   public final boolean testChars(final CharBufferPredicate testChars) throws IOException {
     final byte c = nextToken();
-    if (c != '"') {
-      if (c == 'n') {
-        skipFixedBytes(3);
-        return false;
-      }
-      throw reportError("testChars", "expect string or null, but " + (char) c);
+    if (c == '"') {
+      return testChars.apply(parse(), reusableChars);
     }
-    final int count = parse();
-    return testChars.apply(count, reusableChars);
+    if (c == 'n') {
+      skipFixedBytes(3);
+      return false;
+    }
+    throw reportError("testChars", "expect string or null, but " + (char) c);
   }
 
   @Override
-  public <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException {
+  public final <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException {
     final byte c = nextToken();
-    if (c != '"') {
-      if (c == 'n') {
-        skipFixedBytes(3);
-        return false;
-      }
-      throw reportError("testChars", "expect string or null, but " + (char) c);
+    if (c == '"') {
+      return testChars.apply(context, parse(), reusableChars);
     }
-    final int count = parse();
-    return testChars.apply(context, count, reusableChars);
+    if (c == 'n') {
+      skipFixedBytes(3);
+      return false;
+    }
+    throw reportError("testChars", "expect string or null, but " + (char) c);
   }
 
   @Override
-  public void consumeChars(final CharBufferConsumer testChars) throws IOException {
+  public final void consumeChars(final CharBufferConsumer testChars) throws IOException {
     final byte c = nextToken();
-    if (c != '"') {
-      if (c == 'n') {
-        skipFixedBytes(3);
-        return;
-      }
+    if (c == '"') {
+      testChars.accept(parse(), reusableChars);
+    } else if (c == 'n') {
+      skipFixedBytes(3);
+    } else {
       throw reportError("testChars", "expect string or null, but " + (char) c);
     }
-    final int count = parse();
-    testChars.accept(count, reusableChars);
   }
 
   @Override
-  public <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException {
+  public final <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException {
     final byte c = nextToken();
-    if (c != '"') {
-      if (c == 'n') {
-        skipFixedBytes(3);
-        return;
-      }
+    if (c == '"') {
+      testChars.accept(context, parse(), reusableChars);
+    } else if (c == 'n') {
+      skipFixedBytes(3);
+    } else {
       throw reportError("testChars", "expect string or null, but " + (char) c);
     }
-    final int count = parse();
-    testChars.accept(context, count, reusableChars);
   }
 
   @Override
-  public JsonIterator skipUntil(final String field) throws IOException {
+  public final JsonIterator skipUntil(final String field) throws IOException {
     for (byte c = nextToken(); ; c = nextToken()) {
       switch (c) {
         case '{':
@@ -424,8 +416,7 @@ class BytesJsonIterator implements JsonIterator {
     if (c != '"') {
       throw reportError("testField", "expected field string, but " + (char) c);
     }
-    final int count = parse();
-    return testField.apply(count, reusableChars);
+    return testField.apply(parse(), reusableChars);
   }
 
   @Override
@@ -441,7 +432,7 @@ class BytesJsonIterator implements JsonIterator {
           unreadByte();
           final boolean result = testField(testField);
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect , but " + ((char) c));
+            throw reportError("readObject", "expect :, but " + ((char) c));
           }
           return result;
         }
@@ -452,7 +443,7 @@ class BytesJsonIterator implements JsonIterator {
       case ',':
         final boolean result = testField(testField);
         if ((c = nextToken()) != ':') {
-          throw reportError("readObject", "expect , but " + ((char) c));
+          throw reportError("readObject", "expect :, but " + ((char) c));
         }
         return result;
       case '}':
@@ -481,10 +472,12 @@ class BytesJsonIterator implements JsonIterator {
       }
       reusableChars[j] = (char) c;
     }
-    int alreadyCopied = 0;
+    final int alreadyCopied;
     if (i > head) {
       alreadyCopied = i - head - 1;
       head = i - 1;
+    } else {
+      alreadyCopied = 0;
     }
     return readStringSlowPath(alreadyCopied);
   }
@@ -514,7 +507,7 @@ class BytesJsonIterator implements JsonIterator {
           unreadByte();
           final var field = readField();
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect , but " + ((char) c));
+            throw reportError("readObject", "expect :, but " + ((char) c));
           }
           return field;
         }
@@ -525,7 +518,7 @@ class BytesJsonIterator implements JsonIterator {
       case ',':
         final var field = readField();
         if ((c = nextToken()) != ':') {
-          throw reportError("readObject", "expect , but " + ((char) c));
+          throw reportError("readObject", "expect :, but " + ((char) c));
         }
         return field;
       case '}':
@@ -1039,22 +1032,16 @@ class BytesJsonIterator implements JsonIterator {
             case '\\':
               break;
             case 'u':
-              bc = (JHex.decode(buf[i++]) << 12) +
-                  (JHex.decode(buf[i++]) << 8) +
-                  (JHex.decode(buf[i++]) << 4) +
-                  JHex.decode(buf[i++]);
-              if (Character.isHighSurrogate((char) bc)) {
-                if (isExpectingLowSurrogate) {
-                  throw new JsonException("invalid surrogate");
-                }
-                isExpectingLowSurrogate = true;
-              } else if (Character.isLowSurrogate((char) bc)) {
-                if (isExpectingLowSurrogate) {
+              bc = (JHex.decode(buf[i++]) << 12) + (JHex.decode(buf[i++]) << 8) + (JHex.decode(buf[i++]) << 4) + JHex.decode(buf[i++]);
+              if (isExpectingLowSurrogate) {
+                if (Character.isLowSurrogate((char) bc)) {
                   isExpectingLowSurrogate = false;
                 } else {
                   throw new JsonException("invalid surrogate");
                 }
-              } else if (isExpectingLowSurrogate) {
+              } else if (Character.isHighSurrogate((char) bc)) {
+                isExpectingLowSurrogate = true;
+              } else if (Character.isLowSurrogate((char) bc)) {
                 throw new JsonException("invalid surrogate");
               }
               break;
@@ -1102,7 +1089,7 @@ class BytesJsonIterator implements JsonIterator {
         reusableChars[j++] = (char) bc;
       }
       throw reportError("readStringSlowPath", "incomplete string");
-    } catch (IndexOutOfBoundsException e) {
+    } catch (final IndexOutOfBoundsException e) {
       throw reportError("readString", "incomplete string");
     }
   }
