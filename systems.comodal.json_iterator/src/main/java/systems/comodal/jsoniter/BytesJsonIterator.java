@@ -793,7 +793,7 @@ class BytesJsonIterator implements JsonIterator {
       skip();
       return null;
     }
-    throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
+    throw reportError("readBigDecimal", "Must be a number or a string, found " + valueType);
   }
 
   private static final CharBufferFunction<BigInteger> READ_BIG_INTEGER_FUNCTION = (count, chars) -> new BigInteger(new String(chars, 0, count));
@@ -1090,7 +1090,7 @@ class BytesJsonIterator implements JsonIterator {
       }
       throw reportError("readStringSlowPath", "incomplete string");
     } catch (final IndexOutOfBoundsException e) {
-      throw reportError("readString", "incomplete string");
+      throw reportError("readStringSlowPath", "incomplete string");
     }
   }
 
