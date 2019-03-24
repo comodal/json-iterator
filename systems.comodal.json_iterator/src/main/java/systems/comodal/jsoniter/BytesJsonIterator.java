@@ -352,7 +352,7 @@ class BytesJsonIterator implements JsonIterator {
     } else if (c == 'n') {
       skipFixedBytes(3);
     } else {
-      throw reportError("testChars", "expect string or null, but " + (char) c);
+      throw reportError("consumeChars", "expect string or null, but " + (char) c);
     }
   }
 
@@ -364,7 +364,7 @@ class BytesJsonIterator implements JsonIterator {
     } else if (c == 'n') {
       skipFixedBytes(3);
     } else {
-      throw reportError("testChars", "expect string or null, but " + (char) c);
+      throw reportError("consumeChars", "expect string or null, but " + (char) c);
     }
   }
 
@@ -377,7 +377,7 @@ class BytesJsonIterator implements JsonIterator {
           if (c == '"') {
             final int count = parse();
             if ((c = nextToken()) != ':') {
-              throw reportError("readObject", "expect :, but " + ((char) c));
+              throw reportError("skipUntil", "expect :, but " + ((char) c));
             }
             if (JsonIterator.fieldEquals(field, reusableChars, count)) {
               return this;
@@ -388,15 +388,15 @@ class BytesJsonIterator implements JsonIterator {
           if (c == '}') { // end of object
             return null;
           }
-          throw reportError("readObject", "expect \" after {");
+          throw reportError("skipUntil", "expect \" after {");
         case ',':
           c = nextToken();
           if (c != '"') {
-            throw reportError("readObject", "expect string field, but " + (char) c);
+            throw reportError("skipUntil", "expect string field, but " + (char) c);
           }
           final int count = parse();
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect :, but " + ((char) c));
+            throw reportError("skipUntil", "expect :, but " + ((char) c));
           }
           if (JsonIterator.fieldEquals(field, reusableChars, count)) {
             return this;
@@ -406,7 +406,7 @@ class BytesJsonIterator implements JsonIterator {
         case '}': // end of object
           return null;
         default:
-          throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+          throw reportError("skipUntil", "expect { or , or } or n, but found: " + (char) c);
       }
     }
   }
@@ -432,24 +432,24 @@ class BytesJsonIterator implements JsonIterator {
           unreadByte();
           final boolean result = testField(testField);
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect :, but " + ((char) c));
+            throw reportError("testObjField", "expect :, but " + ((char) c));
           }
           return result;
         }
         if (c == '}') {
           return false; // end of object
         }
-        throw reportError("readObject", "expect \" after {");
+        throw reportError("testObjField", "expect \" after {");
       case ',':
         final boolean result = testField(testField);
         if ((c = nextToken()) != ':') {
-          throw reportError("readObject", "expect :, but " + ((char) c));
+          throw reportError("testObjField", "expect :, but " + ((char) c));
         }
         return result;
       case '}':
         return false; // end of object
       default:
-        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+        throw reportError("testObjField", "expect { or , or } or n, but found: " + (char) c);
     }
   }
 
@@ -507,24 +507,24 @@ class BytesJsonIterator implements JsonIterator {
           unreadByte();
           final var field = readField();
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect :, but " + ((char) c));
+            throw reportError("readObjField", "expect :, but " + ((char) c));
           }
           return field;
         }
         if (c == '}') {
           return null; // end of object
         }
-        throw reportError("readObject", "expect \" after {");
+        throw reportError("readObjField", "expect \" after {");
       case ',':
         final var field = readField();
         if ((c = nextToken()) != ':') {
-          throw reportError("readObject", "expect :, but " + ((char) c));
+          throw reportError("readObjField", "expect :, but " + ((char) c));
         }
         return field;
       case '}':
         return null; // end of object
       default:
-        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+        throw reportError("readObjField", "expect { or , or } or n, but found: " + (char) c);
     }
   }
 
@@ -539,28 +539,28 @@ class BytesJsonIterator implements JsonIterator {
         if (c == '"') {
           parse();
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect :, but " + ((char) c));
+            throw reportError("skipObjField", "expect :, but " + ((char) c));
           }
           return this;
         }
         if (c == '}') { // end of object
           return null;
         }
-        throw reportError("readObject", "expect \" after {");
+        throw reportError("skipObjField", "expect \" after {");
       case ',':
         c = nextToken();
         if (c != '"') {
-          throw reportError("readObject", "expect string field, but " + (char) c);
+          throw reportError("skipObjField", "expect string field, but " + (char) c);
         }
         parse();
         if ((c = nextToken()) != ':') {
-          throw reportError("readObject", "expect :, but " + ((char) c));
+          throw reportError("skipObjField", "expect :, but " + ((char) c));
         }
         return this;
       case '}': // end of object
         return null;
       default:
-        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+        throw reportError("skipObjField", "expect { or , or } or n, but found: " + (char) c);
     }
   }
 
@@ -585,7 +585,7 @@ class BytesJsonIterator implements JsonIterator {
           if (c == '"') {
             final int count = parse();
             if ((c = nextToken()) != ':') {
-              throw reportError("readObject", "expect :, but " + ((char) c));
+              throw reportError("testObject", "expect :, but " + ((char) c));
             }
             if (fieldBufferFunction.test(count, reusableChars, this)) {
               continue;
@@ -595,15 +595,15 @@ class BytesJsonIterator implements JsonIterator {
           if (c == '}') { // end of object
             return;
           }
-          throw reportError("readObject", "expect \" after {");
+          throw reportError("testObject", "expect \" after {");
         case ',':
           c = nextToken();
           if (c != '"') {
-            throw reportError("readObject", "expect string field, but " + (char) c);
+            throw reportError("testObject", "expect string field, but " + (char) c);
           }
           final int count = parse();
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect :, but " + ((char) c));
+            throw reportError("testObject", "expect :, but " + ((char) c));
           }
           if (fieldBufferFunction.test(count, reusableChars, this)) {
             continue;
@@ -612,7 +612,7 @@ class BytesJsonIterator implements JsonIterator {
         case '}': // end of object
           return;
         default:
-          throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+          throw reportError("testObject", "expect { or , or } or n, but found: " + (char) c);
       }
     }
   }
@@ -629,7 +629,7 @@ class BytesJsonIterator implements JsonIterator {
           if (c == '"') {
             final int count = parse();
             if ((c = nextToken()) != ':') {
-              throw reportError("readObject", "expect :, but " + ((char) c));
+              throw reportError("testObject", "expect :, but " + ((char) c));
             }
             if (fieldBufferFunction.test(context, count, reusableChars, this)) {
               continue;
@@ -639,15 +639,15 @@ class BytesJsonIterator implements JsonIterator {
           if (c == '}') { // end of object
             return context;
           }
-          throw reportError("readObject", "expect \" after {");
+          throw reportError("testObject", "expect \" after {");
         case ',':
           c = nextToken();
           if (c != '"') {
-            throw reportError("readObject", "expect string field, but " + (char) c);
+            throw reportError("testObject", "expect string field, but " + (char) c);
           }
           final int count = parse();
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect :, but " + ((char) c));
+            throw reportError("testObject", "expect :, but " + ((char) c));
           }
           if (fieldBufferFunction.test(context, count, reusableChars, this)) {
             continue;
@@ -656,7 +656,7 @@ class BytesJsonIterator implements JsonIterator {
         case '}': // end of object
           return context;
         default:
-          throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+          throw reportError("testObject", "expect { or , or } or n, but found: " + (char) c);
       }
     }
   }
@@ -673,28 +673,28 @@ class BytesJsonIterator implements JsonIterator {
         if (c == '"') {
           final int count = parse();
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect :, but " + ((char) c));
+            throw reportError("applyObject", "expect :, but " + ((char) c));
           }
           return fieldBufferFunction.apply(count, reusableChars, this);
         }
         if (c == '}') { // end of object
           return null;
         }
-        throw reportError("readObject", "expect \" after {");
+        throw reportError("applyObject", "expect \" after {");
       case ',':
         c = nextToken();
         if (c != '"') {
-          throw reportError("readObject", "expect string field, but " + (char) c);
+          throw reportError("applyObject", "expect string field, but " + (char) c);
         }
         final int count = parse();
         if ((c = nextToken()) != ':') {
-          throw reportError("readObject", "expect :, but " + ((char) c));
+          throw reportError("applyObject", "expect :, but " + ((char) c));
         }
         return fieldBufferFunction.apply(count, reusableChars, this);
       case '}': // end of object
         return null;
       default:
-        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+        throw reportError("applyObject", "expect { or , or } or n, but found: " + (char) c);
     }
   }
 
@@ -710,28 +710,28 @@ class BytesJsonIterator implements JsonIterator {
         if (c == '"') {
           final int count = parse();
           if ((c = nextToken()) != ':') {
-            throw reportError("readObject", "expect :, but " + ((char) c));
+            throw reportError("applyObject", "expect :, but " + ((char) c));
           }
           return fieldBufferFunction.apply(context, count, reusableChars, this);
         }
         if (c == '}') { // end of object
           return null;
         }
-        throw reportError("readObject", "expect \" after {");
+        throw reportError("applyObject", "expect \" after {");
       case ',':
         c = nextToken();
         if (c != '"') {
-          throw reportError("readObject", "expect string field, but " + (char) c);
+          throw reportError("applyObject", "expect string field, but " + (char) c);
         }
         final int count = parse();
         if ((c = nextToken()) != ':') {
-          throw reportError("readObject", "expect :, but " + ((char) c));
+          throw reportError("applyObject", "expect :, but " + ((char) c));
         }
         return fieldBufferFunction.apply(context, count, reusableChars, this);
       case '}': // end of object
         return null;
       default:
-        throw reportError("readObject", "expect { or , or } or n, but found: " + (char) c);
+        throw reportError("applyObject", "expect { or , or } or n, but found: " + (char) c);
     }
   }
 
