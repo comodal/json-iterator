@@ -12,26 +12,34 @@ public enum ValueType {
   ARRAY,
   OBJECT;
 
-  static final ValueType[] VALUE_TYPES = new ValueType[256];
+  static final ValueType[] VALUE_TYPES = INIT_TYPES.initValueTypes();
 
-  static {
-    Arrays.fill(VALUE_TYPES, INVALID);
-    VALUE_TYPES['"'] = STRING;
-    VALUE_TYPES['-'] = NUMBER;
-    VALUE_TYPES['0'] = NUMBER;
-    VALUE_TYPES['1'] = NUMBER;
-    VALUE_TYPES['2'] = NUMBER;
-    VALUE_TYPES['3'] = NUMBER;
-    VALUE_TYPES['4'] = NUMBER;
-    VALUE_TYPES['5'] = NUMBER;
-    VALUE_TYPES['6'] = NUMBER;
-    VALUE_TYPES['7'] = NUMBER;
-    VALUE_TYPES['8'] = NUMBER;
-    VALUE_TYPES['9'] = NUMBER;
-    VALUE_TYPES['t'] = BOOLEAN;
-    VALUE_TYPES['f'] = BOOLEAN;
-    VALUE_TYPES['n'] = NULL;
-    VALUE_TYPES['['] = ARRAY;
-    VALUE_TYPES['{'] = OBJECT;
+  private static final class INIT_TYPES {
+
+    private INIT_TYPES() {
+    }
+
+    private static ValueType[] initValueTypes() {
+      final ValueType[] types = new ValueType[256];
+      Arrays.fill(types, INVALID);
+      types['"'] = STRING;
+      types['-'] = NUMBER;
+      types['0'] = NUMBER;
+      types['1'] = NUMBER;
+      types['2'] = NUMBER;
+      types['3'] = NUMBER;
+      types['4'] = NUMBER;
+      types['5'] = NUMBER;
+      types['6'] = NUMBER;
+      types['7'] = NUMBER;
+      types['8'] = NUMBER;
+      types['9'] = NUMBER;
+      types['t'] = BOOLEAN;
+      types['f'] = BOOLEAN;
+      types['n'] = NULL;
+      types['['] = ARRAY;
+      types['{'] = OBJECT;
+      return types;
+    }
   }
 }

@@ -21,14 +21,20 @@ import static systems.comodal.jsoniter.jmh.styles.BenchStringFieldStyles.createJ
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class BenchCharFieldStyles {
 
-  private static final byte[] BENCH_LARGE_COMPACT_FIELDS_JSON;
+  private static final byte[] BENCH_LARGE_COMPACT_FIELDS_JSON = INIT_JSON.initJson("/compactFieldsExchangeInfo.json");
 
-  static {
-    try {
-      BENCH_LARGE_COMPACT_FIELDS_JSON = new String(BenchStringFieldStyles.class.getResourceAsStream("/compactFieldsExchangeInfo.json").readAllBytes())
-          .replaceAll("\\s+", "").getBytes();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
+  static final class INIT_JSON {
+
+    private INIT_JSON() {
+    }
+
+    static byte[] initJson(final String filename) {
+      try {
+        return new String(BenchStringFieldStyles.class.getResourceAsStream(filename).readAllBytes())
+            .replaceAll("\\s+", "").getBytes();
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
     }
   }
 

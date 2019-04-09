@@ -15,13 +15,21 @@ class BytesJsonIterator implements JsonIterator {
       1000000000, 10000000000L, 100000000000L, 1000000000000L,
       10000000000000L, 100000000000000L, 1000000000000000L};
 
-  static final int[] INT_DIGITS = new int[127];
   static final int INVALID_CHAR_FOR_NUMBER = -1;
+  static final int[] INT_DIGITS = INIT_INT_DIGITS.initIntDigits();
 
-  static {
-    Arrays.fill(INT_DIGITS, INVALID_CHAR_FOR_NUMBER);
-    for (int i = '0'; i <= '9'; ++i) {
-      INT_DIGITS[i] = (i - '0');
+  private static final class INIT_INT_DIGITS {
+
+    private INIT_INT_DIGITS() {
+    }
+
+    private static int[] initIntDigits() {
+      final int[] intDigits = new int[127];
+      Arrays.fill(intDigits, INVALID_CHAR_FOR_NUMBER);
+      for (int i = '0'; i <= '9'; ++i) {
+        intDigits[i] = (i - '0');
+      }
+      return intDigits;
     }
   }
 

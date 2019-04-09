@@ -8,7 +8,6 @@ import systems.comodal.jsoniter.factory.JsonIterParserFactory;
 import systems.comodal.jsoniter.jmh.data.exchange.ExchangeInfo;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -19,16 +18,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class BenchStringFieldStyles {
 
-  private static final byte[] BENCH_LARGE_JSON;
-
-  static {
-    try {
-      BENCH_LARGE_JSON = new String(BenchStringFieldStyles.class.getResourceAsStream("/exchangeInfo.json").readAllBytes())
-          .replaceAll("\\s+", "").getBytes();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
+  private static final byte[] BENCH_LARGE_JSON = BenchCharFieldStyles.INIT_JSON.initJson("/exchangeInfo.json");
 
   static final ConcurrentLinkedQueue<JsonIterator> JSON_ITERATOR_POOL = new ConcurrentLinkedQueue<>();
 

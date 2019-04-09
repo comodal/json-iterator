@@ -5,21 +5,29 @@ import java.util.Arrays;
 final class JHex {
 
   private static final int INVALID = -1;
-  private static final int[] DIGITS = new int['f' + 1];
+  private static final int[] DIGITS = INIT_DIGITS.initDigits();
 
-  static {
-    Arrays.fill(DIGITS, INVALID);
-    for (int i = '0'; i <= '9'; ++i) {
-      DIGITS[i] = (i - '0');
+  private static final class INIT_DIGITS {
+
+    private INIT_DIGITS() {
     }
-    for (int i = 'a'; i <= 'f'; ++i) {
-      DIGITS[i] = ((i - 'a') + 10);
-    }
-    for (int i = 'A'; i <= 'F'; ++i) {
-      DIGITS[i] = ((i - 'A') + 10);
+
+    private static int[] initDigits() {
+      final int[] digits = new int['f' + 1];
+      Arrays.fill(digits, INVALID);
+      for (int i = '0'; i <= '9'; ++i) {
+        digits[i] = (i - '0');
+      }
+      for (int i = 'a'; i <= 'f'; ++i) {
+        digits[i] = ((i - 'a') + 10);
+      }
+      for (int i = 'A'; i <= 'F'; ++i) {
+        digits[i] = ((i - 'A') + 10);
+      }
+      return digits;
     }
   }
-
+  
   private JHex() {
   }
 
