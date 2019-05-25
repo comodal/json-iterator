@@ -68,10 +68,6 @@ public interface JsonIterator extends Closeable {
     return true;
   }
 
-  static boolean regionMatches(final String str, final char[] buf, final int from, final int to) {
-    return regionMatches(str, buf, from, to - from);
-  }
-
   boolean supportsMarkReset();
 
   int mark();
