@@ -11,9 +11,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.concurrent.TimeUnit;
 
-import static systems.comodal.jsoniter.jmh.styles.BenchStringFieldStyles.JSON_ITERATOR_POOL;
-import static systems.comodal.jsoniter.jmh.styles.BenchStringFieldStyles.createJsonIterator;
-
 @State(Scope.Benchmark)
 @Warmup(iterations = 4, time = 6)
 @Measurement(iterations = 5, time = 7)
@@ -22,6 +19,7 @@ import static systems.comodal.jsoniter.jmh.styles.BenchStringFieldStyles.createJ
 public class BenchCharFieldStyles {
 
   private static final byte[] BENCH_LARGE_COMPACT_FIELDS_JSON = INIT_JSON.initJson("/compactFieldsExchangeInfo.json");
+  private static final char[] BENCH_LARGE_COMPACT_FIELDS_JSON_CHARS = new String(BENCH_LARGE_COMPACT_FIELDS_JSON).toCharArray();
 
   static final class INIT_JSON {
 
@@ -52,16 +50,22 @@ public class BenchCharFieldStyles {
   }
 
   @Benchmark
-  public void parse(final Blackhole blackhole) throws IOException {
-    final var ji = createJsonIterator(BENCH_LARGE_COMPACT_FIELDS_JSON);
-    try {
-      blackhole.consume(parser.parse(ji));
-    } finally {
-      JSON_ITERATOR_POOL.add(ji);
-    }
+  public void parseBytes(final Blackhole blackhole) throws IOException {
+    final var ji = JsonIterator.parse(BENCH_LARGE_COMPACT_FIELDS_JSON);
+    blackhole.consume(parser.parse(ji));
   }
 
-  public JsonIterator getLoadedJsonIterator() {
-    return createJsonIterator(BENCH_LARGE_COMPACT_FIELDS_JSON);
+  @Benchmark
+  public void parseChars(final Blackhole blackhole) throws IOException {
+    final var ji = JsonIterator.parse(BENCH_LARGE_COMPACT_FIELDS_JSON_CHARS);
+    blackhole.consume(parser.parse(ji));
+  }
+
+  public JsonIterator getLoadedBytesJsonIterator() {
+    return JsonIterator.parse(BENCH_LARGE_COMPACT_FIELDS_JSON);
+  }
+
+  public JsonIterator getLoadedCharsJsonIterator() {
+    return JsonIterator.parse(BENCH_LARGE_COMPACT_FIELDS_JSON_CHARS);
   }
 }

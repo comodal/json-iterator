@@ -5,5 +5,5 @@ import java.io.IOException;
 @FunctionalInterface
 public interface CharBufferPredicate {
 
-  boolean apply(final int len, final char[] buf) throws IOException;
+  boolean apply(final char[] buf, final int offset, final int len) throws IOException;
 }

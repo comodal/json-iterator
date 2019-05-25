@@ -24,8 +24,8 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
     return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_CHAR_FIELD_PARSER).create();
   }
 
-  private static final ContextFieldBufferPredicate<Filter.Builder> FILTER_CHAR_FIELD_PARSER = (filter, len, buf, ji) -> {
-    final char f = buf[0];
+  private static final ContextFieldBufferPredicate<Filter.Builder> FILTER_CHAR_FIELD_PARSER = (filter, buf, offset, len, ji) -> {
+    final char f = buf[offset];
     if (f == 'f') {
       filter.type(ji.readString());
     } else if (f == 'p') {
@@ -60,8 +60,8 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
     return true;
   };
 
-  private static final ContextFieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_CHAR_FIELD_PARSER = (symbol, len, buf, ji) -> {
-    final char f = buf[0];
+  private static final ContextFieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_CHAR_FIELD_PARSER = (symbol, buf, offset, len, ji) -> {
+    final char f = buf[offset];
     if (f == 'p') {
       symbol.symbol(ji.readString());
     } else if (f == 's') {
@@ -90,8 +90,8 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
     return true;
   };
 
-  private static final ContextFieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_CHAR_FIELD_PARSER = (rateLimit, len, buf, ji) -> {
-    final char f = buf[0];
+  private static final ContextFieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_CHAR_FIELD_PARSER = (rateLimit, buf, offset, len, ji) -> {
+    final char f = buf[offset];
     if (f == 't') {
       rateLimit.type(ji.readString());
     } else if (f == 'i') {
@@ -106,8 +106,8 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
     return true;
   };
 
-  private static final ContextFieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_CHAR_FIELD_PARSER = (info, len, buf, ji) -> {
-    final char f = buf[0];
+  private static final ContextFieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_CHAR_FIELD_PARSER = (info, buf, offset, len, ji) -> {
+    final char f = buf[offset];
     if (f == 't') {
       info.timezone(ji.readString());
     } else if (f == 's') {

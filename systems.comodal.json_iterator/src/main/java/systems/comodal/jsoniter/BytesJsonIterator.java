@@ -3,64 +3,25 @@ package systems.comodal.jsoniter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Arrays;
 
-import static systems.comodal.jsoniter.ValueType.*;
-
-class BytesJsonIterator implements JsonIterator {
-
-  private static final long[] POW10 = {
-      1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
-      1000000000, 10000000000L, 100000000000L, 1000000000000L,
-      10000000000000L, 100000000000000L, 1000000000000000L
-  };
-
-  static final int INVALID_CHAR_FOR_NUMBER = -1;
-  static final int[] INT_DIGITS = INIT_INT_DIGITS.initIntDigits();
-
-  private static final class INIT_INT_DIGITS {
-
-    private INIT_INT_DIGITS() {
-    }
-
-    private static int[] initIntDigits() {
-      final int[] intDigits = new int[127];
-      Arrays.fill(intDigits, INVALID_CHAR_FOR_NUMBER);
-      for (int i = '0'; i <= '9'; ++i) {
-        intDigits[i] = (i - '0');
-      }
-      return intDigits;
-    }
-  }
+class BytesJsonIterator extends BaseJsonIterator {
 
   byte[] buf;
-  int head;
-  int tail;
-
-  char[] reusableChars;
+  private char[] charBuf;
 
   BytesJsonIterator(final byte[] buf, final int head, final int tail) {
+    this(buf, head, tail, 32);
+  }
+
+  BytesJsonIterator(final byte[] buf, final int head, final int tail, final int charBufferLength) {
+    super(head, tail);
     this.buf = buf;
-    this.head = head;
-    this.tail = tail;
-    this.reusableChars = new char[32];
+    this.charBuf = new char[charBufferLength];
   }
 
   @Override
   public boolean supportsMarkReset() {
     return true;
-  }
-
-  @Override
-  public int mark() {
-    return head;
-  }
-
-  @Override
-  public JsonIterator reset(final int mark) {
-    this.head = mark;
-    return this;
   }
 
   @Override
@@ -80,6 +41,16 @@ class BytesJsonIterator implements JsonIterator {
   }
 
   @Override
+  public JsonIterator reset(final char[] buf) {
+    return reset(buf, 0, buf.length);
+  }
+
+  @Override
+  public JsonIterator reset(final char[] buf, final int head, final int tail) {
+    return new CharsJsonIterator(buf, head, tail);
+  }
+
+  @Override
   public JsonIterator reset(final InputStream in) {
     return new BufferedStreamJsonIterator(in, buf, 0, 0);
   }
@@ -91,381 +62,78 @@ class BytesJsonIterator implements JsonIterator {
 
   @Override
   public void close() throws IOException {
-
-  }
-
-  final void unreadByte() {
-    if (head == 0) {
-      throw reportError("unreadByte", "unread too many bytes");
-    }
-    head--;
-  }
-
-  final JsonException reportError(final String op, final String msg) {
-    int peekStart = head - 10;
-    if (peekStart < 0) {
-      peekStart = 0;
-    }
-    int peekSize = head - peekStart;
-    if (head > tail) {
-      peekSize = tail - peekStart;
-    }
-    final String peek = new String(buf, peekStart, peekSize);
-    throw new JsonException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf, 0, Math.min(buf.length, 1_024)));
   }
 
   @Override
-  public String currentBuffer() {
-    int peekStart = head - 10;
-    if (peekStart < 0) {
-      peekStart = 0;
-    }
-    final var peek = new String(buf, peekStart, head - peekStart);
-    return "head: " + head + ", peek: " + peek + ", buf: " + new String(buf, 0, Math.min(buf.length, 1_024));
+  final String getBufferString(final int from, final int to) {
+    return new String(buf, from, Math.min(to, tail) - from);
   }
 
   @Override
-  public final boolean readNull() throws IOException {
-    final byte c = nextToken();
-    if (c != 'n') {
-      unreadByte();
-      return false;
-    }
-    skipFixedBytes(3); // null
-    return true;
-  }
-
-  @Override
-  public final boolean readBoolean() throws IOException {
-    final byte c = nextToken();
-    if ('t' == c) {
-      skipFixedBytes(3); // true
-      return true;
-    }
-    if ('f' == c) {
-      skipFixedBytes(4); // false
-      return false;
-    }
-    throw reportError("readBoolean", "expect t or f, found: " + c);
-  }
-
-  @Override
-  public final short readShort() throws IOException {
-    final int v = readInt();
-    if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
-      return (short) v;
-    }
-    throw reportError("readShort", "short overflow: " + v);
-  }
-
-  @Override
-  public final int readInt() throws IOException {
-    final byte c = nextToken();
-    if (c == '-') {
-      return readInt(readByte());
-    }
-    final int val = readInt(c);
-    if (val == Integer.MIN_VALUE) {
-      throw reportError("readInt", "value is too large for int");
-    }
-    return -val;
-  }
-
-  @Override
-  public final long readLong() throws IOException {
-    byte c = nextToken();
-    if (c == '-') {
-      c = readByte();
-      if (INT_DIGITS[c] == 0) {
-        assertNotLeadingZero();
-        return 0;
+  final char nextToken() throws IOException {
+    byte c;
+    for (int i = head; ; i++) {
+      if (i == tail) {
+        if (loadMore()) {
+          i = head;
+        } else {
+          throw reportError("nextToken", "unexpected end");
+        }
       }
-      return readLong(c);
-    }
-    if (INT_DIGITS[c] == 0) {
-      assertNotLeadingZero();
-      return 0;
-    }
-    final long val = readLong(c);
-    if (val == Long.MIN_VALUE) {
-      throw reportError("readLong", "value is too large for long");
-    }
-    return -val;
-  }
-
-  @Override
-  public final boolean readArray() throws IOException {
-    final byte c = nextToken();
-    if (c == '[') {
-      if (nextToken() == ']') {
-        return false;
-      }
-      unreadByte();
-      return true;
-    }
-    if (c == ']' || c == 'n') {
-      return false;
-    }
-    if (c == ',') {
-      return true;
-    }
-    throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
-  }
-
-  public final JsonIterator openArray() throws IOException {
-    final byte c = nextToken();
-    if (c == '[') {
-      return this;
-    }
-    throw reportError("openArray", "expected '[' but found: " + (char) c);
-  }
-
-  public final JsonIterator continueArray() throws IOException {
-    final byte c = nextToken();
-    if (c == ',') {
-      return this;
-    }
-    throw reportError("continueArray", "expected ',' but found: " + (char) c);
-  }
-
-  public final JsonIterator closeArray() throws IOException {
-    final byte c = nextToken();
-    if (c == ']') {
-      return this;
-    }
-    throw reportError("closeArray", "expected ']' but found: " + (char) c);
-  }
-
-  @Override
-  public final String readNumberAsString() throws IOException {
-    final var numberChars = readNumber();
-    return new String(numberChars.chars, 0, numberChars.charsLength);
-  }
-
-  static final class NumberChars {
-
-    final char[] chars;
-    final int charsLength;
-    final boolean dotFound;
-
-    NumberChars(final char[] chars, final int charsLength, final boolean dotFound) {
-      this.chars = chars;
-      this.charsLength = charsLength;
-      this.dotFound = dotFound;
-    }
-  }
-
-  NumberChars readNumber() throws IOException {
-    int j = 0;
-    boolean dotFound = false;
-    for (int i = head; i < tail; i++) {
-      if (j == reusableChars.length) {
-        doubleReusableCharBuffer();
-      }
-      final byte c = buf[i];
+      c = buf[i];
       switch (c) {
         case ' ':
+        case '\n':
+        case '\t':
+        case '\r':
           continue;
-        case '.':
-        case 'e':
-        case 'E':
-          dotFound = true;
-          // fallthrough
-        case '-':
-        case '+':
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-          reusableChars[j++] = (char) c;
-          break;
         default:
-          head = i;
-          return new NumberChars(reusableChars, j, dotFound);
-      }
-    }
-    head = tail;
-    return new NumberChars(reusableChars, j, dotFound);
-  }
-
-  private static final CharBufferFunction<String> READ_STRING_FUNCTION = (count, _reusableChars) -> new String(_reusableChars, 0, count);
-
-  @Override
-  public final String readString() throws IOException {
-    return applyChars(READ_STRING_FUNCTION);
-  }
-
-  @Override
-  public final <R> R applyChars(final CharBufferFunction<R> applyChars) throws IOException {
-    final byte c = nextToken();
-    if (c == '"') {
-      return applyChars.apply(parse(), reusableChars);
-    }
-    if (c == 'n') {
-      skipFixedBytes(3);
-      return null;
-    }
-    throw reportError("applyChars", "expect string or null, but " + (char) c);
-  }
-
-  @Override
-  public final <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException {
-    final byte c = nextToken();
-    if (c == '"') {
-      return applyChars.apply(context, parse(), reusableChars);
-    }
-    if (c == 'n') {
-      skipFixedBytes(3);
-      return null;
-    }
-    throw reportError("applyChars", "expect string or null, but " + (char) c);
-  }
-
-  @Override
-  public final boolean testChars(final CharBufferPredicate testChars) throws IOException {
-    final byte c = nextToken();
-    if (c == '"') {
-      return testChars.apply(parse(), reusableChars);
-    }
-    if (c == 'n') {
-      skipFixedBytes(3);
-      return false;
-    }
-    throw reportError("testChars", "expect string or null, but " + (char) c);
-  }
-
-  @Override
-  public final <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException {
-    final byte c = nextToken();
-    if (c == '"') {
-      return testChars.apply(context, parse(), reusableChars);
-    }
-    if (c == 'n') {
-      skipFixedBytes(3);
-      return false;
-    }
-    throw reportError("testChars", "expect string or null, but " + (char) c);
-  }
-
-  @Override
-  public final void consumeChars(final CharBufferConsumer testChars) throws IOException {
-    final byte c = nextToken();
-    if (c == '"') {
-      testChars.accept(parse(), reusableChars);
-    } else if (c == 'n') {
-      skipFixedBytes(3);
-    } else {
-      throw reportError("consumeChars", "expect string or null, but " + (char) c);
-    }
-  }
-
-  @Override
-  public final <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException {
-    final byte c = nextToken();
-    if (c == '"') {
-      testChars.accept(context, parse(), reusableChars);
-    } else if (c == 'n') {
-      skipFixedBytes(3);
-    } else {
-      throw reportError("consumeChars", "expect string or null, but " + (char) c);
-    }
-  }
-
-  @Override
-  public final JsonIterator skipUntil(final String field) throws IOException {
-    for (byte c = nextToken(); ; c = nextToken()) {
-      switch (c) {
-        case '{':
-          c = nextToken();
-          if (c == '"') {
-            final int count = parse();
-            if ((c = nextToken()) != ':') {
-              throw reportError("skipUntil", "expect :, but " + ((char) c));
-            }
-            if (JsonIterator.fieldEquals(field, reusableChars, count)) {
-              return this;
-            }
-            skip();
-            continue;
-          }
-          if (c == '}') { // end of object
-            return null;
-          }
-          throw reportError("skipUntil", "expect \" after {");
-        case ',':
-          c = nextToken();
-          if (c != '"') {
-            throw reportError("skipUntil", "expect string field, but " + (char) c);
-          }
-          final int count = parse();
-          if ((c = nextToken()) != ':') {
-            throw reportError("skipUntil", "expect :, but " + ((char) c));
-          }
-          if (JsonIterator.fieldEquals(field, reusableChars, count)) {
-            return this;
-          }
-          skip();
-          continue;
-        case '}': // end of object
-          return null;
-        default:
-          throw reportError("skipUntil", "expect { or , or } or n, but found: " + (char) c);
+          head = i + 1;
+          return (char) c;
       }
     }
   }
 
-  private boolean testField(final CharBufferPredicate testField) throws IOException {
-    final byte c = nextToken();
-    if (c != '"') {
-      throw reportError("testField", "expected field string, but " + (char) c);
-    }
-    return testField.apply(parse(), reusableChars);
+  byte read() throws IOException {
+    return buf[head++];
   }
 
   @Override
-  public final boolean testObjField(final CharBufferPredicate testField) throws IOException {
-    byte c = nextToken();
-    switch (c) {
-      case 'n':
-        skipFixedBytes(3);
-        return false;
-      case '{':
-        c = nextToken();
-        if (c == '"') {
-          unreadByte();
-          final boolean result = testField(testField);
-          if ((c = nextToken()) != ':') {
-            throw reportError("testObjField", "expect :, but " + ((char) c));
-          }
-          return result;
-        }
-        if (c == '}') {
-          return false; // end of object
-        }
-        throw reportError("testObjField", "expect \" after {");
-      case ',':
-        final boolean result = testField(testField);
-        if ((c = nextToken()) != ':') {
-          throw reportError("testObjField", "expect :, but " + ((char) c));
-        }
-        return result;
-      case '}':
-        return false; // end of object
-      default:
-        throw reportError("testObjField", "expect { or , or } or n, but found: " + (char) c);
-    }
+  final char readChar() throws IOException {
+    return (char) read();
   }
 
-  private int parse() throws IOException {
-    byte c;// try fast path first
+  @Override
+  final int readAsInt() throws IOException {
+    return read();
+  }
+
+  @Override
+  final char peekChar() {
+    return (char) buf[head];
+  }
+
+  @Override
+  final char peekChar(final int offset) {
+    return (char) buf[offset];
+  }
+
+  @Override
+  final int peekIntDigitChar(final int offset) {
+    return INT_DIGITS[buf[offset]];
+  }
+
+  private void doubleReusableCharBuffer() {
+    final char[] newBuf = new char[charBuf.length << 1];
+    System.arraycopy(charBuf, 0, newBuf, 0, charBuf.length);
+    charBuf = newBuf;
+  }
+
+  @Override
+  final int parse() throws IOException {
+    byte c; // try fast path first
     int i = head;
-    final int bound = updateStringCopyBound(reusableChars.length);
+    final int bound = Math.min(tail - head, charBuf.length);
     for (int j = 0; j < bound; j++) {
       c = buf[i++];
       if (c == '"') {
@@ -479,11 +147,11 @@ class BytesJsonIterator implements JsonIterator {
       if ((c ^ '\\') < 1) {
         break;
       }
-      reusableChars[j] = (char) c;
+      charBuf[j] = (char) c;
     }
     final int alreadyCopied;
     if (i > head) {
-      alreadyCopied = i - head - 1;
+      alreadyCopied = (i - head) - 1;
       head = i - 1;
     } else {
       alreadyCopied = 0;
@@ -491,535 +159,82 @@ class BytesJsonIterator implements JsonIterator {
     return readStringSlowPath(alreadyCopied);
   }
 
-  int updateStringCopyBound(final int bound) {
-    return bound;
-  }
-
-  private String readField() throws IOException {
-    final byte c = nextToken();
-    if (c != '"') {
-      throw reportError("readField", "expected field string, but " + (char) c);
-    }
-    return new String(reusableChars, 0, parse());
+  @Override
+  final <R> R parse(final CharBufferFunction<R> applyChars) throws IOException {
+    final int len = parse();
+    return applyChars.apply(charBuf, 0, len);
   }
 
   @Override
-  public final String readObjField() throws IOException {
-    byte c = nextToken();
-    switch (c) {
-      case 'n':
-        skipFixedBytes(3);
-        return null;
-      case '{':
-        c = nextToken();
-        if (c == '"') {
-          unreadByte();
-          final var field = readField();
-          if ((c = nextToken()) != ':') {
-            throw reportError("readObjField", "expect :, but " + ((char) c));
-          }
-          return field;
-        }
-        if (c == '}') {
-          return null; // end of object
-        }
-        throw reportError("readObjField", "expect \" after {");
-      case ',':
-        final var field = readField();
-        if ((c = nextToken()) != ':') {
-          throw reportError("readObjField", "expect :, but " + ((char) c));
-        }
-        return field;
-      case '}':
-        return null; // end of object
-      default:
-        throw reportError("readObjField", "expect { or , or } or n, but found: " + (char) c);
-    }
-  }
-
-  public final JsonIterator skipObjField() throws IOException {
-    byte c = nextToken();
-    switch (c) {
-      case 'n':
-        skipFixedBytes(3);
-        return null;
-      case '{':
-        c = nextToken();
-        if (c == '"') {
-          parse();
-          if ((c = nextToken()) != ':') {
-            throw reportError("skipObjField", "expect :, but " + ((char) c));
-          }
-          return this;
-        }
-        if (c == '}') { // end of object
-          return null;
-        }
-        throw reportError("skipObjField", "expect \" after {");
-      case ',':
-        c = nextToken();
-        if (c != '"') {
-          throw reportError("skipObjField", "expect string field, but " + (char) c);
-        }
-        parse();
-        if ((c = nextToken()) != ':') {
-          throw reportError("skipObjField", "expect :, but " + ((char) c));
-        }
-        return this;
-      case '}': // end of object
-        return null;
-      default:
-        throw reportError("skipObjField", "expect { or , or } or n, but found: " + (char) c);
-    }
+  final <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException {
+    final int len = parse();
+    return applyChars.apply(context, charBuf, 0, len);
   }
 
   @Override
-  public final JsonIterator closeObj() throws IOException {
-    final byte c = nextToken();
-    if (c == '}') {
-      return this;
-    }
-    throw reportError("closeObj", "expected '}' but found: " + (char) c);
+  final boolean parse(final CharBufferPredicate testChars) throws IOException {
+    final int len = parse();
+    return testChars.apply(charBuf, 0, len);
   }
 
   @Override
-  public final void testObject(final FieldBufferPredicate fieldBufferFunction) throws IOException {
-    for (byte c = nextToken(); ; c = nextToken()) {
-      switch (c) {
-        case 'n':
-          skipFixedBytes(3);
-          return;
-        case '{':
-          c = nextToken();
-          if (c == '"') {
-            final int count = parse();
-            if ((c = nextToken()) != ':') {
-              throw reportError("testObject", "expect :, but " + ((char) c));
-            }
-            if (fieldBufferFunction.test(count, reusableChars, this)) {
-              continue;
-            }
-            return;
-          }
-          if (c == '}') { // end of object
-            return;
-          }
-          throw reportError("testObject", "expect \" after {");
-        case ',':
-          c = nextToken();
-          if (c != '"') {
-            throw reportError("testObject", "expect string field, but " + (char) c);
-          }
-          final int count = parse();
-          if ((c = nextToken()) != ':') {
-            throw reportError("testObject", "expect :, but " + ((char) c));
-          }
-          if (fieldBufferFunction.test(count, reusableChars, this)) {
-            continue;
-          }
-          return;
-        case '}': // end of object
-          return;
-        default:
-          throw reportError("testObject", "expect { or , or } or n, but found: " + (char) c);
-      }
-    }
+  final <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException {
+    final int len = parse();
+    return testChars.apply(context, charBuf, 0, len);
   }
 
   @Override
-  public final <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction) throws IOException {
-    for (byte c = nextToken(); ; c = nextToken()) {
-      switch (c) {
-        case 'n':
-          skipFixedBytes(3);
-          return context;
-        case '{':
-          c = nextToken();
-          if (c == '"') {
-            final int count = parse();
-            if ((c = nextToken()) != ':') {
-              throw reportError("testObject", "expect :, but " + ((char) c));
-            }
-            if (fieldBufferFunction.test(context, count, reusableChars, this)) {
-              continue;
-            }
-            return context;
-          }
-          if (c == '}') { // end of object
-            return context;
-          }
-          throw reportError("testObject", "expect \" after {");
-        case ',':
-          c = nextToken();
-          if (c != '"') {
-            throw reportError("testObject", "expect string field, but " + (char) c);
-          }
-          final int count = parse();
-          if ((c = nextToken()) != ':') {
-            throw reportError("testObject", "expect :, but " + ((char) c));
-          }
-          if (fieldBufferFunction.test(context, count, reusableChars, this)) {
-            continue;
-          }
-          return context;
-        case '}': // end of object
-          return context;
-        default:
-          throw reportError("testObject", "expect { or , or } or n, but found: " + (char) c);
-      }
-    }
+  final void parse(final CharBufferConsumer testChars) throws IOException {
+    final int len = parse();
+    testChars.accept(charBuf, 0, len);
   }
 
   @Override
-  public final <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction) throws IOException {
-    byte c = nextToken();
-    switch (c) {
-      case 'n':
-        skipFixedBytes(3);
-        return null;
-      case '{':
-        c = nextToken();
-        if (c == '"') {
-          final int count = parse();
-          if ((c = nextToken()) != ':') {
-            throw reportError("applyObject", "expect :, but " + ((char) c));
-          }
-          return fieldBufferFunction.apply(count, reusableChars, this);
-        }
-        if (c == '}') { // end of object
-          return null;
-        }
-        throw reportError("applyObject", "expect \" after {");
-      case ',':
-        c = nextToken();
-        if (c != '"') {
-          throw reportError("applyObject", "expect string field, but " + (char) c);
-        }
-        final int count = parse();
-        if ((c = nextToken()) != ':') {
-          throw reportError("applyObject", "expect :, but " + ((char) c));
-        }
-        return fieldBufferFunction.apply(count, reusableChars, this);
-      case '}': // end of object
-        return null;
-      default:
-        throw reportError("applyObject", "expect { or , or } or n, but found: " + (char) c);
-    }
+  final <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException {
+    final int len = parse();
+    testChars.accept(context, charBuf, 0, len);
   }
 
   @Override
-  public final <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction) throws IOException {
-    byte c = nextToken();
-    switch (c) {
-      case 'n':
-        skipFixedBytes(3);
-        return null;
-      case '{':
-        c = nextToken();
-        if (c == '"') {
-          final int count = parse();
-          if ((c = nextToken()) != ':') {
-            throw reportError("applyObject", "expect :, but " + ((char) c));
-          }
-          return fieldBufferFunction.apply(context, count, reusableChars, this);
-        }
-        if (c == '}') { // end of object
-          return null;
-        }
-        throw reportError("applyObject", "expect \" after {");
-      case ',':
-        c = nextToken();
-        if (c != '"') {
-          throw reportError("applyObject", "expect string field, but " + (char) c);
-        }
-        final int count = parse();
-        if ((c = nextToken()) != ':') {
-          throw reportError("applyObject", "expect :, but " + ((char) c));
-        }
-        return fieldBufferFunction.apply(context, count, reusableChars, this);
-      case '}': // end of object
-        return null;
-      default:
-        throw reportError("applyObject", "expect { or , or } or n, but found: " + (char) c);
-    }
+  final boolean fieldEquals(final String field, final int offset, final int len) {
+    return JsonIterator.fieldEquals(field, charBuf, 0, len);
   }
 
   @Override
-  public final float readFloat() throws IOException {
-    return (float) readDouble();
-  }
-
-  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = (count, chars) -> new BigDecimal(chars, 0, count);
-  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (count, chars) -> {
-    if (count == 1) {
-      return chars[0] == '0'
-          ? BigDecimal.ZERO
-          : new BigDecimal(chars, 0, count);
-    }
-    if (chars[count - 1] != '0') {
-      return new BigDecimal(chars, 0, count);
-    }
-    int i = count - 2;
-    char c = chars[i];
-    while (c == '0') {
-      if (i == 0) {
-        return BigDecimal.ZERO;
-      }
-      c = chars[--i];
-    }
-    for (int j = i; c != '.'; c = chars[--j]) {
-      if ((c == 'e') || (c == 'E')) {
-        return new BigDecimal(chars, 0, count).stripTrailingZeros();
-      }
-      if (j == 0) { // Not a decimal
-        return new BigDecimal(chars, 0, count);
-      }
-    }
-    return new BigDecimal(chars, 0, i + 1);
-  };
-
-  @Override
-  public final BigDecimal readBigDecimal() throws IOException {
-    return readBigDecimal(READ_BIG_DECIMAL_FUNCTION);
+  final boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) throws IOException {
+    return fieldBufferFunction.test(charBuf, 0, len, this);
   }
 
   @Override
-  public final BigDecimal readBigDecimalStripTrailingZeroes() throws IOException {
-    return readBigDecimal(READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION);
-  }
-
-  private BigDecimal readBigDecimal(final CharBufferFunction<BigDecimal> parseChars) throws IOException {
-    // skip whitespace by read next
-    final var valueType = whatIsNext();
-    if (valueType == STRING) {
-      return applyChars(parseChars);
-    }
-    if (valueType == NUMBER) {
-      final var numberChars = readNumber();
-      return parseChars.apply(numberChars.charsLength, numberChars.chars);
-    }
-    if (valueType == NULL) {
-      skip();
-      return null;
-    }
-    throw reportError("readBigDecimal", "Must be a number or a string, found " + valueType);
-  }
-
-  private static final CharBufferFunction<BigInteger> READ_BIG_INTEGER_FUNCTION = (count, chars) -> new BigInteger(new String(chars, 0, count));
-
-  @Override
-  public final BigInteger readBigInteger() throws IOException {
-    // skip whitespace by read next
-    final var valueType = whatIsNext();
-    if (valueType == NUMBER) {
-      return new BigInteger(readNumberAsString());
-    }
-    if (valueType == STRING) {
-      return applyChars(READ_BIG_INTEGER_FUNCTION);
-    }
-    if (valueType == NULL) {
-      skip();
-      return null;
-    }
-    throw reportError("readBigInteger", "Must be a number or a string, found " + valueType);
+  final <C> boolean test(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) throws IOException {
+    return fieldBufferFunction.test(context, charBuf, 0, len, this);
   }
 
   @Override
-  public final ValueType whatIsNext() throws IOException {
-    final var valueType = VALUE_TYPES[nextToken()];
-    unreadByte();
-    return valueType;
+  final <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) throws IOException {
+    return fieldBufferFunction.apply(charBuf, 0, len, this);
   }
 
   @Override
-  public final JsonIterator skip() throws IOException {
-    final byte c = nextToken();
-    switch (c) {
-      case '"':
-        skipString();
-        return this;
-      case '-':
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        skipUntilBreak();
-        return this;
-      case 't':
-      case 'n':
-        skipFixedBytes(3); // true or null
-        return this;
-      case 'f':
-        skipFixedBytes(4); // false
-        return this;
-      case '[':
-        skipArray();
-        return this;
-      case '{':
-        skipObject();
-        return this;
-      default:
-        throw reportError("skip", "do not know how to skip: " + c);
-    }
-//    return switch (c) {
-//      case '"' ->skipString();
-//      case '-','0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ->skipUntilBreak();
-//      case 't','n' ->skipFixedBytes(3); // true or null
-//      case 'f' ->skipFixedBytes(4); // false
-//      case '[' ->skipArray();
-//      case '{' ->skipObject();
-//      default ->throw reportError("skip", "do not know how to skip: " + c);
-//    } ;
+  final <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len) throws IOException {
+    return fieldBufferFunction.apply(context, charBuf, 0, len, this);
   }
 
-  void skipArray() throws IOException {
-    int level = 1;
-    for (int i = head; i < tail; i++) {
-      switch (buf[i]) {
-        case '"': // If inside string, skip it
-          head = i + 1;
-          skipString();
-          i = head - 1; // it will be i++ soon
-          break;
-        case '[': // If open symbol, increase level
-          level++;
-          break;
-        case ']': // If close symbol, increase level
-          level--;
-          // If we have returned to the original level, we're done
-          if (level == 0) {
-            head = i + 1;
-            return;
-          }
-          break;
-      }
-    }
-    throw reportError("skipArray", "incomplete array");
+  @Override
+  final BigDecimal applyNumberChars(final CharBufferFunction<BigDecimal> parseChars) throws IOException {
+    return parseChars.apply(charBuf, 0, parseNumber());
   }
 
-  void skipObject() throws IOException {
-    for (int i = head, level = 1; i < tail; i++) {
-      switch (buf[i]) {
-        case '"': // If inside string, skip it
-          head = i + 1;
-          skipString();
-          i = head - 1; // it will be i++ soon
-          break;
-        case '{': // If open symbol, increase level
-          level++;
-          break;
-        case '}': // If close symbol, increase level
-          level--;
-          // If we have returned to the original level, we're done
-          if (level == 0) {
-            head = i + 1;
-            return;
-          }
-          break;
-      }
-    }
-    throw reportError("skipObject", "incomplete object");
-  }
-
-  void skipString() throws IOException {
-    final int end = findStringEnd();
-    if (end == -1) {
-      throw reportError("skipString", "incomplete string");
-    }
-    head = end;
-  }
-
-  // adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
-  // Tries to find the end of string
-  // Support if string contains escaped quote symbols.
-  final int findStringEnd() {
-    byte c;
-    ESCAPED:
-    for (int i = head; i < tail; i++) {
-      c = buf[i];
-      if (c == '"') {
-        return i + 1;
-      }
-      if (c == '\\') {
-        for (int numEscapes = 1; ; ++numEscapes) {
-          if (++i == tail) {
-            return -1;
-          }
-          c = buf[i];
-          if (c == '"') {
-            if ((numEscapes & 1) == 0) {
-              return i + 1;
-            }
-            continue ESCAPED;
-          }
-          if (c != '\\') {
-            continue ESCAPED;
-          }
-        }
-      }
-    }
-    return -1;
-  }
-
-  void skipUntilBreak() throws IOException {
-    for (int i = head; i < tail; i++) {
-      switch (buf[i]) {
-        case ' ':
-        case '\t':
-        case '\n':
-        case '\r':
-        case ',':
-        case '}':
-        case ']':
-          head = i;
-          return;
-      }
-    }
-    head = tail;
-  }
-
-  byte nextToken() throws IOException {
-    byte c;
-    for (int i = head; ; ) {
-      c = buf[i++];
-      switch (c) {
-        case ' ':
-        case '\n':
-        case '\r':
-        case '\t':
-          continue;
-        default:
-          head = i;
-          return c;
-      }
-    }
-  }
-
-  byte readByte() throws IOException {
-    return buf[head++];
-  }
-
-  void skipFixedBytes(final int n) throws IOException {
-    head += n;
-  }
-
-  int readStringSlowPath(int j) throws IOException {
+  private int readStringSlowPath(int j) throws IOException {
     try {
       boolean isExpectingLowSurrogate = false;
-      for (int i = head, bc; i < tail; ) {
-        bc = buf[i++];
+      for (int bc; ; ) {
+        bc = readAsInt();
         if (bc == '"') {
-          head = i;
           return j;
         }
         if (bc == '\\') {
-          bc = buf[i++];
+          bc = readAsInt();
           switch (bc) {
             case 'b':
               bc = '\b';
@@ -1041,7 +256,7 @@ class BytesJsonIterator implements JsonIterator {
             case '\\':
               break;
             case 'u':
-              bc = (JHex.decode(buf[i++]) << 12) + (JHex.decode(buf[i++]) << 8) + (JHex.decode(buf[i++]) << 4) + JHex.decode(buf[i++]);
+              bc = (JHex.decode(readAsInt()) << 12) + (JHex.decode(readAsInt()) << 8) + (JHex.decode(readAsInt()) << 4) + JHex.decode(readAsInt());
               if (isExpectingLowSurrogate) {
                 if (Character.isLowSurrogate((char) bc)) {
                   isExpectingLowSurrogate = false;
@@ -1058,15 +273,15 @@ class BytesJsonIterator implements JsonIterator {
               throw reportError("readStringSlowPath", "invalid escape character: " + bc);
           }
         } else if ((bc & 0x80) != 0) {
-          final int u2 = buf[i++];
+          final int u2 = readAsInt();
           if ((bc & 0xE0) == 0xC0) {
             bc = ((bc & 0x1F) << 6) + (u2 & 0x3F);
           } else {
-            final int u3 = buf[i++];
+            final int u3 = readAsInt();
             if ((bc & 0xF0) == 0xE0) {
               bc = ((bc & 0x0F) << 12) + ((u2 & 0x3F) << 6) + (u3 & 0x3F);
             } else {
-              final int u4 = buf[i++];
+              final int u4 = readAsInt();
               if ((bc & 0xF8) == 0xF0) {
                 bc = ((bc & 0x07) << 18) + ((u2 & 0x3F) << 12) + ((u3 & 0x3F) << 6) + (u4 & 0x3F);
               } else {
@@ -1079,276 +294,74 @@ class BytesJsonIterator implements JsonIterator {
                 }
                 // split surrogates
                 final int sup = bc - 0x10000;
-                if (reusableChars.length == j) {
+                if (charBuf.length == j) {
                   doubleReusableCharBuffer();
                 }
-                reusableChars[j++] = (char) ((sup >>> 10) + 0xd800);
-                if (reusableChars.length == j) {
+                charBuf[j++] = (char) ((sup >>> 10) + 0xd800);
+                if (charBuf.length == j) {
                   doubleReusableCharBuffer();
                 }
-                reusableChars[j++] = (char) ((sup & 0x3ff) + 0xdc00);
+                charBuf[j++] = (char) ((sup & 0x3ff) + 0xdc00);
                 continue;
               }
             }
           }
         }
-        if (reusableChars.length == j) {
+        if (charBuf.length == j) {
           doubleReusableCharBuffer();
         }
-        reusableChars[j++] = (char) bc;
+        charBuf[j++] = (char) bc;
       }
-      throw reportError("readStringSlowPath", "incomplete string");
     } catch (final IndexOutOfBoundsException e) {
       throw reportError("readStringSlowPath", "incomplete string");
     }
   }
 
-  final void doubleReusableCharBuffer() {
-    final char[] newBuf = new char[reusableChars.length << 1];
-    System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-    reusableChars = newBuf;
-  }
-
-  void assertNotLeadingZero() throws IOException {
-    try {
-      if (head == buf.length) {
-        return;
-      }
-      final byte nextByte = readByte();
-      unreadByte();
-      if (INT_DIGITS[nextByte] == INVALID_CHAR_FOR_NUMBER) {
-        return;
-      }
-      throw reportError("assertNotLeadingZero", "leading zero is invalid");
-    } catch (final ArrayIndexOutOfBoundsException e) {
-      head = tail;
-    }
-  }
-
-  int readInt(final byte c) throws IOException {
-    int ind = INT_DIGITS[c];
-    if (ind == 0) {
-      assertNotLeadingZero();
-      return 0;
-    }
-    if (ind == INVALID_CHAR_FOR_NUMBER) {
-      throw reportError("readInt", "expect 0~9");
-    }
-    if (tail - head > 9) {
-      int i = head;
-      final int ind2 = INT_DIGITS[buf[i]];
-      if (ind2 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        return -ind;
-      }
-      final int ind3 = INT_DIGITS[buf[++i]];
-      if (ind3 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 10 + ind2;
-        return -ind;
-      }
-      final int ind4 = INT_DIGITS[buf[++i]];
-      if (ind4 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 100 + ind2 * 10 + ind3;
-        return -ind;
-      }
-      final int ind5 = INT_DIGITS[buf[++i]];
-      if (ind5 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
-        return -ind;
-      }
-      final int ind6 = INT_DIGITS[buf[++i]];
-      if (ind6 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
-        return -ind;
-      }
-      final int ind7 = INT_DIGITS[buf[++i]];
-      if (ind7 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
-        return -ind;
-      }
-      final int ind8 = INT_DIGITS[buf[++i]];
-      if (ind8 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
-        return -ind;
-      }
-      final int ind9 = INT_DIGITS[buf[++i]];
-      ind = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
-      head = i;
-      if (ind9 == INVALID_CHAR_FOR_NUMBER) {
-        return -ind;
-      }
-    }
-    return readIntSlowPath(ind);
-  }
-
-  int readIntSlowPath(int value) throws IOException {
-    value = -value; // add negatives to avoid redundant checks for Integer.MIN_VALUE on each iteration
-    for (int i = head, ind; i < tail; i++) {
-      ind = INT_DIGITS[buf[i]];
-      if (ind == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        return value;
-      }
-      if (value < -214748364) { // limit / 10
-        throw reportError("readIntSlowPath", "value is too large for int");
-      }
-      value = (value << 3) + (value << 1) - ind;
-      if (value >= 0) {
-        throw reportError("readIntSlowPath", "value is too large for int");
-      }
-    }
-    head = tail;
-    return value;
-  }
-
-  long readLong(final byte c) throws IOException {
-    long ind = INT_DIGITS[c];
-    if (ind == INVALID_CHAR_FOR_NUMBER) {
-      throw reportError("readLong", "expect 0~9");
-    }
-    if (tail - head > 9) {
-      int i = head;
-      final int ind2 = INT_DIGITS[buf[i]];
-      if (ind2 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        return -ind;
-      }
-      final int ind3 = INT_DIGITS[buf[++i]];
-      if (ind3 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 10 + ind2;
-        return -ind;
-      }
-      final int ind4 = INT_DIGITS[buf[++i]];
-      if (ind4 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 100 + ind2 * 10 + ind3;
-        return -ind;
-      }
-      final int ind5 = INT_DIGITS[buf[++i]];
-      if (ind5 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
-        return -ind;
-      }
-      final int ind6 = INT_DIGITS[buf[++i]];
-      if (ind6 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
-        return -ind;
-      }
-      final int ind7 = INT_DIGITS[buf[++i]];
-      if (ind7 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
-        return -ind;
-      }
-      final int ind8 = INT_DIGITS[buf[++i]];
-      if (ind8 == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        ind = ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
-        return -ind;
-      }
-      final int ind9 = INT_DIGITS[buf[++i]];
-      ind = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
-      head = i;
-      if (ind9 == INVALID_CHAR_FOR_NUMBER) {
-        return -ind;
-      }
-    }
-    return readLongSlowPath(ind);
-  }
-
-  long readLongSlowPath(long value) throws IOException {
-    value = -value; // add negatives to avoid redundant checks for Long.MIN_VALUE on each iteration
-    for (int i = head, ind; i < tail; i++) {
-      ind = INT_DIGITS[buf[i]];
-      if (ind == INVALID_CHAR_FOR_NUMBER) {
-        head = i;
-        return value;
-      }
-      if (value < -922337203685477580L) { // limit / 10
-        throw reportError("readLongSlowPath", "value is too large for long");
-      }
-      value = (value << 3) + (value << 1) - ind;
-      if (value >= 0) {
-        throw reportError("readLongSlowPath", "value is too large for long");
-      }
-    }
-    head = tail;
-    return value;
+  @Override
+  final String parsedNumberAsString(final int len) {
+    return new String(charBuf, 0, len);
   }
 
   @Override
-  public final double readDouble() throws IOException {
-    if (nextToken() == '-') {
-      return -readDoubleNoSign();
-    }
-    unreadByte();
-    return readDoubleNoSign();
-  }
-
-  double readDoubleNoSign() throws IOException {
-    int oldHead = head;
-    try {
-      final long value = readLong(); // without the dot & sign
-      if (head == tail) {
-        return value;
+  final int parseNumber() throws IOException {
+    for (int i = head, len = 0; ; i++) {
+      if (i == tail) {
+        if (loadMore()) {
+          i = head;
+        } else {
+          head = tail;
+          return len;
+        }
       }
-      byte c = buf[head];
-      if (c == '.') {
-        head++;
-        final int start = head;
-        c = buf[head++];
-        long decimalPart = readLong(c);
-        if (decimalPart == Long.MIN_VALUE) {
-          return readDoubleSlowPath();
-        }
-        if (head < tail && (buf[head] == 'e' || buf[head] == 'E')) {
-          head = oldHead;
-          return readDoubleSlowPath();
-        }
-        decimalPart = -decimalPart;
-        final int decimalPlaces = head - start;
-        if (decimalPlaces > 0 && decimalPlaces < POW10.length && (head - oldHead) < 10) {
-          return value + (decimalPart / (double) POW10[decimalPlaces]);
-        }
-        head = oldHead;
-        return readDoubleSlowPath();
+      if (len == charBuf.length) {
+        doubleReusableCharBuffer();
       }
-      if (head < tail && (buf[head] == 'e' || buf[head] == 'E')) {
-        head = oldHead;
-        return readDoubleSlowPath();
+      final char c = peekChar(i);
+      switch (c) {
+        case ' ':
+          continue;
+        case '.':
+        case 'e':
+        case 'E':
+          // dot found
+        case '-':
+        case '+':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+          charBuf[len++] = c;
+          continue;
+        default:
+          head = i;
+          return len;
       }
-      return value;
-    } catch (final JsonException e) {
-      head = oldHead;
-      return readDoubleSlowPath();
-    }
-  }
-
-  final double readDoubleSlowPath() throws IOException {
-    try {
-      final var numberChars = readNumber();
-      if (numberChars.charsLength == 0 && whatIsNext() == STRING) {
-        final var possibleInf = readString();
-        if ("infinity".equals(possibleInf)) {
-          return Double.POSITIVE_INFINITY;
-        }
-        if ("-infinity".equals(possibleInf)) {
-          return Double.NEGATIVE_INFINITY;
-        }
-        throw reportError("readDoubleSlowPath", "expect number but found string: " + possibleInf);
-      }
-      return Double.valueOf(new String(numberChars.chars, 0, numberChars.charsLength));
-    } catch (final NumberFormatException e) {
-      throw reportError("readDoubleSlowPath", e.toString());
     }
   }
 }

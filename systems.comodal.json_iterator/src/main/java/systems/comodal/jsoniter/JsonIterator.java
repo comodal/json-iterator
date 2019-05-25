@@ -12,24 +12,56 @@ public interface JsonIterator extends Closeable {
     return new BufferedStreamJsonIterator(in, new byte[bufSize], 0, 0);
   }
 
+  static JsonIterator parse(final InputStream in, final int bufSize, final int charBufferLength) {
+    return new BufferedStreamJsonIterator(in, new byte[bufSize], 0, 0, charBufferLength);
+  }
+
   static JsonIterator parse(final byte[] buf) {
     return new BytesJsonIterator(buf, 0, buf.length);
+  }
+
+  static JsonIterator parse(final byte[] buf, final int charBufferLength) {
+    return new BytesJsonIterator(buf, 0, buf.length, charBufferLength);
   }
 
   static JsonIterator parse(final byte[] buf, final int head, final int tail) {
     return new BytesJsonIterator(buf, head, tail);
   }
 
+  static JsonIterator parse(final byte[] buf, final int head, final int tail, final int charBufferLength) {
+    return new BytesJsonIterator(buf, head, tail, charBufferLength);
+  }
+
+  static JsonIterator parse(final char[] buf) {
+    return new CharsJsonIterator(buf, 0, buf.length);
+  }
+
+  static JsonIterator parse(final char[] buf, final int head, final int tail) {
+    return new CharsJsonIterator(buf, head, tail);
+  }
+
   static JsonIterator parse(final String str) {
     return parse(str.getBytes());
   }
 
+  static JsonIterator parse(final String str, final int charBufferLength) {
+    return parse(str.getBytes(), charBufferLength);
+  }
+
+  static boolean fieldEquals(final String str, final char[] buf) {
+    return fieldEquals(str, buf, 0, buf.length);
+  }
+
   static boolean fieldEquals(final String str, final char[] buf, final int len) {
+    return fieldEquals(str, buf, 0, len);
+  }
+
+  static boolean fieldEquals(final String str, final char[] buf, final int offset, final int len) {
     if (str.length() != len) {
       return false;
     }
-    for (int i = 0; i < len; i++) {
-      if (str.charAt(i) != buf[i]) {
+    for (int i = 0, j = offset; i < len; i++, j++) {
+      if (str.charAt(i) != buf[j]) {
         return false;
       }
     }
@@ -37,16 +69,7 @@ public interface JsonIterator extends Closeable {
   }
 
   static boolean regionMatches(final String str, final char[] buf, final int from, final int to) {
-    final int len = to - from;
-    if (str.length() != len) {
-      return false;
-    }
-    for (int i = 0, j = from; i < len; i++, j++) {
-      if (str.charAt(i) != buf[j]) {
-        return false;
-      }
-    }
-    return true;
+    return regionMatches(str, buf, from, to - from);
   }
 
   boolean supportsMarkReset();
@@ -58,6 +81,10 @@ public interface JsonIterator extends Closeable {
   JsonIterator reset(final byte[] buf);
 
   JsonIterator reset(final byte[] buf, final int head, final int tail);
+
+  JsonIterator reset(final char[] buf);
+
+  JsonIterator reset(final char[] buf, final int head, final int tail);
 
   JsonIterator reset(final InputStream in);
 

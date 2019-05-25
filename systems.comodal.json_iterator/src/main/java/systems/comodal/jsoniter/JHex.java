@@ -27,11 +27,11 @@ final class JHex {
       return digits;
     }
   }
-  
+
   private JHex() {
   }
 
-  static int decode(final byte b) {
+  static int decode(final int b) {
     final int val = DIGITS[b];
     if (val == INVALID) {
       throw new IndexOutOfBoundsException(b + " is not valid hex digit");

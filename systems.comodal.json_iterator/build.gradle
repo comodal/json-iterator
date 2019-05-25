@@ -36,6 +36,7 @@ dependencies {
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api:+'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:+'
+  
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:+'
   testImplementation 'org.openjdk.jmh:jmh-core:+'
   testImplementation 'org.openjdk.jmh:jmh-generator-annprocess:+'
@@ -45,10 +46,12 @@ dependencies {
 }
 
 jmh {
+  // ./gradlew -q --console=plain --no-daemon jmh -Pbench=BenchStringFieldStyles
   if(project.properties['bench.graal'] == 'true') {
-    jvmArgsPrepend = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
+    jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC', '-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
     resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/graal_results.json")
   } else {
+    jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC']
     resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/results.json")
   }
   warmupIterations = 4

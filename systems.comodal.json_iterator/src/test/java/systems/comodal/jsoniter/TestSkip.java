@@ -1,78 +1,89 @@
 package systems.comodal.jsoniter;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 final class TestSkip {
 
-  @Test
-  void test_skip_number() throws IOException {
-    var iter = JsonIterator.parse("[1,2]");
-    assertTrue(iter.readArray());
-    iter.skip();
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_skip_number(final JsonIteratorFactory factory) throws IOException {
+    var ji = factory.create("[1,2]");
+    assertTrue(ji.readArray());
+    ji.skip();
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertFalse(ji.readArray());
   }
 
-  @Test
-  void test_skip_string() throws IOException {
-    var iter = JsonIterator.parse("[\"hello\",2]");
-    assertTrue(iter.readArray());
-    iter.skip();
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_skip_string(final JsonIteratorFactory factory) throws IOException {
+    var ji = factory.create("[\"hello\",2]");
+    assertTrue(ji.readArray());
+    ji.skip();
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertFalse(ji.readArray());
   }
 
-  @Test
-  void test_skip_string_streaming() throws IOException {
-    var iter = JsonIterator.parse(new ByteArrayInputStream("\"hello".getBytes()), 2);
-    assertThrows(JsonException.class, iter::skip);
-    iter = JsonIterator.parse(new ByteArrayInputStream("\"hello\"".getBytes()), 2);
-    iter.skip();
-    iter = JsonIterator.parse(new ByteArrayInputStream("\"hello\"1".getBytes()), 2);
-    iter.skip();
-    assertEquals(1, iter.readInt());
-    iter = JsonIterator.parse(new ByteArrayInputStream("\"h\\\"ello\"1".getBytes()), 3);
-    iter.skip();
-    assertEquals(1, iter.readInt());
-    iter = JsonIterator.parse(new ByteArrayInputStream("\"\\\\\"1".getBytes()), 3);
-    iter.skip();
-    assertEquals(1, iter.readInt());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_skip_string_streaming(final JsonIteratorFactory factory) throws IOException {
+    var ji = factory.create("\"hello", 2, 2);
+    assertThrows(JsonException.class, ji::skip);
+
+    ji = factory.create("\"hello\"", 2, 2);
+    ji.skip();
+
+    ji = factory.create("\"hello\"1", 2, 2);
+    ji.skip();
+    assertEquals(1, ji.readInt());
+
+    ji = factory.create("\"h\\\"ello\"1", 2, 3);
+    ji.skip();
+    assertEquals(1, ji.readInt());
+
+    ji = factory.create("\"\\\\\"1", 2, 3);
+    ji.skip();
+    assertEquals(1, ji.readInt());
   }
 
-  @Test
-  void test_skip_object() throws IOException {
-    var iter = JsonIterator.parse("[{\"hello\": {\"world\": \"a\"}},2]");
-    assertTrue(iter.readArray());
-    iter.skip();
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_skip_object(final JsonIteratorFactory factory) throws IOException {
+    var ji = factory.create("[{\"hello\": {\"world\": \"a\"}},2]");
+    assertTrue(ji.readArray());
+    ji.skip();
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertFalse(ji.readArray());
   }
 
-  @Test
-  void test_skip_array() throws IOException {
-    var iter = JsonIterator.parse("[ [1,  3] ,2]");
-    assertTrue(iter.readArray());
-    iter.skip();
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_skip_array(final JsonIteratorFactory factory) throws IOException {
+    var ji = factory.create("[ [1,  3] ,2]");
+    assertTrue(ji.readArray());
+    ji.skip();
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertFalse(ji.readArray());
   }
 
-  @Test
-  void test_skip_nested() throws IOException {
-    var iter = JsonIterator.parse("[ [1, {\"a\": [\"b\"] },  3] ,2]");
-    assertTrue(iter.readArray());
-    iter.skip();
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_skip_nested(final JsonIteratorFactory factory) throws IOException {
+    var ji = factory.create("[ [1, {\"a\": [\"b\"] },  3] ,2]");
+    assertTrue(ji.readArray());
+    ji.skip();
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertFalse(ji.readArray());
   }
 }

@@ -24,8 +24,8 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
     return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_CHAR_FIELD_PARSER).create();
   }
 
-  private static final ContextFieldBufferPredicate<Filter.Builder> FILTER_CHAR_FIELD_PARSER = (filter, len, buf, ji) -> {
-    switch (buf[0]) {
+  private static final ContextFieldBufferPredicate<Filter.Builder> FILTER_CHAR_FIELD_PARSER = (filter, buf, offset, len, ji) -> {
+    switch (buf[offset]) {
       case 'f':
         filter.type(ji.readString());
         return true;
@@ -69,12 +69,12 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
         filter.maxNumAlgoOrders(ji.readInt());
         return true;
       default:
-        throw new IllegalStateException("Unhandled filter field " + buf[0]);
+        throw new IllegalStateException("Unhandled filter field " + buf[offset]);
     }
   };
 
-  private static final ContextFieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_CHAR_FIELD_PARSER = (symbol, len, buf, ji) -> {
-    switch (buf[0]) {
+  private static final ContextFieldBufferPredicate<ProductSymbol.Builder> PRODUCT_SYMBOL_CHAR_FIELD_PARSER = (symbol, buf, offset, len, ji) -> {
+    switch (buf[offset]) {
       case 'p':
         symbol.symbol(ji.readString());
         return true;
@@ -107,12 +107,12 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
         }
         return true;
       default:
-        throw new IllegalStateException("Unhandled symbol field " + buf[0]);
+        throw new IllegalStateException("Unhandled symbol field " + buf[offset]);
     }
   };
 
-  private static final ContextFieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_CHAR_FIELD_PARSER = (rateLimit, len, buf, ji) -> {
-    switch (buf[0]) {
+  private static final ContextFieldBufferPredicate<RateLimit.Builder> RATE_LIMIT_CHAR_FIELD_PARSER = (rateLimit, buf, offset, len, ji) -> {
+    switch (buf[offset]) {
       case 't':
         rateLimit.type(ji.readString());
         return true;
@@ -126,12 +126,12 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
         rateLimit.limit(ji.readInt());
         return true;
       default:
-        throw new IllegalStateException("Unhandled rate limit field " + buf[0]);
+        throw new IllegalStateException("Unhandled rate limit field " + buf[offset]);
     }
   };
 
-  private static final ContextFieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_CHAR_FIELD_PARSER = (info, len, buf, ji) -> {
-    switch (buf[0]) {
+  private static final ContextFieldBufferPredicate<ExchangeInfo.Builder> EXCHANGE_INFO_CHAR_FIELD_PARSER = (info, buf, offset, len, ji) -> {
+    switch (buf[offset]) {
       case 't':
         info.timezone(ji.readString());
         return true;
@@ -154,7 +154,7 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
         }
         return true;
       default:
-        throw new IllegalStateException("Unhandled field " + buf[0]);
+        throw new IllegalStateException("Unhandled field " + buf[offset]);
     }
   };
 }

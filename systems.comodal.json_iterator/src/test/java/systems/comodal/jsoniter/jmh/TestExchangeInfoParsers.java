@@ -25,19 +25,25 @@ final class TestExchangeInfoParsers {
   @TestFactory
   Stream<DynamicTest> testStringFieldParsers() {
     final var bench = new BenchStringFieldStyles();
-    return Set.of("StaticFieldOrdering", "IocLoopCompareStringFieldToCharsIf", "LoopStringSwitch", "LoopStringIf")
-        .parallelStream()
+    final var styles = Set.of("StaticFieldOrdering", "IocLoopCompareStringFieldToCharsIf", "LoopStringSwitch", "LoopStringIf");
+    return styles.parallelStream()
         .map(filter -> JsonIterParserFactory.loadParser(ExchangeInfo.class, filter))
-        .map(parser -> dynamicTest(parser.getClass().getSimpleName(), () -> validateExchangeInfo(parser.parse(bench.getLoadedJsonIterator()))));
+        .map(parser -> dynamicTest(parser.getClass().getSimpleName(), () -> {
+          validateExchangeInfo(parser.parse(bench.getLoadedBytesJsonIterator()));
+          validateExchangeInfo(parser.parse(bench.getLoadedCharsJsonIterator()));
+        }));
   }
 
   @TestFactory
   Stream<DynamicTest> testCharFieldParsers() {
     final var bench = new BenchCharFieldStyles();
-    return Set.of("StaticFieldOrdering", "IocLoopCharSwitch", "IocLoopCharIf")
-        .parallelStream()
+    final var styles = Set.of("StaticFieldOrdering", "IocLoopCharSwitch", "IocLoopCharIf");
+    return styles.parallelStream()
         .map(filter -> JsonIterParserFactory.loadParser(ExchangeInfo.class, filter))
-        .map(parser -> dynamicTest(parser.getClass().getSimpleName(), () -> validateExchangeInfo(parser.parse(bench.getLoadedJsonIterator()))));
+        .map(parser -> dynamicTest(parser.getClass().getSimpleName(), () -> {
+          validateExchangeInfo(parser.parse(bench.getLoadedBytesJsonIterator()));
+          validateExchangeInfo(parser.parse(bench.getLoadedCharsJsonIterator()));
+        }));
   }
 
   private void validateExchangeInfo(final ExchangeInfo info) {

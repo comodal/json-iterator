@@ -1,6 +1,8 @@
 package systems.comodal.jsoniter;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
 import java.io.IOException;
 
@@ -8,94 +10,110 @@ import static org.junit.jupiter.api.Assertions.*;
 
 final class TestArray {
 
-  @Test
-  void test_empty_array() throws IOException {
-    var iter = JsonIterator.parse("[]");
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_empty_array(final JsonIteratorFactory factory) throws IOException {
+    final var json = "[]";
 
-    iter = JsonIterator.parse("[]");
-    assertEquals(iter, iter.openArray());
-    assertEquals(iter, iter.closeArray());
+    var ji = factory.create(json);
+    assertFalse(ji.readArray());
+
+    ji = factory.create(json);
+    assertEquals(ji, ji.openArray());
+    assertEquals(ji, ji.closeArray());
   }
 
-  @Test
-  void test_one_element() throws IOException {
-    var iter = JsonIterator.parse("[1]");
-    assertTrue(iter.readArray());
-    assertEquals(1, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_one_element(final JsonIteratorFactory factory) throws IOException {
+    final var json = "[1]";
 
-    iter = JsonIterator.parse("[1]");
-    assertEquals(iter, iter.openArray());
-    assertEquals(1, iter.readInt());
-    assertEquals(iter, iter.closeArray());
+    var ji = factory.create(json);
+    assertTrue(ji.readArray());
+    assertEquals(1, ji.readInt());
+    assertFalse(ji.readArray());
+
+    ji = factory.create(json);
+    assertEquals(ji, ji.openArray());
+    assertEquals(1, ji.readInt());
+    assertEquals(ji, ji.closeArray());
   }
 
-  @Test
-  void test_two_elements() throws IOException {
-    var iter = JsonIterator.parse(" [ 1 , 2 ] ");
-    assertTrue(iter.readArray());
-    assertEquals(1, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_two_elements(final JsonIteratorFactory factory) throws IOException {
+    final var json = " [ 1 , 2 ] ";
 
-    iter = JsonIterator.parse(" [ 1 , 2 ] ");
-    assertEquals(iter, iter.openArray());
-    assertEquals(1, iter.readInt());
-    assertEquals(iter, iter.continueArray());
-    assertEquals(2, iter.readInt());
-    assertEquals(iter, iter.closeArray());
+    var ji = factory.create(json);
+    assertTrue(ji.readArray());
+    assertEquals(1, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertFalse(ji.readArray());
+
+    ji = factory.create(json);
+    assertEquals(ji, ji.openArray());
+    assertEquals(1, ji.readInt());
+    assertEquals(ji, ji.continueArray());
+    assertEquals(2, ji.readInt());
+    assertEquals(ji, ji.closeArray());
   }
 
-  @Test
-  void test_three_elements() throws IOException {
-    var iter = JsonIterator.parse(" [ 1 , 2, 3 ] ");
-    assertTrue(iter.readArray());
-    assertEquals(1, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(3, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_three_elements(final JsonIteratorFactory factory) throws IOException {
+    final var json = " [ 1 , 2, 3 ] ";
 
-    iter = JsonIterator.parse(" [ 1 , 2, 3 ] ");
-    assertEquals(iter, iter.openArray());
-    assertEquals(1, iter.readInt());
-    assertEquals(iter, iter.continueArray());
-    assertEquals(2, iter.readInt());
-    assertEquals(iter, iter.continueArray());
-    assertEquals(3, iter.readInt());
-    assertEquals(iter, iter.closeArray());
+    var ji = factory.create(json);
+    assertTrue(ji.readArray());
+    assertEquals(1, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(3, ji.readInt());
+    assertFalse(ji.readArray());
+
+    ji = factory.create(json);
+    assertEquals(ji, ji.openArray());
+    assertEquals(1, ji.readInt());
+    assertEquals(ji, ji.continueArray());
+    assertEquals(2, ji.readInt());
+    assertEquals(ji, ji.continueArray());
+    assertEquals(3, ji.readInt());
+    assertEquals(ji, ji.closeArray());
   }
 
-  @Test
-  void test_four_elements() throws IOException {
-    var iter = JsonIterator.parse(" [ 1 , 2, 3, 4 ] ");
-    assertTrue(iter.readArray());
-    assertEquals(1, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(3, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(4, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_four_elements(final JsonIteratorFactory factory) throws IOException {
+    final var json = " [ 1 , 2, 3, 4 ] ";
+    final var ji = factory.create(json);
+    assertTrue(ji.readArray());
+    assertEquals(1, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(3, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(4, ji.readInt());
+    assertFalse(ji.readArray());
   }
 
-  @Test
-  void test_five_elements() throws IOException {
-    var iter = JsonIterator.parse(" [ 1 , 2, 3, 4, 5  ] ");
-    assertTrue(iter.readArray());
-    assertEquals(1, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(2, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(3, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(4, iter.readInt());
-    assertTrue(iter.readArray());
-    assertEquals(5, iter.readInt());
-    assertFalse(iter.readArray());
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void test_five_elements(final JsonIteratorFactory factory) throws IOException {
+    final var json = " [ 1 , 2, 3, 4, 5  ] ";
+    final var ji = factory.create(json);
+    assertTrue(ji.readArray());
+    assertEquals(1, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(2, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(3, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(4, ji.readInt());
+    assertTrue(ji.readArray());
+    assertEquals(5, ji.readInt());
+    assertFalse(ji.readArray());
   }
 }
