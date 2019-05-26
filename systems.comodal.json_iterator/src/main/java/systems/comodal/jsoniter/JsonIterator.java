@@ -68,10 +68,6 @@ public interface JsonIterator extends Closeable {
     return true;
   }
 
-  boolean supportsMarkReset();
-
-  int mark();
-
   JsonIterator reset(final int mark);
 
   JsonIterator reset(final byte[] buf);
@@ -88,19 +84,13 @@ public interface JsonIterator extends Closeable {
 
   String currentBuffer();
 
+  // Object Field & Navigation Methods
+
+  boolean supportsMarkReset();
+
+  int mark();
+
   ValueType whatIsNext() throws IOException;
-
-  JsonIterator skip() throws IOException;
-
-  boolean readNull() throws IOException;
-
-  boolean readBoolean() throws IOException;
-
-  short readShort() throws IOException;
-
-  int readInt() throws IOException;
-
-  long readLong() throws IOException;
 
   boolean readArray() throws IOException;
 
@@ -110,12 +100,58 @@ public interface JsonIterator extends Closeable {
 
   JsonIterator closeArray() throws IOException;
 
-  String readNumberAsString() throws IOException;
+  default String readObject() throws IOException {
+    return readObjField();
+  }
+
+  String readObjField() throws IOException;
+
+  JsonIterator skipObjField() throws IOException;
+
+  JsonIterator skipUntil(final String field) throws IOException;
+
+  JsonIterator closeObj() throws IOException;
+
+  // Value Methods
+
+  JsonIterator skip() throws IOException;
+
+  /**
+   * Advances the iterator if the next item is 'null' and returns true.
+   * Otherwise, stays in place in returns false.
+   */
+  boolean readNull() throws IOException;
 
   String readString() throws IOException;
 
+  String readNumberAsString() throws IOException;
+
+  String readNumberOrNumberString() throws IOException;
+
+  boolean readBoolean() throws IOException;
+
+  short readShort() throws IOException;
+
+  int readInt() throws IOException;
+
+  long readLong() throws IOException;
+
+  float readFloat() throws IOException;
+
+  double readDouble() throws IOException;
+
+  BigDecimal readBigDecimal() throws IOException;
+
+  BigDecimal readBigDecimalStripTrailingZeroes() throws IOException;
+
+  BigInteger readBigInteger() throws IOException;
+
+  // IOC Field Value Methods
+
   /**
-   * Construct an Object of your choice directly from the char[] representing the next String value.
+   * Construct an Object of type R directly from the char[] representing the next String value.
+   * <p>
+   * The function is not called for null values, instead null is directly returned.
    *
    * @param applyChars This array buffer is reused throughout the life of this iterator.
    * @param <R>        Resulting Object Type.
@@ -134,19 +170,9 @@ public interface JsonIterator extends Closeable {
 
   <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException;
 
-  JsonIterator skipUntil(final String field) throws IOException;
-
-  default String readObject() throws IOException {
-    return readObjField();
-  }
-
-  String readObjField() throws IOException;
+  // IOC Field Methods
 
   boolean testObjField(final CharBufferPredicate testField) throws IOException;
-
-  JsonIterator skipObjField() throws IOException;
-
-  JsonIterator closeObj() throws IOException;
 
   <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction) throws IOException;
 
@@ -155,14 +181,4 @@ public interface JsonIterator extends Closeable {
   <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction) throws IOException;
 
   void testObject(final FieldBufferPredicate fieldBufferFunction) throws IOException;
-
-  float readFloat() throws IOException;
-
-  double readDouble() throws IOException;
-
-  BigDecimal readBigDecimal() throws IOException;
-
-  BigDecimal readBigDecimalStripTrailingZeroes() throws IOException;
-
-  BigInteger readBigInteger() throws IOException;
 }

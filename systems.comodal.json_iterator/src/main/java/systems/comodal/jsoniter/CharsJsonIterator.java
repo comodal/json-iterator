@@ -82,6 +82,24 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
+  char peekToken() {
+    char c;
+    for (int i = head; ; i++) {
+      c = buf[i];
+      switch (c) {
+        case ' ':
+        case '\n':
+        case '\r':
+        case '\t':
+          continue;
+        default:
+          head = i;
+          return c;
+      }
+    }
+  }
+
+  @Override
   char readChar() {
     return buf[head++];
   }

@@ -72,12 +72,37 @@ class BytesJsonIterator extends BaseJsonIterator {
   @Override
   final char nextToken() throws IOException {
     byte c;
-    for (int i = head; ; i++) {
+    for (int i = head; ; ) {
       if (i == tail) {
         if (loadMore()) {
           i = head;
         } else {
           throw reportError("nextToken", "unexpected end");
+        }
+      }
+      c = buf[i++];
+      switch (c) {
+        case ' ':
+        case '\n':
+        case '\t':
+        case '\r':
+          continue;
+        default:
+          head = i;
+          return (char) c;
+      }
+    }
+  }
+
+  @Override
+  final char peekToken() throws IOException {
+    byte c;
+    for (int i = head; ; i++) {
+      if (i == tail) {
+        if (loadMore()) {
+          i = head;
+        } else {
+          throw reportError("peekToken", "unexpected end");
         }
       }
       c = buf[i];
@@ -88,7 +113,7 @@ class BytesJsonIterator extends BaseJsonIterator {
         case '\r':
           continue;
         default:
-          head = i + 1;
+          head = i;
           return (char) c;
       }
     }

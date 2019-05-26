@@ -78,6 +78,8 @@ abstract class BaseJsonIterator implements JsonIterator {
 
   abstract char nextToken() throws IOException;
 
+  abstract char peekToken() throws IOException;
+
   boolean loadMore() throws IOException {
     return false;
   }
@@ -663,7 +665,6 @@ abstract class BaseJsonIterator implements JsonIterator {
 
   @Override
   public final BigInteger readBigInteger() throws IOException {
-    // skip whitespace by read next
     final var valueType = whatIsNext();
     if (valueType == NUMBER) {
       return new BigInteger(readNumberAsString());
@@ -679,10 +680,24 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
+  public String readNumberOrNumberString() throws IOException {
+    final var valueType = whatIsNext();
+    if (valueType == NUMBER) {
+      return readNumberAsString();
+    }
+    if (valueType == STRING) {
+      return readString();
+    }
+    if (valueType == NULL) {
+      skip();
+      return null;
+    }
+    throw reportError("readNumberOrNumberString", "Must be a number, string or null but found " + valueType);
+  }
+
+  @Override
   public final ValueType whatIsNext() throws IOException {
-    final var valueType = VALUE_TYPES[nextToken()];
-    unread();
-    return valueType;
+    return VALUE_TYPES[peekToken()];
   }
 
   private int findStringEnd() throws IOException {
