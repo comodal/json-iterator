@@ -6,7 +6,7 @@ Funcationality has been extended by embracing inversion-of-control mechanics via
 
 Parsing supports String, byte[], char[] and InputStream data sources.
 
-### Basic Usage
+## Basic Usage
 
 See [JsonIterator.java](systems.comodal.json_iterator/src/main/java/systems/comodal/jsoniter/JsonIterator.java) for the public interface.
 
@@ -15,7 +15,7 @@ var jsonIterator = JsonIterator.parse("{\"hello\": \"world\"}");
 System.out.println(jsonIterator.readObjField() + ' ' + jsonIterator.readString());
 ```
 
-### Recommended Usage
+## Recommended Usage
 
 If the presence and ordering of the JSON object fields are guaranteed to always be the same, follow the [`StaticFieldOrdering`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/StaticFieldOrdering.java) style and simply skip over object field entries.
 
@@ -23,15 +23,23 @@ Otherwise, follow the [`IocLoopCompareStringFieldToCharsIf`](systems.comodal.jso
 
 If the first character for all of an objects' fields are unique, follow either the [`IocLoopCharIf`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/IocLoopCharIf.java) or [`IocLoopCharSwitch`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/IocLoopCharSwitch.java) style.  Similar to the style `IocLoopCompareStringFieldToCharsIf`, these styles avoid constructing Strings for object fields.
 
-### Style Comparison Benchmarks
+## Style Comparison Benchmarks
 
-#### String Fields
+### String Fields
+
+```sh 
+> ./gradlew jmh -Pbench=BenchCharFieldStyles
+```
 
 Each iteration parses a large json object ([exchangeInfo.json](systems.comodal.json_iterator/src/jmh/resources/exchangeInfo.json)).  The results can also be viewed on [JMH Visualizer](http://jmh.morethan.io/?source=https://raw.githubusercontent.com/comodal/json-iterator/master/benchmark-results/BenchStringFieldStyles/results.json).
 
 ![String Fields Style Comparision](benchmark-results/BenchStringFieldStyles/results.png)
 
-#### Char Fields
+### Char Fields
+
+```sh 
+> ./gradlew jmh -Pbench=BenchStringFieldStyles
+```
 
 Each iteration parses a large json object ([compactFieldsExchangeInfo.json](systems.comodal.json_iterator/src/jmh/resources/compactFieldsExchangeInfo.json)).  The results can also be viewed on [JMH Visualizer](http://jmh.morethan.io/?source=https://raw.githubusercontent.com/comodal/json-iterator/master/benchmark-results/BenchCharFieldStyles/results.json).
 
