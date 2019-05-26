@@ -17,10 +17,6 @@ final class IocLoopCharIf implements JsonIterParser<ExchangeInfo> {
 
   @Override
   public ExchangeInfo parse(final JsonIterator ji) throws IOException {
-    return parseExchangeInfo(ji);
-  }
-
-  static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
     return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_CHAR_FIELD_PARSER).create();
   }
 

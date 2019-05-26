@@ -16,7 +16,7 @@ final class StaticFieldOrdering implements JsonIterParser<ExchangeInfo> {
     return parseExchangeInfo(ji);
   }
 
-  static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
+  private static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
     final var info = ExchangeInfo.build();
     info.timezone(ji.skipObjField().readString());
     info.serverTime(ji.skipObjField().readLong());

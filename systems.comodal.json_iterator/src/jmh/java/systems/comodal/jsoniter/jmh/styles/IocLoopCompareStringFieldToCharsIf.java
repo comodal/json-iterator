@@ -19,10 +19,6 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
 
   @Override
   public ExchangeInfo parse(final JsonIterator ji) throws IOException {
-    return parseExchangeInfo(ji);
-  }
-
-  private static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
     return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_IF_PARSER).create();
   }
 

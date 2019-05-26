@@ -19,7 +19,7 @@ final class LoopStringSwitch implements JsonIterParser<ExchangeInfo> {
     return parseExchangeInfo(ji);
   }
 
-  static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
+  private static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
     final var info = ExchangeInfo.build();
     for (var field = ji.readObjField(); field != null; field = ji.readObjField()) {
       switch (field) {
