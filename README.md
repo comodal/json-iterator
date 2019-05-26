@@ -23,15 +23,15 @@ Otherwise, follow the [`IocLoopCompareStringFieldToCharsIf`](systems.comodal.jso
 
 If the first character for all of an objects' fields are unique, follow either the [`IocLoopCharIf`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/IocLoopCharIf.java) or [`IocLoopCharSwitch`](systems.comodal.json_iterator/src/jmh/java/systems/comodal/jsoniter/jmh/styles/IocLoopCharSwitch.java) style.  Similar to the style `IocLoopCompareStringFieldToCharsIf`, these styles avoid constructing Strings for object fields.
 
-#### Style Comparison Benchmarks
+### Style Comparison Benchmarks
 
-##### String Fields
+#### String Fields
 
 Each iteration parses a large json object ([exchangeInfo.json](systems.comodal.json_iterator/src/jmh/resources/exchangeInfo.json)).  The results can also be viewed on [JMH Visualizer](http://jmh.morethan.io/?source=https://raw.githubusercontent.com/comodal/json-iterator/master/benchmark-results/BenchStringFieldStyles/results.json).
 
 ![String Fields Style Comparision](benchmark-results/BenchStringFieldStyles/results.png)
 
-##### Char Fields
+#### Char Fields
 
 Each iteration parses a large json object ([compactFieldsExchangeInfo.json](systems.comodal.json_iterator/src/jmh/resources/compactFieldsExchangeInfo.json)).  The results can also be viewed on [JMH Visualizer](http://jmh.morethan.io/?source=https://raw.githubusercontent.com/comodal/json-iterator/master/benchmark-results/BenchCharFieldStyles/results.json).
 
