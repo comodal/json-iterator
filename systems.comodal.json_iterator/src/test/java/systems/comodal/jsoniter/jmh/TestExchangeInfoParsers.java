@@ -31,6 +31,7 @@ final class TestExchangeInfoParsers {
         .map(parser -> dynamicTest(parser.getClass().getSimpleName(), () -> {
           validateExchangeInfo(parser.parse(bench.getLoadedBytesJsonIterator()));
           validateExchangeInfo(parser.parse(bench.getLoadedCharsJsonIterator()));
+          validateExchangeInfo(parser.parse(bench.getLoadedBytesInputStreamJsonIterator(1_024)));
         }));
   }
 
@@ -43,6 +44,7 @@ final class TestExchangeInfoParsers {
         .map(parser -> dynamicTest(parser.getClass().getSimpleName(), () -> {
           validateExchangeInfo(parser.parse(bench.getLoadedBytesJsonIterator()));
           validateExchangeInfo(parser.parse(bench.getLoadedCharsJsonIterator()));
+          validateExchangeInfo(parser.parse(bench.getLoadedBytesInputStreamJsonIterator(1_024)));
         }));
   }
 

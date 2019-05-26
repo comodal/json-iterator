@@ -7,6 +7,7 @@ import systems.comodal.jsoniter.factory.JsonIterParser;
 import systems.comodal.jsoniter.factory.JsonIterParserFactory;
 import systems.comodal.jsoniter.jmh.data.exchange.ExchangeInfo;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -55,6 +56,10 @@ public class BenchStringFieldStyles {
 
   public JsonIterator getLoadedBytesJsonIterator() {
     return JsonIterator.parse(BENCH_LARGE_JSON);
+  }
+
+  public JsonIterator getLoadedBytesInputStreamJsonIterator(final int bufferSize) {
+    return JsonIterator.parse(new ByteArrayInputStream(BENCH_LARGE_JSON), bufferSize);
   }
 
   public JsonIterator getLoadedCharsJsonIterator() {

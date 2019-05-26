@@ -644,7 +644,6 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   private BigDecimal readBigDecimal(final CharBufferFunction<BigDecimal> parseChars) throws IOException {
-    // skip whitespace by read next
     final var valueType = whatIsNext();
     if (valueType == STRING) {
       return applyChars(parseChars);
@@ -867,12 +866,11 @@ abstract class BaseJsonIterator implements JsonIterator {
 
   @Override
   public final boolean readNull() throws IOException {
-    final char c = nextToken();
+    final char c = peekToken();
     if (c == 'n') {
-      skip(3); // null
+      skip(4); // null
       return true;
     }
-    unread();
     return false;
   }
 

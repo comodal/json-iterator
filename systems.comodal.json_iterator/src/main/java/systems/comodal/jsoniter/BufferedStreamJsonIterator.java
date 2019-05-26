@@ -6,18 +6,15 @@ import java.io.InputStream;
 final class BufferedStreamJsonIterator extends BytesJsonIterator {
 
   private InputStream in;
-  private int skipStartedAt; // skip should keep bytes starting at this position
 
   BufferedStreamJsonIterator(final InputStream in, final byte[] buf, final int head, final int tail) {
     super(buf, head, tail);
     this.in = in;
-    this.skipStartedAt = -1;
   }
 
   BufferedStreamJsonIterator(final InputStream in, final byte[] buf, final int head, final int tail, final int charBufferLength) {
     super(buf, head, tail, charBufferLength);
     this.in = in;
-    this.skipStartedAt = -1;
   }
 
   @Override
@@ -55,7 +52,6 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
     this.in = in;
     this.head = 0;
     this.tail = 0;
-    this.skipStartedAt = -1;
     return this;
   }
 
@@ -67,43 +63,13 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
     this.in = in;
     this.head = 0;
     this.tail = 0;
-    this.skipStartedAt = -1;
     return this;
-  }
-
-  private boolean keepSkippedBytesThenRead() throws IOException {
-    int n;
-    int offset;
-    if (skipStartedAt == 0 || skipStartedAt < (tail >> 1)) {
-      final byte[] newBuf = new byte[buf.length << 1];
-      offset = tail - skipStartedAt;
-      System.arraycopy(buf, skipStartedAt, newBuf, 0, offset);
-      buf = newBuf;
-      n = in.read(buf, offset, buf.length - offset);
-    } else {
-      offset = tail - skipStartedAt;
-      System.arraycopy(buf, skipStartedAt, buf, 0, offset);
-      n = in.read(buf, offset, buf.length - offset);
-    }
-    skipStartedAt = 0;
-    if (n < 1) {
-      if (n == -1) {
-        return false;
-      }
-      throw reportError("loadMore", "read from input stream returned " + n);
-    }
-    head = offset;
-    tail = offset + n;
-    return true;
   }
 
   @Override
   boolean loadMore() throws IOException {
     if (in == null) {
       return false;
-    }
-    if (skipStartedAt != -1) {
-      return keepSkippedBytesThenRead();
     }
     final int n = in.read(buf);
     if (n < 1) {
