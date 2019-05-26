@@ -28,7 +28,7 @@ If the first character for all of an objects' fields are unique, follow either t
 ### String Fields
 
 ```sh 
-> ./gradlew jmh -Pbench=BenchCharFieldStyles
+> ./gradlew jmh -Pbench=BenchStringFieldStyles
 ```
 
 Each iteration parses a large json object ([exchangeInfo.json](systems.comodal.json_iterator/src/jmh/resources/exchangeInfo.json)).  The results can also be viewed on [JMH Visualizer](http://jmh.morethan.io/?source=https://raw.githubusercontent.com/comodal/json-iterator/master/benchmark-results/BenchStringFieldStyles/results.json).
@@ -38,7 +38,7 @@ Each iteration parses a large json object ([exchangeInfo.json](systems.comodal.j
 ### Char Fields
 
 ```sh 
-> ./gradlew jmh -Pbench=BenchStringFieldStyles
+> ./gradlew jmh -Pbench=BenchCharFieldStyles
 ```
 
 Each iteration parses a large json object ([compactFieldsExchangeInfo.json](systems.comodal.json_iterator/src/jmh/resources/compactFieldsExchangeInfo.json)).  The results can also be viewed on [JMH Visualizer](http://jmh.morethan.io/?source=https://raw.githubusercontent.com/comodal/json-iterator/master/benchmark-results/BenchCharFieldStyles/results.json).
