@@ -118,7 +118,7 @@ public interface JsonIterator extends Closeable {
 
   /**
    * Advances the iterator if the next item is 'null' and returns true.
-   * Otherwise, stays in place in returns false.
+   * Otherwise, stays in place and returns false.
    */
   boolean readNull() throws IOException;
 
