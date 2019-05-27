@@ -96,7 +96,7 @@ final class TestFloat {
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
   void test_long_double(final JsonIteratorFactory factory) {
-    assertEquals(4593560419846153055d, factory.create("4593560419846153055").readDouble(), 0.1);
+    assertEquals(4593560419846153055d, factory.create("4593560419846153055").readDouble());
   }
 
   @ParameterizedTest
@@ -109,26 +109,28 @@ final class TestFloat {
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
   void test_decimal_places(final JsonIteratorFactory factory) {
-    assertEquals(Long.MAX_VALUE, factory.create("9223372036854775807,").readFloat(), 0.01f);
-    assertEquals(Long.MAX_VALUE, factory.create("9223372036854775807,").readDouble(), 0.01f);
-    assertEquals(Long.MIN_VALUE, factory.create("-9223372036854775808,").readDouble(), 0.01f);
-    assertEquals(9923372036854775807f, factory.create("9923372036854775807,").readFloat(), 0.01f);
-    assertEquals(-9923372036854775808f, factory.create("-9923372036854775808,").readFloat(), 0.01f);
-    assertEquals(9923372036854775807d, factory.create("9923372036854775807,").readDouble(), 0.01f);
-    assertEquals(-9923372036854775808d, factory.create("-9923372036854775808,").readDouble(), 0.01f);
-    assertEquals(720368.54775807f, factory.create("720368.54775807,").readFloat(), 0.01f);
-    assertEquals(-720368.54775807f, factory.create("-720368.54775807,").readFloat(), 0.01f);
-    assertEquals(720368.54775807d, factory.create("720368.54775807,").readDouble(), 0.01f);
-    assertEquals(-720368.54775807d, factory.create("-720368.54775807,").readDouble(), 0.01f);
-    assertEquals(72036.854775807f, factory.create("72036.854775807,").readFloat(), 0.01f);
-    assertEquals(72036.854775807d, factory.create("72036.854775807,").readDouble(), 0.01f);
-    assertEquals(720368.54775807f, factory.create("720368.547758075,").readFloat(), 0.01f);
-    assertEquals(720368.54775807d, factory.create("720368.547758075,").readDouble(), 0.01f);
+    assertEquals(Long.MAX_VALUE, factory.create("9223372036854775807,").readFloat());
+    assertEquals(Long.MAX_VALUE, factory.create("9223372036854775807,").readDouble());
+    assertEquals(Long.MIN_VALUE, factory.create("-9223372036854775808,").readDouble());
+    assertEquals(9923372036854775807f, factory.create("9923372036854775807,").readFloat());
+    assertEquals(-9923372036854775808f, factory.create("-9923372036854775808,").readFloat());
+    assertEquals(9923372036854775807d, factory.create("9923372036854775807,").readDouble());
+    assertEquals(-9923372036854775808d, factory.create("-9923372036854775808,").readDouble());
+    assertEquals(720368.54775807f, factory.create("720368.54775807,").readFloat());
+    assertEquals(-720368.54775807f, factory.create("-720368.54775807,").readFloat());
+    assertEquals(720368.54775807d, factory.create("720368.54775807,").readDouble());
+    assertEquals(-720368.54775807d, factory.create("-720368.54775807,").readDouble());
+    assertEquals(72036.854775807f, factory.create("72036.854775807,").readFloat());
+    assertEquals(72036.854775807d, factory.create("72036.854775807,").readDouble());
+    assertEquals(720368.547758075f, factory.create("720368.547758075,").readFloat());
+    assertEquals(720368.547758075d, factory.create("720368.547758075,").readDouble());
   }
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
   void test_combination_of_dot_and_exponent(final JsonIteratorFactory factory) {
+    assertEquals(Double.parseDouble("8.37377E9"), factory.create("8.37377E9").readDouble());
+    assertEquals(Float.parseFloat("8.37377E9"), factory.create("8.37377E9").readFloat());
     assertEquals(Double.parseDouble("8.37377E9"), factory.create("8.37377E9").readFloat(), 1000d);
   }
 
