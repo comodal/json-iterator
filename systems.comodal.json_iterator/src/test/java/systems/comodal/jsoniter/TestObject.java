@@ -4,8 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
-import java.io.IOException;
-
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,14 +12,14 @@ final class TestObject {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_empty_object(final JsonIteratorFactory factory) throws IOException {
+  void test_empty_object(final JsonIteratorFactory factory) {
     var ji = factory.create("{}");
     assertNull(ji.readObject());
   }
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_one_field(final JsonIteratorFactory factory) throws IOException {
+  void test_one_field(final JsonIteratorFactory factory) {
     var ji = factory.create("{ \"field1\"\n" +
         ":\n" +
         "\t\"hello\" }");
@@ -54,7 +52,7 @@ final class TestObject {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_two_fields(final JsonIteratorFactory factory) throws IOException {
+  void test_two_fields(final JsonIteratorFactory factory) {
     var ji = factory.create("{ \"field1\" : \"hello\" , \"field2\": \"world\" }");
     assertEquals("field1", ji.readObject());
     assertEquals("hello", ji.readString());
@@ -68,14 +66,14 @@ final class TestObject {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_skip_until(final JsonIteratorFactory factory) throws IOException {
+  void test_skip_until(final JsonIteratorFactory factory) {
     var ji = factory.create("{ \"field1\" : \"hello\" , \"field2\": {\"nested1\" : \"blah\", \"nested2\": \"world\"} }");
     assertEquals("world", ji.skipUntil("field2").skipUntil("nested2").readString());
   }
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_read_null(final JsonIteratorFactory factory) throws IOException {
+  void test_read_null(final JsonIteratorFactory factory) {
     var ji = factory.create("null");
     assertTrue(ji.readNull());
   }

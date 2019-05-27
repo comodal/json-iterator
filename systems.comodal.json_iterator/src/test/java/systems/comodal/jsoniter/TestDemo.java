@@ -4,8 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
-import java.io.IOException;
-
 import static java.lang.Boolean.TRUE;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,7 +11,7 @@ final class TestDemo {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_iterator_api(final JsonIteratorFactory factory) throws IOException {
+  void test_iterator_api(final JsonIteratorFactory factory) {
     final var json = "[0,1,2,3]";
     final var ji = factory.create(json);
     int total = 0;
@@ -26,7 +24,7 @@ final class TestDemo {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_iterator(final JsonIteratorFactory factory) throws IOException {
+  void test_iterator(final JsonIteratorFactory factory) {
     final var json = "{\"numbers\": [\"1\", \"2\", [\"3\", \"4\"]]}";
     final var ji = factory.create(json);
     assertEquals("numbers", ji.readObject());
@@ -48,7 +46,7 @@ final class TestDemo {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_iterator_apply(final JsonIteratorFactory factory) throws IOException {
+  void test_iterator_apply(final JsonIteratorFactory factory) {
     final var json = "{\"numbers\": [\"1\", \"2\", [\"3\", \"4\"]]}";
     final var ji = factory.create(json);
     final var last = ji.applyObject(TRUE, (context, buf, offset, len, _iter) -> {
@@ -75,7 +73,7 @@ final class TestDemo {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_iterator_consume(final JsonIteratorFactory factory) throws IOException {
+  void test_iterator_consume(final JsonIteratorFactory factory) {
     final var ji = factory.create("{\"numbers\": [\"1\", \"2\", [\"3\", \"4\"]]}");
     final var context = ji.testObject(TRUE, (_context, buf, offset, len, _iter) -> {
       assertEquals(TRUE, _context);
@@ -94,7 +92,7 @@ final class TestDemo {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_readme(final JsonIteratorFactory factory) throws IOException {
+  void test_readme(final JsonIteratorFactory factory) {
     var jsonIterator = factory.create("{\"hello\": \"world\"}");
     var fieldName = jsonIterator.readObject();
     var fieldValue = jsonIterator.readString();

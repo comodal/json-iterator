@@ -40,28 +40,28 @@ public interface JsonIterator extends Closeable {
     return new CharsJsonIterator(buf, head, tail);
   }
 
-  static JsonIterator parse(final String str) {
-    return parse(str.getBytes());
+  static JsonIterator parse(final String field) {
+    return parse(field.getBytes());
   }
 
-  static JsonIterator parse(final String str, final int charBufferLength) {
-    return parse(str.getBytes(), charBufferLength);
+  static JsonIterator parse(final String field, final int charBufferLength) {
+    return parse(field.getBytes(), charBufferLength);
   }
 
-  static boolean fieldEquals(final String str, final char[] buf) {
-    return fieldEquals(str, buf, 0, buf.length);
+  static boolean fieldEquals(final String field, final char[] buf) {
+    return fieldEquals(field, buf, 0, buf.length);
   }
 
-  static boolean fieldEquals(final String str, final char[] buf, final int len) {
-    return fieldEquals(str, buf, 0, len);
+  static boolean fieldEquals(final String field, final char[] buf, final int len) {
+    return fieldEquals(field, buf, 0, len);
   }
 
-  static boolean fieldEquals(final String str, final char[] buf, final int offset, final int len) {
-    if (str.length() != len) {
+  static boolean fieldEquals(final String field, final char[] buf, final int offset, final int len) {
+    if (field.length() != len) {
       return false;
     }
     for (int i = 0, j = offset; i < len; i++, j++) {
-      if (str.charAt(i) != buf[j]) {
+      if (field.charAt(i) != buf[j]) {
         return false;
       }
     }
@@ -90,61 +90,61 @@ public interface JsonIterator extends Closeable {
 
   int mark();
 
-  ValueType whatIsNext() throws IOException;
+  ValueType whatIsNext();
 
-  boolean readArray() throws IOException;
+  boolean readArray();
 
-  JsonIterator openArray() throws IOException;
+  JsonIterator openArray();
 
-  JsonIterator continueArray() throws IOException;
+  JsonIterator continueArray();
 
-  JsonIterator closeArray() throws IOException;
+  JsonIterator closeArray();
 
-  default String readObject() throws IOException {
+  default String readObject() {
     return readObjField();
   }
 
-  String readObjField() throws IOException;
+  String readObjField();
 
-  JsonIterator skipObjField() throws IOException;
+  JsonIterator skipObjField();
 
-  JsonIterator skipUntil(final String field) throws IOException;
+  JsonIterator skipUntil(final String field);
 
-  JsonIterator closeObj() throws IOException;
+  JsonIterator closeObj();
 
   // Value Methods
 
-  JsonIterator skip() throws IOException;
+  JsonIterator skip();
 
   /**
    * Advances the iterator if the next item is 'null' and returns true.
    * Otherwise, stays in place and returns false.
    */
-  boolean readNull() throws IOException;
+  boolean readNull();
 
-  String readString() throws IOException;
+  String readString();
 
-  String readNumberAsString() throws IOException;
+  String readNumberAsString();
 
-  String readNumberOrNumberString() throws IOException;
+  String readNumberOrNumberString();
 
-  boolean readBoolean() throws IOException;
+  boolean readBoolean();
 
-  short readShort() throws IOException;
+  short readShort();
 
-  int readInt() throws IOException;
+  int readInt();
 
-  long readLong() throws IOException;
+  long readLong();
 
-  float readFloat() throws IOException;
+  float readFloat();
 
-  double readDouble() throws IOException;
+  double readDouble();
 
-  BigDecimal readBigDecimal() throws IOException;
+  BigDecimal readBigDecimal();
 
-  BigDecimal readBigDecimalStripTrailingZeroes() throws IOException;
+  BigDecimal readBigDecimalStripTrailingZeroes();
 
-  BigInteger readBigInteger() throws IOException;
+  BigInteger readBigInteger();
 
   // IOC Field Value Methods
 
@@ -158,27 +158,27 @@ public interface JsonIterator extends Closeable {
    * @return Object constructed from applyChars.
    * @throws IOException needed in case the underlying data is a stream.
    */
-  <R> R applyChars(final CharBufferFunction<R> applyChars) throws IOException;
+  <R> R applyChars(final CharBufferFunction<R> applyChars);
 
-  <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException;
+  <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars);
 
-  boolean testChars(final CharBufferPredicate testChars) throws IOException;
+  boolean testChars(final CharBufferPredicate testChars);
 
-  <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException;
+  <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars);
 
-  void consumeChars(final CharBufferConsumer testChars) throws IOException;
+  void consumeChars(final CharBufferConsumer testChars);
 
-  <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException;
+  <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars);
 
   // IOC Field Methods
 
-  boolean testObjField(final CharBufferPredicate testField) throws IOException;
+  boolean testObjField(final CharBufferPredicate testField);
 
-  <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction) throws IOException;
+  <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction);
 
-  <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction) throws IOException;
+  <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction);
 
-  <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction) throws IOException;
+  <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction);
 
-  void testObject(final FieldBufferPredicate fieldBufferFunction) throws IOException;
+  void testObject(final FieldBufferPredicate fieldBufferFunction);
 }

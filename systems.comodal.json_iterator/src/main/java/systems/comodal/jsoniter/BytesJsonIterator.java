@@ -1,6 +1,5 @@
 package systems.comodal.jsoniter;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 
@@ -61,7 +60,7 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
   }
 
   @Override
@@ -70,7 +69,7 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final char nextToken() throws IOException {
+  final char nextToken() {
     byte c;
     for (int i = head; ; ) {
       if (i == tail) {
@@ -95,7 +94,7 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final char peekToken() throws IOException {
+  final char peekToken() {
     byte c;
     for (int i = head; ; i++) {
       if (i == tail) {
@@ -119,17 +118,17 @@ class BytesJsonIterator extends BaseJsonIterator {
     }
   }
 
-  byte read() throws IOException {
+  byte read() {
     return buf[head++];
   }
 
   @Override
-  final char readChar() throws IOException {
+  final char readChar() {
     return (char) read();
   }
 
   @Override
-  final int readAsInt() throws IOException {
+  final int readAsInt() {
     return read();
   }
 
@@ -155,7 +154,7 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final int parse() throws IOException {
+  final int parse() {
     byte c; // try fast path first
     int i = head;
     final int bound = Math.min(tail - head, charBuf.length);
@@ -185,37 +184,37 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <R> R parse(final CharBufferFunction<R> applyChars) throws IOException {
+  final <R> R parse(final CharBufferFunction<R> applyChars) {
     final int len = parse();
     return applyChars.apply(charBuf, 0, len);
   }
 
   @Override
-  final <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException {
+  final <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars) {
     final int len = parse();
     return applyChars.apply(context, charBuf, 0, len);
   }
 
   @Override
-  final boolean parse(final CharBufferPredicate testChars) throws IOException {
+  final boolean parse(final CharBufferPredicate testChars) {
     final int len = parse();
     return testChars.apply(charBuf, 0, len);
   }
 
   @Override
-  final <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException {
+  final <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars) {
     final int len = parse();
     return testChars.apply(context, charBuf, 0, len);
   }
 
   @Override
-  final void parse(final CharBufferConsumer testChars) throws IOException {
+  final void parse(final CharBufferConsumer testChars) {
     final int len = parse();
     testChars.accept(charBuf, 0, len);
   }
 
   @Override
-  final <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException {
+  final <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars) {
     final int len = parse();
     testChars.accept(context, charBuf, 0, len);
   }
@@ -226,31 +225,31 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) throws IOException {
+  final boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) {
     return fieldBufferFunction.test(charBuf, 0, len, this);
   }
 
   @Override
-  final <C> boolean test(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) throws IOException {
+  final <C> boolean test(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) {
     return fieldBufferFunction.test(context, charBuf, 0, len, this);
   }
 
   @Override
-  final <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) throws IOException {
+  final <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) {
     return fieldBufferFunction.apply(charBuf, 0, len, this);
   }
 
   @Override
-  final <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len) throws IOException {
+  final <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len) {
     return fieldBufferFunction.apply(context, charBuf, 0, len, this);
   }
 
   @Override
-  final BigDecimal applyNumberChars(final CharBufferFunction<BigDecimal> parseChars) throws IOException {
+  final BigDecimal applyNumberChars(final CharBufferFunction<BigDecimal> parseChars) {
     return parseChars.apply(charBuf, 0, parseNumber());
   }
 
-  private int readStringSlowPath(int j) throws IOException {
+  private int readStringSlowPath(int j) {
     try {
       boolean isExpectingLowSurrogate = false;
       for (int bc; ; ) {
@@ -348,7 +347,7 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final int parseNumber() throws IOException {
+  final int parseNumber() {
     for (int i = head, len = 0; ; i++) {
       if (i == tail) {
         if (loadMore()) {

@@ -2,6 +2,7 @@ package systems.comodal.jsoniter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 
 final class BufferedStreamJsonIterator extends BytesJsonIterator {
 
@@ -18,8 +19,12 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
-  public void close() throws IOException {
-    in.close();
+  public void close() {
+    try {
+      in.close();
+    } catch (final IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   @Override
@@ -67,32 +72,28 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
-  boolean loadMore() throws IOException {
-    if (in == null) {
-      return false;
-    }
-    final int n = in.read(buf);
-    if (n < 1) {
-      if (n == -1) {
-        return false;
+  boolean loadMore() {
+    try {
+      final int n = in.read(buf);
+      if (n < 1) {
+        if (n == -1) {
+          return false;
+        }
+        throw reportError("loadMore", "read from input stream returned " + n);
       }
-      throw reportError("loadMore", "read from input stream returned " + n);
+      head = 0;
+      tail = n;
+      return true;
+    } catch (final IOException e) {
+      throw new UncheckedIOException(e);
     }
-    head = 0;
-    tail = n;
-    return true;
   }
 
   @Override
-  byte read() throws IOException {
+  byte read() {
     if (head == tail && !loadMore()) {
       throw reportError("read", "no more to read");
     }
     return buf[head++];
-  }
-
-  @Override
-  double readDoubleNoSign() throws IOException {
-    return readDoubleSlowPath();
   }
 }

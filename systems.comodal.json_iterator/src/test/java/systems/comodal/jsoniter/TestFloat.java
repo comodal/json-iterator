@@ -4,7 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 
 import static java.math.BigDecimal.ZERO;
@@ -14,7 +13,7 @@ final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void testStripTrailingZeroes(final JsonIteratorFactory factory) throws Exception {
+  void testStripTrailingZeroes(final JsonIteratorFactory factory) {
     var expected = new BigDecimal("123.456");
     assertEquals(expected, factory.create("123.456").readBigDecimalStripTrailingZeroes());
     assertEquals(expected, factory.create("123.4560").readBigDecimalStripTrailingZeroes());
@@ -74,7 +73,7 @@ final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void testReadMaxDouble(final JsonIteratorFactory factory) throws Exception {
+  void testReadMaxDouble(final JsonIteratorFactory factory) {
     var maxDouble = "1.7976931348623157e+308";
     assertEquals(maxDouble, factory.create(maxDouble).readNumberAsString());
 
@@ -83,7 +82,7 @@ final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_positive_negative(final JsonIteratorFactory factory) throws IOException {
+  void test_positive_negative(final JsonIteratorFactory factory) {
     // positive
     assertEquals(12.3f, factory.create("12.3,").readFloat());
     assertEquals(729212.0233f, factory.create("729212.0233,").readFloat());
@@ -96,20 +95,20 @@ final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_long_double(final JsonIteratorFactory factory) throws IOException {
+  void test_long_double(final JsonIteratorFactory factory) {
     assertEquals(4593560419846153055d, factory.create("4593560419846153055").readDouble(), 0.1);
   }
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_ieee_754(final JsonIteratorFactory factory) throws IOException {
+  void test_ieee_754(final JsonIteratorFactory factory) {
     assertEquals(0.00123f, factory.create("123e-5,").readFloat());
     assertEquals(0.00123d, factory.create("123e-5,").readDouble());
   }
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_decimal_places(final JsonIteratorFactory factory) throws IOException {
+  void test_decimal_places(final JsonIteratorFactory factory) {
     assertEquals(Long.MAX_VALUE, factory.create("9223372036854775807,").readFloat(), 0.01f);
     assertEquals(Long.MAX_VALUE, factory.create("9223372036854775807,").readDouble(), 0.01f);
     assertEquals(Long.MIN_VALUE, factory.create("-9223372036854775808,").readDouble(), 0.01f);
@@ -129,13 +128,13 @@ final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_combination_of_dot_and_exponent(final JsonIteratorFactory factory) throws IOException {
-    assertEquals(Double.valueOf("8.37377E9"), factory.create("8.37377E9").readFloat(), 1000d);
+  void test_combination_of_dot_and_exponent(final JsonIteratorFactory factory) {
+    assertEquals(Double.parseDouble("8.37377E9"), factory.create("8.37377E9").readFloat(), 1000d);
   }
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void testReadBigDecimalStripTrailingZeroesCornerCase(final JsonIteratorFactory factory) throws IOException {
+  void testReadBigDecimalStripTrailingZeroesCornerCase(final JsonIteratorFactory factory) {
     final var json = "{\"U\":\"2019-02-25T02:57:39.118962Z\",\"f\":\"1\"}";
     final var ji = factory.create(json);
     assertEquals("2019-02-25T02:57:39.118962Z", ji.skipObjField().readString());
@@ -144,7 +143,7 @@ final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void testBigDecimal(final JsonIteratorFactory factory) throws IOException {
+  void testBigDecimal(final JsonIteratorFactory factory) {
     assertEquals(new BigDecimal("100.100"), factory.create("100.100").readBigDecimal());
     assertEquals(new BigDecimal("100.1"), factory.create("100.1000").readBigDecimalStripTrailingZeroes());
     assertEquals(new BigDecimal("100"), factory.create("100.000").readBigDecimalStripTrailingZeroes());
@@ -168,10 +167,12 @@ final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void testInfinity(final JsonIteratorFactory factory) throws IOException {
-    assertEquals(Double.NEGATIVE_INFINITY, factory.create("\"-infinity\"").readDouble());
-    assertEquals(Float.NEGATIVE_INFINITY, factory.create("\"-infinity\"").readFloat());
-    assertEquals(Double.POSITIVE_INFINITY, factory.create("\"infinity\"").readDouble());
-    assertEquals(Float.POSITIVE_INFINITY, factory.create("\"infinity\"").readFloat());
+  void testInfinity(final JsonIteratorFactory factory) {
+    assertEquals(Double.NEGATIVE_INFINITY, factory.create("\"-Infinity\"").readDouble());
+    assertEquals(Float.NEGATIVE_INFINITY, factory.create("\"-Infinity\"").readFloat());
+    assertEquals(Double.POSITIVE_INFINITY, factory.create("\"Infinity\"").readDouble());
+    assertEquals(Float.POSITIVE_INFINITY, factory.create("\"Infinity\"").readFloat());
+    assertEquals(Double.NaN, factory.create("\"NaN\"").readDouble());
+    assertEquals(Float.NaN, factory.create("\"NaN\"").readFloat());
   }
 }

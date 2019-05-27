@@ -1,6 +1,5 @@
 package systems.comodal.jsoniter;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 
@@ -200,7 +199,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <R> R parse(final CharBufferFunction<R> applyChars) throws IOException {
+  final <R> R parse(final CharBufferFunction<R> applyChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -211,7 +210,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException {
+  final <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -222,7 +221,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final boolean parse(final CharBufferPredicate testChars) throws IOException {
+  final boolean parse(final CharBufferPredicate testChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -233,7 +232,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException {
+  final <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -244,7 +243,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final void parse(final CharBufferConsumer testChars) throws IOException {
+  final void parse(final CharBufferConsumer testChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -255,7 +254,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException {
+  final <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -271,7 +270,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) throws IOException {
+  final boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.test(chars, 0, chars.length, this);
@@ -280,7 +279,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C> boolean test(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) throws IOException {
+  final <C> boolean test(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.test(context, chars, 0, chars.length, this);
@@ -289,7 +288,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) throws IOException {
+  final <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.apply(chars, 0, chars.length, this);
@@ -298,7 +297,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len) throws IOException {
+  final <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.apply(context, chars, 0, chars.length, this);
@@ -307,7 +306,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final BigDecimal applyNumberChars(final CharBufferFunction<BigDecimal> parseChars) throws IOException {
+  final BigDecimal applyNumberChars(final CharBufferFunction<BigDecimal> parseChars) {
     final int len = parseNumber();
     return parseChars.apply(buf, head - len, len);
   }

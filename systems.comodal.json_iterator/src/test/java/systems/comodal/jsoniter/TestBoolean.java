@@ -4,15 +4,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 final class TestBoolean {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_boolean_array(final JsonIteratorFactory factory) throws IOException {
+  void test_boolean_array(final JsonIteratorFactory factory) {
     final var json = "[true,false,null,true]";
     var ji = factory.create(json);
     ji.readArray();
@@ -35,7 +33,7 @@ final class TestBoolean {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_booleans(final JsonIteratorFactory factory) throws IOException {
+  void test_booleans(final JsonIteratorFactory factory) {
     assertTrue(factory.create("true").readBoolean());
     assertFalse(factory.create("false").readBoolean());
     assertTrue(factory.create("null").readNull());

@@ -1,6 +1,5 @@
 package systems.comodal.jsoniter;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -8,12 +7,6 @@ import java.util.Arrays;
 import static systems.comodal.jsoniter.ValueType.*;
 
 abstract class BaseJsonIterator implements JsonIterator {
-
-  private static final long[] POW10 = {
-      1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
-      1000000000, 10000000000L, 100000000000L, 1000000000000L,
-      10000000000000L, 100000000000000L, 1000000000000000L
-  };
 
   private static final int INVALID_CHAR_FOR_NUMBER = -1;
   static final int[] INT_DIGITS = INIT_INT_DIGITS.initIntDigits();
@@ -66,21 +59,21 @@ abstract class BaseJsonIterator implements JsonIterator {
     return "head: " + head + ", peek: " + peek + ", buf: " + getBufferString(0, 1_024);
   }
 
-  abstract char readChar() throws IOException;
+  abstract char readChar();
 
-  abstract int readAsInt() throws IOException;
+  abstract int readAsInt();
 
-  abstract char peekChar() throws IOException;
+  abstract char peekChar();
 
   abstract char peekChar(final int offset);
 
   abstract int peekIntDigitChar(final int offset);
 
-  abstract char nextToken() throws IOException;
+  abstract char nextToken();
 
-  abstract char peekToken() throws IOException;
+  abstract char peekToken();
 
-  boolean loadMore() throws IOException {
+  boolean loadMore() {
     return false;
   }
 
@@ -91,7 +84,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     head--;
   }
 
-  private void skip(final int n) throws IOException {
+  private void skip(final int n) {
     head += n;
     if (head >= tail) {
       final int more = head - tail;
@@ -107,7 +100,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final JsonIterator openArray() throws IOException {
+  public final JsonIterator openArray() {
     final char c = nextToken();
     if (c == '[') {
       return this;
@@ -116,7 +109,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final JsonIterator continueArray() throws IOException {
+  public final JsonIterator continueArray() {
     final char c = nextToken();
     if (c == ',') {
       return this;
@@ -125,7 +118,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final JsonIterator closeArray() throws IOException {
+  public final JsonIterator closeArray() {
     final char c = nextToken();
     if (c == ']') {
       return this;
@@ -136,14 +129,14 @@ abstract class BaseJsonIterator implements JsonIterator {
   private static final CharBufferFunction<String> READ_STRING_FUNCTION = String::new;
 
   @Override
-  public final String readString() throws IOException {
+  public final String readString() {
     return applyChars(READ_STRING_FUNCTION);
   }
 
-  abstract int parse() throws IOException;
+  abstract int parse();
 
   @Override
-  public final <R> R applyChars(final CharBufferFunction<R> applyChars) throws IOException {
+  public final <R> R applyChars(final CharBufferFunction<R> applyChars) {
     final char c = nextToken();
     if (c == '"') {
       return parse(applyChars);
@@ -155,10 +148,10 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("applyChars", "expected string or null, but " + c);
   }
 
-  abstract <R> R parse(final CharBufferFunction<R> applyChars) throws IOException;
+  abstract <R> R parse(final CharBufferFunction<R> applyChars);
 
   @Override
-  public final <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException {
+  public final <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars) {
     final char c = nextToken();
     if (c == '"') {
       return parse(context, applyChars);
@@ -170,10 +163,10 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("applyChars", "expected string or null, but " + c);
   }
 
-  abstract <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars) throws IOException;
+  abstract <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars);
 
   @Override
-  public final boolean testChars(final CharBufferPredicate testChars) throws IOException {
+  public final boolean testChars(final CharBufferPredicate testChars) {
     final char c = nextToken();
     if (c == '"') {
       return parse(testChars);
@@ -185,10 +178,10 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("testChars", "expected string or null, but " + c);
   }
 
-  abstract boolean parse(final CharBufferPredicate testChars) throws IOException;
+  abstract boolean parse(final CharBufferPredicate testChars);
 
   @Override
-  public final <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException {
+  public final <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars) {
     final char c = nextToken();
     if (c == '"') {
       return parse(context, testChars);
@@ -200,10 +193,10 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("testChars", "expected string or null, but " + c);
   }
 
-  abstract <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars) throws IOException;
+  abstract <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars);
 
   @Override
-  public final void consumeChars(final CharBufferConsumer testChars) throws IOException {
+  public final void consumeChars(final CharBufferConsumer testChars) {
     final char c = nextToken();
     if (c == '"') {
       parse(testChars);
@@ -214,10 +207,10 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  abstract void parse(final CharBufferConsumer testChars) throws IOException;
+  abstract void parse(final CharBufferConsumer testChars);
 
   @Override
-  public final <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException {
+  public final <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars) {
     final char c = nextToken();
     if (c == '"') {
       parse(context, testChars);
@@ -228,12 +221,12 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  abstract <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars) throws IOException;
+  abstract <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars);
 
   abstract boolean fieldEquals(final String field, final int offset, final int len);
 
   @Override
-  public final JsonIterator skipUntil(final String field) throws IOException {
+  public final JsonIterator skipUntil(final String field) {
     char c;
     for (int offset, len; ; ) {
       switch ((c = nextToken())) {
@@ -278,7 +271,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private boolean testField(final CharBufferPredicate testField) throws IOException {
+  private boolean testField(final CharBufferPredicate testField) {
     final char c = nextToken();
     if (c != '"') {
       throw reportError("testField", "expected field string, but " + c);
@@ -287,7 +280,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final boolean testObjField(final CharBufferPredicate testField) throws IOException {
+  public final boolean testObjField(final CharBufferPredicate testField) {
     char c = nextToken();
     switch (c) {
       case 'n':
@@ -320,7 +313,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private String readField() throws IOException {
+  private String readField() {
     final char c = nextToken();
     if (c != '"') {
       throw reportError("readField", "expected field string, but " + c);
@@ -329,7 +322,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final String readObjField() throws IOException {
+  public final String readObjField() {
     char c = nextToken();
     switch (c) {
       case 'n':
@@ -362,7 +355,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  public final JsonIterator skipObjField() throws IOException {
+  public final JsonIterator skipObjField() {
     char c = nextToken();
     switch (c) {
       case 'n':
@@ -399,7 +392,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final JsonIterator closeObj() throws IOException {
+  public final JsonIterator closeObj() {
     final char c = nextToken();
     if (c == '}') {
       return this;
@@ -408,7 +401,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final void testObject(final FieldBufferPredicate fieldBufferFunction) throws IOException {
+  public final void testObject(final FieldBufferPredicate fieldBufferFunction) {
     char c;
     for (int offset, len; ; ) {
       switch ((c = nextToken())) {
@@ -454,10 +447,10 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  abstract boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) throws IOException;
+  abstract boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len);
 
   @Override
-  public final <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction) throws IOException {
+  public final <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction) {
     char c;
     for (int offset, len; ; ) {
       switch ((c = nextToken())) {
@@ -505,11 +498,11 @@ abstract class BaseJsonIterator implements JsonIterator {
 
   abstract <C> boolean test(final C context,
                             final ContextFieldBufferPredicate<C> fieldBufferFunction,
-                            final int offset, final int len) throws IOException;
+                            final int offset, final int len);
 
 
   @Override
-  public final <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction) throws IOException {
+  public final <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction) {
     char c = nextToken();
     switch (c) {
       case 'n':
@@ -547,10 +540,10 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  abstract <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) throws IOException;
+  abstract <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len);
 
   @Override
-  public final <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction) throws IOException {
+  public final <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction) {
     char c = nextToken();
     switch (c) {
       case 'n':
@@ -588,20 +581,24 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  abstract <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len) throws IOException;
+  abstract <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len);
 
   @Override
-  public final double readDouble() throws IOException {
-    if (nextToken() == '-') {
-      return -readDoubleNoSign();
+  public final double readDouble() {
+    try {
+      return Double.parseDouble(readNumberOrNumberString());
+    } catch (final NumberFormatException e) {
+      throw reportError("readDouble", e.toString());
     }
-    unread();
-    return readDoubleNoSign();
   }
 
   @Override
-  public final float readFloat() throws IOException {
-    return (float) readDouble();
+  public final float readFloat() {
+    try {
+      return Float.parseFloat(readNumberOrNumberString());
+    } catch (final NumberFormatException e) {
+      throw reportError("readFloat", e.toString());
+    }
   }
 
   private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = BigDecimal::new;
@@ -634,16 +631,16 @@ abstract class BaseJsonIterator implements JsonIterator {
   };
 
   @Override
-  public final BigDecimal readBigDecimal() throws IOException {
+  public final BigDecimal readBigDecimal() {
     return readBigDecimal(READ_BIG_DECIMAL_FUNCTION);
   }
 
   @Override
-  public final BigDecimal readBigDecimalStripTrailingZeroes() throws IOException {
+  public final BigDecimal readBigDecimalStripTrailingZeroes() {
     return readBigDecimal(READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION);
   }
 
-  private BigDecimal readBigDecimal(final CharBufferFunction<BigDecimal> parseChars) throws IOException {
+  private BigDecimal readBigDecimal(final CharBufferFunction<BigDecimal> parseChars) {
     final var valueType = whatIsNext();
     if (valueType == STRING) {
       return applyChars(parseChars);
@@ -658,12 +655,12 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("readBigDecimal", "Must be a number, string or null but found " + valueType);
   }
 
-  abstract BigDecimal applyNumberChars(final CharBufferFunction<BigDecimal> parseChars) throws IOException;
+  abstract BigDecimal applyNumberChars(final CharBufferFunction<BigDecimal> parseChars);
 
   private static final CharBufferFunction<BigInteger> READ_BIG_INTEGER_FUNCTION = (chars, offset, len) -> new BigInteger(new String(chars, offset, len));
 
   @Override
-  public final BigInteger readBigInteger() throws IOException {
+  public final BigInteger readBigInteger() {
     final var valueType = whatIsNext();
     if (valueType == NUMBER) {
       return new BigInteger(readNumberAsString());
@@ -679,7 +676,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public String readNumberOrNumberString() throws IOException {
+  public String readNumberOrNumberString() {
     final var valueType = whatIsNext();
     if (valueType == NUMBER) {
       return readNumberAsString();
@@ -695,11 +692,11 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final ValueType whatIsNext() throws IOException {
+  public final ValueType whatIsNext() {
     return VALUE_TYPES[peekToken()];
   }
 
-  private int findStringEnd() throws IOException {
+  private int findStringEnd() {
     char c;
     for (int i = head; ; ++i) {
       if (i >= tail) {
@@ -725,7 +722,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private void skipString() throws IOException {
+  private void skipString() {
     final int end = findStringEnd();
     if (end == -1) {
       throw reportError("skipString", "incomplete string");
@@ -733,7 +730,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     head = end + 1;
   }
 
-  private void skipUntilBreak() throws IOException {
+  private void skipUntilBreak() {
     for (int i = head; ; i++) {
       if (i == tail) {
         if (loadMore()) {
@@ -757,7 +754,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private void skipArray() throws IOException {
+  private void skipArray() {
     for (int i = head, level = 1; ; i++) {
       if (i == tail) {
         if (loadMore()) {
@@ -787,7 +784,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private void skipObject() throws IOException {
+  private void skipObject() {
     for (int i = head, level = 1; ; i++) {
       if (i == tail) {
         if (loadMore()) {
@@ -818,7 +815,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final JsonIterator skip() throws IOException {
+  public final JsonIterator skip() {
     final char c = nextToken();
     switch (c) {
       case '"':
@@ -865,7 +862,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final boolean readNull() throws IOException {
+  public final boolean readNull() {
     final char c = peekToken();
     if (c == 'n') {
       skip(4); // null
@@ -875,7 +872,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final boolean readBoolean() throws IOException {
+  public final boolean readBoolean() {
     final char c = nextToken();
     if ('t' == c) {
       skip(3); // true
@@ -888,7 +885,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("readBoolean", "expected t or f, found: " + c);
   }
 
-  private void assertNotLeadingZero() throws IOException {
+  private void assertNotLeadingZero() {
     if (head == tail && !loadMore()) {
       return;
     }
@@ -899,7 +896,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("assertNotLeadingZero", "leading zero is invalid");
   }
 
-  private int readIntSlowPath(int value) throws IOException {
+  private int readIntSlowPath(int value) {
     value = -value; // add negatives to avoid redundant checks for Integer.MIN_VALUE on each iteration
     for (int i = head, ind; ; i++) {
       if (i == tail) {
@@ -925,7 +922,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private int readInt(final char c) throws IOException {
+  private int readInt(final char c) {
     int ind = INT_DIGITS[c];
     if (ind == 0) {
       assertNotLeadingZero();
@@ -988,7 +985,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final int readInt() throws IOException {
+  public final int readInt() {
     final char c = nextToken();
     if (c == '-') {
       return readInt(readChar());
@@ -1001,7 +998,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final short readShort() throws IOException {
+  public final short readShort() {
     final int v = readInt();
     if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
       return (short) v;
@@ -1009,7 +1006,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("readShort", "short overflow: " + v);
   }
 
-  private long readLongSlowPath(long value) throws IOException {
+  private long readLongSlowPath(long value) {
     value = -value; // add negatives to avoid redundant checks for Long.MIN_VALUE on each iteration
     for (int i = head, ind; ; i++) {
       if (i == tail) {
@@ -1035,7 +1032,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private long readLong(final char c) throws IOException {
+  private long readLong(final char c) {
     long ind = INT_DIGITS[c];
     if (ind == 0) {
       assertNotLeadingZero();
@@ -1098,7 +1095,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final long readLong() throws IOException {
+  public final long readLong() {
     char c = nextToken();
     if (c == '-') {
       c = readChar();
@@ -1120,7 +1117,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final boolean readArray() throws IOException {
+  public final boolean readArray() {
     final char c = nextToken();
     if (c == '[') {
       if (nextToken() == ']') {
@@ -1139,75 +1136,11 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final String readNumberAsString() throws IOException {
+  public final String readNumberAsString() {
     return parsedNumberAsString(parseNumber());
   }
 
-  abstract int parseNumber() throws IOException;
+  abstract int parseNumber();
 
   abstract String parsedNumberAsString(final int len);
-
-  final double readDoubleSlowPath() throws IOException {
-    try {
-      final int len = parseNumber();
-      if (len == 0 && whatIsNext() == STRING) {
-        final var possibleInf = readString();
-        if ("infinity".equals(possibleInf)) {
-          return Double.POSITIVE_INFINITY;
-        }
-        if ("-infinity".equals(possibleInf)) {
-          return Double.NEGATIVE_INFINITY;
-        }
-        throw reportError("readDoubleSlowPath", "expected number but found string: " + possibleInf);
-      }
-      return Double.valueOf(parsedNumberAsString(len));
-    } catch (final NumberFormatException e) {
-      throw reportError("readDoubleSlowPath", e.toString());
-    }
-  }
-
-  double readDoubleNoSign() throws IOException {
-    int oldHead = head;
-    try {
-      final long value = readLong(); // without the dot & sign
-      if (head == tail) {
-        return value;
-      }
-      char c = peekChar();
-      if (c == '.') {
-        head++;
-        final int start = head;
-        c = readChar();
-        long decimalPart = readLong(c);
-        if (decimalPart == Long.MIN_VALUE) {
-          return readDoubleSlowPath();
-        }
-        if (head < tail) {
-          c = peekChar();
-          if ((c == 'e' || c == 'E')) {
-            head = oldHead;
-            return readDoubleSlowPath();
-          }
-        }
-        decimalPart = -decimalPart;
-        final int decimalPlaces = head - start;
-        if (decimalPlaces > 0 && decimalPlaces < POW10.length && (head - oldHead) < 10) {
-          return value + (decimalPart / (double) POW10[decimalPlaces]);
-        }
-        head = oldHead;
-        return readDoubleSlowPath();
-      }
-      if (head < tail) {
-        c = peekChar();
-        if ((c == 'e' || c == 'E')) {
-          head = oldHead;
-          return readDoubleSlowPath();
-        }
-      }
-      return value;
-    } catch (final JsonException e) {
-      head = oldHead;
-      return readDoubleSlowPath();
-    }
-  }
 }

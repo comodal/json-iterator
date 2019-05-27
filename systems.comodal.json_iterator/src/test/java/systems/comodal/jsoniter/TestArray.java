@@ -4,15 +4,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 final class TestArray {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_empty_array(final JsonIteratorFactory factory) throws IOException {
+  void test_empty_array(final JsonIteratorFactory factory) {
     final var json = "[]";
 
     var ji = factory.create(json);
@@ -25,7 +23,7 @@ final class TestArray {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_one_element(final JsonIteratorFactory factory) throws IOException {
+  void test_one_element(final JsonIteratorFactory factory) {
     final var json = "[1]";
 
     var ji = factory.create(json);
@@ -41,7 +39,7 @@ final class TestArray {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_two_elements(final JsonIteratorFactory factory) throws IOException {
+  void test_two_elements(final JsonIteratorFactory factory) {
     final var json = " [ 1 , 2 ] ";
 
     var ji = factory.create(json);
@@ -61,7 +59,7 @@ final class TestArray {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_three_elements(final JsonIteratorFactory factory) throws IOException {
+  void test_three_elements(final JsonIteratorFactory factory) {
     final var json = " [ 1 , 2, 3 ] ";
 
     var ji = factory.create(json);
@@ -85,7 +83,7 @@ final class TestArray {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_four_elements(final JsonIteratorFactory factory) throws IOException {
+  void test_four_elements(final JsonIteratorFactory factory) {
     final var json = " [ 1 , 2, 3, 4 ] ";
     final var ji = factory.create(json);
     assertTrue(ji.readArray());
@@ -101,7 +99,7 @@ final class TestArray {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
-  void test_five_elements(final JsonIteratorFactory factory) throws IOException {
+  void test_five_elements(final JsonIteratorFactory factory) {
     final var json = " [ 1 , 2, 3, 4, 5  ] ";
     final var ji = factory.create(json);
     assertTrue(ji.readArray());
