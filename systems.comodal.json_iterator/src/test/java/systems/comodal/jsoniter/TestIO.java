@@ -23,17 +23,4 @@ final class TestIO {
     assertEquals('2', ji.read());
     assertThrows(JsonException.class, ji::read);
   }
-
-  @Test
-  void test_unread_byte() {
-    final var ji = (BufferedStreamJsonIterator) JsonIterator.parse(new ByteArrayInputStream("12".getBytes()), 64);
-    assertEquals('1', ji.read());
-    assertEquals('2', ji.read());
-    ji.unread();
-    assertEquals('2', ji.read());
-    ji.unread();
-    ji.unread();
-    assertEquals('1', ji.read());
-  }
-
 }

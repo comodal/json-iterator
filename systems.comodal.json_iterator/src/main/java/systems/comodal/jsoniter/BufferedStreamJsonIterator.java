@@ -19,12 +19,8 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   }
 
   @Override
-  public void close() {
-    try {
-      in.close();
-    } catch (final IOException e) {
-      throw new UncheckedIOException(e);
-    }
+  public void close() throws IOException {
+    in.close();
   }
 
   @Override

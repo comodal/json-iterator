@@ -1,5 +1,6 @@
 package systems.comodal.jsoniter;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 
@@ -60,7 +61,7 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
   }
 
   @Override

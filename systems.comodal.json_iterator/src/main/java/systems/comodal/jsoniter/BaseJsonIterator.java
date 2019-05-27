@@ -77,13 +77,6 @@ abstract class BaseJsonIterator implements JsonIterator {
     return false;
   }
 
-  final void unread() {
-    if (head == 0) {
-      throw reportError("unread", "unread too many bytes");
-    }
-    head--;
-  }
-
   private void skip(final int n) {
     head += n;
     if (head >= tail) {
@@ -289,8 +282,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       case '{':
         c = nextToken();
         if (c == '"') {
-          unread();
-          final boolean result = testField(testField);
+          final boolean result = parse(testField);
           if ((c = nextToken()) != ':') {
             throw reportError("testObjField", "expected :, but " + c);
           }
@@ -331,8 +323,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       case '{':
         c = nextToken();
         if (c == '"') {
-          unread();
-          final var field = readField();
+          final var field = parse(READ_STRING_FUNCTION);
           if ((c = nextToken()) != ':') {
             throw reportError("readObjField", "expected :, but " + c);
           }
@@ -499,7 +490,6 @@ abstract class BaseJsonIterator implements JsonIterator {
   abstract <C> boolean test(final C context,
                             final ContextFieldBufferPredicate<C> fieldBufferFunction,
                             final int offset, final int len);
-
 
   @Override
   public final <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction) {
@@ -696,38 +686,31 @@ abstract class BaseJsonIterator implements JsonIterator {
     return VALUE_TYPES[peekToken()];
   }
 
-  private int findStringEnd() {
+  private void skipString() {
     char c;
     for (int i = head; ; ++i) {
       if (i >= tail) {
         if (loadMore()) {
           i = head;
         } else {
-          return -1;
+          throw reportError("skipString", "incomplete string");
         }
       }
       c = peekChar(i);
       if (c == '"') {
-        return i;
+        head = i + 1;
+        return;
       }
       if (c == '\\') {
         if (++i == tail) {
           if (loadMore()) {
             i = head;
           } else {
-            return -1;
+            throw reportError("skipString", "incomplete string");
           }
         }
       }
     }
-  }
-
-  private void skipString() {
-    final int end = findStringEnd();
-    if (end == -1) {
-      throw reportError("skipString", "incomplete string");
-    }
-    head = end + 1;
   }
 
   private void skipUntilBreak() {
@@ -1120,10 +1103,10 @@ abstract class BaseJsonIterator implements JsonIterator {
   public final boolean readArray() {
     final char c = nextToken();
     if (c == '[') {
-      if (nextToken() == ']') {
+      if (peekToken() == ']') {
+        head++;
         return false;
       }
-      unread();
       return true;
     }
     if (c == ']' || c == 'n') {
