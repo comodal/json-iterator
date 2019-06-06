@@ -49,7 +49,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   abstract String getBufferString(final int from, final int to);
 
   final JsonException reportError(final String op, final String msg) {
-    final var peek = getBufferString(head <= 10 ? 0 : head - 10, head > tail ? tail : head);
+    final var peek = getBufferString(head <= 10 ? 0 : head - 10, Math.min(head, tail));
     throw new JsonException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + getBufferString(0, 1_024));
   }
 

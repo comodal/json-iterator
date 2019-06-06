@@ -32,11 +32,9 @@ repositories {
 }
 
 dependencies {
-  components.all(DependenciesAlignmentRule)
-
   testImplementation 'org.junit.jupiter:junit-jupiter-api:+'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:+'
-  
+
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:+'
   testImplementation 'org.openjdk.jmh:jmh-core:+'
   testImplementation 'org.openjdk.jmh:jmh-generator-annprocess:+'
@@ -47,11 +45,11 @@ dependencies {
 
 jmh {
   // ./gradlew -q --console=plain --no-daemon jmh -Pbench=BenchStringFieldStyles
-  if(project.properties['bench.graal'] == 'true') {
-    jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC', '-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
+  if (project.properties['bench.graal'] == 'true') {
+    jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC', '-XX:+UseNUMA', '-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
     resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/graal_results.json")
   } else {
-    jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC']
+    jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC', '-XX:+UseNUMA']
     resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/results.json")
   }
   warmupIterations = 4
@@ -69,7 +67,7 @@ jmhReport {
   jmhResultPath = jmh.resultsFile
   def reportDir = project.parent.file("benchmark-results/$bench/jmh_report/")
   jmhReportOutput = reportDir
-  if(!reportDir.exists()) {
+  if (!reportDir.exists()) {
     reportDir.mkdirs()
   }
 }
@@ -100,26 +98,13 @@ test {
   }
 }
 
-
-final class DependenciesAlignmentRule implements ComponentMetadataRule {
-  void execute(ComponentMetadataContext ctx) {
-    ctx.details.with {
-      if (id.group.startsWith("org.junit.jupiter")) {
-        belongsTo("org.junit.jupiter:junit-platform:${id.version}")
-      } else if (id.group.startsWith("org.openjdk.jmh")) {
-        belongsTo("org.openjdk.jmh:jmh-platform:${id.version}")
-      }
-    }
-  }
-}
-
 task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = 'sources'
-  from sourceSets.main.allSource
+  archiveClassifier = 'sources'
+  from sourceSets.main.allJava
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
+  archiveClassifier = 'javadoc'
   from javadoc.destinationDir
 }
 
