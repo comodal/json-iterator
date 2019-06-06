@@ -16,7 +16,7 @@ final class IocLoopCharSwitch implements JsonIterParser<ExchangeInfo> {
   }
 
   @Override
-  public ExchangeInfo parse(final JsonIterator ji) throws IOException {
+  public ExchangeInfo parse(final JsonIterator ji) {
     return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_CHAR_FIELD_PARSER).create();
   }
   

@@ -61,8 +61,6 @@ abstract class BaseJsonIterator implements JsonIterator {
 
   abstract char readChar();
 
-  abstract int readAsInt();
-
   abstract char peekChar();
 
   abstract char peekChar(final int offset);

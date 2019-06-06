@@ -19,7 +19,7 @@ final class LoopStringIf implements JsonIterParser<ExchangeInfo> {
     return parseExchangeInfo(ji);
   }
 
-  private static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
+  private static ExchangeInfo parseExchangeInfo(final JsonIterator ji) {
     final var info = ExchangeInfo.build();
     for (var field = ji.readObjField(); field != null; field = ji.readObjField()) {
       if ("timezone".equals(field)) {

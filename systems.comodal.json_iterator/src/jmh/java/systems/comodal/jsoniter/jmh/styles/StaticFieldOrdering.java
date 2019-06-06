@@ -4,19 +4,17 @@ import systems.comodal.jsoniter.JsonIterator;
 import systems.comodal.jsoniter.factory.JsonIterParser;
 import systems.comodal.jsoniter.jmh.data.exchange.*;
 
-import java.io.IOException;
-
 final class StaticFieldOrdering implements JsonIterParser<ExchangeInfo> {
 
   StaticFieldOrdering() {
   }
 
   @Override
-  public ExchangeInfo parse(final JsonIterator ji) throws IOException {
+  public ExchangeInfo parse(final JsonIterator ji) {
     return parseExchangeInfo(ji);
   }
 
-  private static ExchangeInfo parseExchangeInfo(final JsonIterator ji) throws IOException {
+  private static ExchangeInfo parseExchangeInfo(final JsonIterator ji) {
     final var info = ExchangeInfo.build();
     info.timezone(ji.skipObjField().readString());
     info.serverTime(ji.skipObjField().readLong());

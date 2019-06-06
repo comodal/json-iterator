@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 
 final class CharsJsonIterator extends BaseJsonIterator {
 
-  char[] buf;
+  private char[] buf;
 
   CharsJsonIterator(final char[] buf, final int head, final int tail) {
     super(head, tail);
@@ -100,11 +100,6 @@ final class CharsJsonIterator extends BaseJsonIterator {
 
   @Override
   char readChar() {
-    return buf[head++];
-  }
-
-  @Override
-  int readAsInt() {
     return buf[head++];
   }
 

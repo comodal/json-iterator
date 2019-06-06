@@ -129,11 +129,6 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final int readAsInt() {
-    return read();
-  }
-
-  @Override
   final char peekChar() {
     return (char) buf[head];
   }
@@ -254,12 +249,12 @@ class BytesJsonIterator extends BaseJsonIterator {
     try {
       boolean isExpectingLowSurrogate = false;
       for (int bc; ; ) {
-        bc = readAsInt();
+        bc = read();
         if (bc == '"') {
           return j;
         }
         if (bc == '\\') {
-          bc = readAsInt();
+          bc = read();
           switch (bc) {
             case 'b':
               bc = '\b';
@@ -281,7 +276,7 @@ class BytesJsonIterator extends BaseJsonIterator {
             case '\\':
               break;
             case 'u':
-              bc = (JHex.decode(readAsInt()) << 12) + (JHex.decode(readAsInt()) << 8) + (JHex.decode(readAsInt()) << 4) + JHex.decode(readAsInt());
+              bc = (JHex.decode(read()) << 12) + (JHex.decode(read()) << 8) + (JHex.decode(read()) << 4) + JHex.decode(read());
               if (isExpectingLowSurrogate) {
                 if (Character.isLowSurrogate((char) bc)) {
                   isExpectingLowSurrogate = false;
@@ -298,15 +293,15 @@ class BytesJsonIterator extends BaseJsonIterator {
               throw reportError("readStringSlowPath", "invalid escape character: " + bc);
           }
         } else if ((bc & 0x80) != 0) {
-          final int u2 = readAsInt();
+          final int u2 = read();
           if ((bc & 0xE0) == 0xC0) {
             bc = ((bc & 0x1F) << 6) + (u2 & 0x3F);
           } else {
-            final int u3 = readAsInt();
+            final int u3 = read();
             if ((bc & 0xF0) == 0xE0) {
               bc = ((bc & 0x0F) << 12) + ((u2 & 0x3F) << 6) + (u3 & 0x3F);
             } else {
-              final int u4 = readAsInt();
+              final int u4 = read();
               if ((bc & 0xF8) == 0xF0) {
                 bc = ((bc & 0x07) << 18) + ((u2 & 0x3F) << 12) + ((u3 & 0x3F) << 6) + (u4 & 0x3F);
               } else {
