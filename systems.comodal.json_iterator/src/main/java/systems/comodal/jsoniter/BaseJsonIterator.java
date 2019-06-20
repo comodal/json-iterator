@@ -29,7 +29,6 @@ abstract class BaseJsonIterator implements JsonIterator {
   int head;
   int tail;
 
-
   BaseJsonIterator(final int head, final int tail) {
     this.head = head;
     this.tail = tail;

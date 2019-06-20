@@ -85,6 +85,14 @@ sourceSets {
   }
 }
 
+compileTestJava {
+  moduleOptions {
+    addModules = ['org.junit.jupiter.params', 'jmh.core']
+    addReads = [
+        'systems.comodal.json_iterator': 'org.junit.jupiter.params,jmh.core']
+  }
+}
+
 test {
   moduleOptions {
     runOnClasspath = true
@@ -99,12 +107,12 @@ test {
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-  archiveClassifier = 'sources'
+  archiveClassifier.set('sources')
   from sourceSets.main.allJava
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-  archiveClassifier = 'javadoc'
+  archiveClassifier.set('javadoc')
   from javadoc.destinationDir
 }
 
