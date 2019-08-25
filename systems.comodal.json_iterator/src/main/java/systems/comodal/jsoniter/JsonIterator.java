@@ -140,6 +140,20 @@ public interface JsonIterator extends Closeable {
 
   JsonIterator skip();
 
+  default JsonIterator skipRestOfObject() {
+    while (skipObjField() != null) {
+      skip();
+    }
+    return this;
+  }
+
+  default JsonIterator skipRestOfArray() {
+    while (readArray()) {
+      skip();
+    }
+    return this;
+  }
+
   /**
    * Advances the iterator if the next item is 'null' and returns true.
    * Otherwise, stays in place and returns false.

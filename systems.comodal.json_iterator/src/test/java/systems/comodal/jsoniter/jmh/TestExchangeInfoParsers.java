@@ -25,7 +25,14 @@ final class TestExchangeInfoParsers {
   @TestFactory
   Stream<DynamicTest> testStringFieldParsers() {
     final var bench = new BenchStringFieldStyles();
-    final var styles = Set.of("StaticFieldOrdering", "IocLoopCompareStringFieldToCharsIf", "LoopStringSwitch", "LoopStringIf");
+    final var styles = Set.of(
+        "StaticFieldOrdering",
+        "IocLoopCompareStringFieldToCharsIf",
+        "IocLoopCompareStringFieldToCharsIfNHashN",
+        "IocLoopCompareStringFieldToCharsIfNLogN",
+        "LoopStringSwitch",
+        "LoopStringIf"
+    );
     return styles.parallelStream()
         .map(filter -> JsonIterParserFactory.loadParser(ExchangeInfo.class, filter))
         .map(parser -> dynamicTest(parser.getClass().getSimpleName(), () -> {

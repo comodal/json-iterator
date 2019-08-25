@@ -52,10 +52,10 @@ jmh {
     jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC', '-XX:+UseNUMA']
     resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/results.json")
   }
-  warmupIterations = 4
-  warmup = '5s'
+  warmupIterations = 3
+  warmup = '4s'
   iterations = 5
-  timeOnIteration = '7s'
+  timeOnIteration = '5s'
   fork = 1
   include = [project.bench]
   jmhVersion = '+'
