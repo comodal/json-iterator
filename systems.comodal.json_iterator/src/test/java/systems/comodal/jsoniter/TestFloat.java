@@ -6,9 +6,9 @@ import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Arrays;
 
 import static java.math.BigDecimal.ZERO;
+import static java.time.Instant.ofEpochSecond;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class TestFloat {
@@ -87,21 +87,37 @@ final class TestFloat {
   void testApplyNumberChars(final JsonIteratorFactory factory) {
     final CharBufferFunction<Instant> fractionalEpochParser = (buf, offset, len) -> {
       final int end = offset + len;
-      for (int i = end - 1; i >= offset; i--) {
-        if (buf[i] == '.') {
-          final long seconds = Long.parseLong(new String(buf, offset, offset + i));
-          final var nanoChars = new char[9];
-          final int nanoLen = end - (++i);
-          System.arraycopy(buf, i, nanoChars, 0, nanoLen);
-          Arrays.fill(nanoChars, nanoLen, nanoChars.length, '0');
-          return Instant.ofEpochSecond(seconds, Long.parseLong(new String(nanoChars)));
+      long seconds = 0;
+      for (char c; offset < end; ) {
+        if ((c = buf[offset++]) == '.') {
+          int i = end - offset;
+          long nanoAdjustment = 0;
+          do {
+            nanoAdjustment *= 10;
+            nanoAdjustment += Character.digit(buf[offset++], 10);
+          } while (offset < end);
+          while (i++ < 9) {
+            nanoAdjustment *= 10;
+          }
+          return ofEpochSecond(seconds, nanoAdjustment);
         }
+        seconds *= 10;
+        seconds += Character.digit(c, 10);
       }
-      return Instant.ofEpochSecond(Long.parseLong(new String(buf, offset, len)));
+      return ofEpochSecond(seconds);
     };
-    final var factionalEpoch = "1567130406.633";
-    assertEquals(Instant.ofEpochSecond(1567130406L, 633_000_000L),
-        factory.create(factionalEpoch).applyNumberChars(fractionalEpochParser));
+
+    var factionalEpoch = "1567130406.123";
+    var instant = factory.create(factionalEpoch).applyNumberChars(fractionalEpochParser);
+    assertEquals(ofEpochSecond(1567130406L, 123_000_000L), instant);
+
+    factionalEpoch = "1567130406.123456789";
+    instant = factory.create(factionalEpoch).applyNumberChars(fractionalEpochParser);
+    assertEquals(ofEpochSecond(1567130406L, 123_456_789L), instant);
+
+    factionalEpoch = "1567130406";
+    instant = factory.create(factionalEpoch).applyNumberChars(fractionalEpochParser);
+    assertEquals(ofEpochSecond(1567130406L), instant);
   }
 
   @ParameterizedTest
