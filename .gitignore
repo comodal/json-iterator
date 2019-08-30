@@ -3,3 +3,4 @@ out/
 build/
 *.iml
 jmh_report/
+gen.json

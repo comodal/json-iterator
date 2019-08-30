@@ -14,7 +14,7 @@ import static systems.comodal.jsoniter.ValueType.OBJECT;
 public class JIParserGeneratorEntryPoint {
 
   private static void printUsage() {
-    System.err.println("Usage: ./gradlew gen <style>[ifelse, nlogn, nhashn] <unexpected_field_behavior>[throw, skip] <tab_size>[2, 4, etc.] <camelCaseRootName> <file_or_url>(asdf.json, https://)");
+    System.err.println("Usage: ./gradlew :json-iterator:genParser --args='<style>[ifelse, nlogn, nhashn] <unexpected_field_behavior>[throw, skip] <tab_size>[2, 4, etc.] <camelCaseRootName> <file_or_url>(asdf.json, https://)'");
   }
 
   public static void main(final String[] args) throws IOException {

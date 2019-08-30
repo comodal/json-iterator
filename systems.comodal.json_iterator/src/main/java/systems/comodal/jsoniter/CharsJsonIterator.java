@@ -301,7 +301,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final BigDecimal applyNumberChars(final CharBufferFunction<BigDecimal> parseChars) {
+  final BigDecimal parseBigDecimal(final CharBufferFunction<BigDecimal> parseChars) {
     final int len = parseNumber();
     return parseChars.apply(buf, head - len, len);
   }
@@ -309,5 +309,17 @@ final class CharsJsonIterator extends BaseJsonIterator {
   @Override
   final String parsedNumberAsString(final int len) {
     return new String(buf, head - len, len);
+  }
+
+  @Override
+  final <R> R parseNumber(final CharBufferFunction<R> applyChars, final int len) {
+    return applyChars.apply(buf, 0, len);
+  }
+
+  @Override
+  final <C, R> R parseNumber(final C context,
+                             final ContextCharBufferFunction<C, R> applyChars,
+                             final int len) {
+    return applyChars.apply(context, buf, 0, len);
   }
 }

@@ -156,3 +156,11 @@ bintray {
     }
   }
 }
+
+// ./gradlew :json-iterator:genParser --args='<style>[ifelse, nlogn, nhashn] <unexpected_field_behavior>[throw, skip] <tab_size>[2, 4, etc.] <camelCaseRootName> <file_or_url>(asdf.json, https://)'
+// ./gradlew :json-iterator:genParser --args='ifelse skip 2 assets gen.json'
+task genParser(type: JavaExec) {
+  workingDir = project.getRootDir()
+  classpath = sourceSets.jmh.getRuntimeClasspath()
+  main = 'systems.comodal.jsoniter.generate.JIParserGeneratorEntryPoint'
+}

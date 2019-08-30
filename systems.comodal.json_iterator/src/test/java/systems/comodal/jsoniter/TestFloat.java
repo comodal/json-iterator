@@ -5,6 +5,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Arrays;
 
 import static java.math.BigDecimal.ZERO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -78,6 +80,28 @@ final class TestFloat {
     assertEquals(maxDouble, factory.create(maxDouble).readNumberAsString());
 
     assertEquals(maxDouble, factory.create("\"1.7976931348623157e+308\"").readNumberOrNumberString());
+  }
+
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void testApplyNumberChars(final JsonIteratorFactory factory) {
+    final CharBufferFunction<Instant> fractionalEpochParser = (buf, offset, len) -> {
+      final int end = offset + len;
+      for (int i = end - 1; i >= offset; i--) {
+        if (buf[i] == '.') {
+          final long seconds = Long.parseLong(new String(buf, offset, offset + i));
+          final var nanoChars = new char[9];
+          final int nanoLen = end - (++i);
+          System.arraycopy(buf, i, nanoChars, 0, nanoLen);
+          Arrays.fill(nanoChars, nanoLen, nanoChars.length, '0');
+          return Instant.ofEpochSecond(seconds, Long.parseLong(new String(nanoChars)));
+        }
+      }
+      return Instant.ofEpochSecond(Long.parseLong(new String(buf, offset, len)));
+    };
+    final var factionalEpoch = "1567130406.633";
+    assertEquals(Instant.ofEpochSecond(1567130406L, 633_000_000L),
+        factory.create(factionalEpoch).applyNumberChars(fractionalEpochParser));
   }
 
   @ParameterizedTest

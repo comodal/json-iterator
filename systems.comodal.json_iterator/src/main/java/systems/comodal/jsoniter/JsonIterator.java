@@ -200,6 +200,10 @@ public interface JsonIterator extends Closeable {
 
   <C, R> R applyChars(final C context, final ContextCharBufferFunction<C, R> applyChars);
 
+  <R> R applyNumberChars(final CharBufferFunction<R> applyChars);
+
+  <C, R> R applyNumberChars(final C context, final ContextCharBufferFunction<C, R> applyChars);
+
   boolean testChars(final CharBufferPredicate testChars);
 
   <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars);
