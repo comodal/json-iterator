@@ -490,6 +490,55 @@ abstract class BaseJsonIterator implements JsonIterator {
                             final ContextFieldBufferPredicate<C> fieldBufferFunction,
                             final int offset, final int len);
 
+
+  @Override
+  public final <C> C testObject(final C context, final ContextFieldBufferMaskedPredicate<C> fieldBufferFunction) {
+    char c;
+    long mask = 0;
+    for (int offset, len; ; ) {
+      if ((c = nextToken()) == ',') {
+        c = nextToken();
+        if (c != '"') {
+          throw reportError("testObject", "expected string field, but " + c);
+        }
+        offset = head;
+        len = parse();
+        if ((c = nextToken()) != ':') {
+          throw reportError("testObject", "expected :, but " + c);
+        } else if ((mask = test(context, mask, fieldBufferFunction, offset, len)) == Long.MIN_VALUE) {
+          return context;
+        }
+      } else if (c == '{') {
+        c = nextToken();
+        if (c == '"') {
+          offset = head;
+          len = parse();
+          if ((c = nextToken()) != ':') {
+            throw reportError("testObject", "expected :, but " + c);
+          } else if ((mask = test(context, mask, fieldBufferFunction, offset, len)) == Long.MIN_VALUE) {
+            return context;
+          }
+        } else if (c == '}') { // end of object
+          return context;
+        } else {
+          throw reportError("testObject", "expected \" after {");
+        }
+      } else if (c == '}') {
+        return context;
+      } else if (c == 'n') {
+        skip(3);
+        return context;
+      } else {
+        throw reportError("testObject", "expected { or , or } or n, but found: " + c);
+      }
+    }
+  }
+
+  abstract <C> long test(final C context,
+                         final long mask,
+                         final ContextFieldBufferMaskedPredicate<C> fieldBufferFunction,
+                         final int offset, final int len);
+
   @Override
   public final <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction) {
     char c = nextToken();

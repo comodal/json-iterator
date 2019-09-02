@@ -69,7 +69,7 @@ final class JIValueParserGenerator implements JIParserGenerator {
   }
 
   @Override
-  public Map<String, JIParserGenerator> getSortedFields() {
+  public Map<String, JIParserGenerator> getFields() {
     return null;
   }
 

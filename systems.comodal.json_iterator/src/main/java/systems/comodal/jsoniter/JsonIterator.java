@@ -194,7 +194,6 @@ public interface JsonIterator extends Closeable {
    * @param applyChars This array buffer is reused throughout the life of this iterator.
    * @param <R>        Resulting Object Type.
    * @return Object constructed from applyChars.
-   * @throws IOException needed in case the underlying data is a stream.
    */
   <R> R applyChars(final CharBufferFunction<R> applyChars);
 
@@ -223,4 +222,6 @@ public interface JsonIterator extends Closeable {
   <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction);
 
   void testObject(final FieldBufferPredicate fieldBufferFunction);
+
+  <C> C testObject(final C context, final ContextFieldBufferMaskedPredicate<C> fieldBufferFunction);
 }

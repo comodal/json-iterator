@@ -283,6 +283,15 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
+  <C> long test(final C context, final long mask, final ContextFieldBufferMaskedPredicate<C> fieldBufferFunction, final int offset, final int len) {
+    if (numEscapes > 0) {
+      final char[] chars = handleEscapes(offset, len);
+      return fieldBufferFunction.test(context, mask, chars, 0, chars.length, this);
+    }
+    return fieldBufferFunction.test(context, mask, buf, offset, len, this);
+  }
+
+  @Override
   final <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);

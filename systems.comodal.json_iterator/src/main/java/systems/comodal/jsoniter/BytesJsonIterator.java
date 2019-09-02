@@ -231,6 +231,11 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
+  final <C> long test(final C context, final long mask, final ContextFieldBufferMaskedPredicate<C> fieldBufferFunction, final int offset, final int len) {
+    return fieldBufferFunction.test(context, mask, charBuf, 0, len, this);
+  }
+
+  @Override
   final <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) {
     return fieldBufferFunction.apply(charBuf, 0, len, this);
   }

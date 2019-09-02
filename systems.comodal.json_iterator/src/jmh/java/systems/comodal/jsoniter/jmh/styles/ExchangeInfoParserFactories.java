@@ -8,6 +8,7 @@ public final class ExchangeInfoParserFactories {
   private static final IocLoopCharSwitch IOC_LOOP_CHAR_SWITCH_INSTANCE = new IocLoopCharSwitch();
   private static final IocLoopCharIf IOC_LOOP_CHAR_IF_INSTANCE = new IocLoopCharIf();
   private static final IocLoopCompareStringFieldToCharsIf IOC_LOOP_COMPARE_STRING_FIELD_TO_CHARS_IF_INSTANCE = new IocLoopCompareStringFieldToCharsIf();
+  private static final IocLoopCompareStringFieldToCharsIfMask IOC_LOOP_COMPARE_STRING_FIELD_TO_CHARS_IF__MASK_INSTANCE = new IocLoopCompareStringFieldToCharsIfMask();
   private static final IocLoopCompareStringFieldToCharsIfNLogN IOC_LOOP_COMPARE_STRING_FIELD_TO_CHARS_IF_N_LOG_N_INSTANCE = new IocLoopCompareStringFieldToCharsIfNLogN();
   private static final IocLoopCompareStringFieldToCharsIfNHashN IOC_LOOP_COMPARE_STRING_FIELD_TO_CHARS_IF_N_HASH_N_INSTANCE = new IocLoopCompareStringFieldToCharsIfNHashN();
   private static final LoopStringIf LOOP_STRING_IF_INSTANCE = new LoopStringIf();
@@ -35,6 +36,14 @@ public final class ExchangeInfoParserFactories {
     @Override
     public IocLoopCompareStringFieldToCharsIf create(final Class<ExchangeInfo> parserType) {
       return IOC_LOOP_COMPARE_STRING_FIELD_TO_CHARS_IF_INSTANCE;
+    }
+  }
+
+  public static final class IocLoopCompareStringFieldToCharsIfMaskExchangeInfoFactory implements JsonIterParserFactory<ExchangeInfo> {
+
+    @Override
+    public IocLoopCompareStringFieldToCharsIfMask create(final Class<ExchangeInfo> parserType) {
+      return IOC_LOOP_COMPARE_STRING_FIELD_TO_CHARS_IF__MASK_INSTANCE;
     }
   }
 

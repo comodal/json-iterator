@@ -24,6 +24,7 @@ public class BenchGeneratedIOCStyles {
   
   @Param({
       "IocLoopCompareStringFieldToCharsIf",
+      "IocLoopCompareStringFieldToCharsIfMask",
       "IocLoopCompareStringFieldToCharsIfNHashN",
       "IocLoopCompareStringFieldToCharsIfNLogN"
   })

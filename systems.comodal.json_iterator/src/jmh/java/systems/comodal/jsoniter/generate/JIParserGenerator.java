@@ -12,7 +12,7 @@ interface JIParserGenerator {
 
   ValueType getType();
 
-  Map<String, JIParserGenerator> getSortedFields();
+  Map<String, JIParserGenerator> getFields();
 
   JIParser printLogic(final JIParserConfig config,
                       final StringBuilder builder,

@@ -28,6 +28,7 @@ final class TestExchangeInfoParsers {
     final var styles = Set.of(
         "StaticFieldOrdering",
         "IocLoopCompareStringFieldToCharsIf",
+        "IocLoopCompareStringFieldToCharsIfMask",
         "IocLoopCompareStringFieldToCharsIfNHashN",
         "IocLoopCompareStringFieldToCharsIfNLogN",
         "LoopStringSwitch",

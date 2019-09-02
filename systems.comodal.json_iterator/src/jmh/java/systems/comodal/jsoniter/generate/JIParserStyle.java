@@ -13,7 +13,7 @@ public enum JIParserStyle {
     @Override
     JIParser createParser(final JIParserConfig config,
                           final JIParserGenerator generator) {
-      final var fields = generator.getSortedFields();
+      final var fields = generator.getFields();
       if (fields == null || fields.isEmpty()) {
         return null;
       }
@@ -48,11 +48,77 @@ public enum JIParserStyle {
       return JIParser.create(parserName, parserCode);
     }
   },
+  IFMASK() {
+    @Override
+    JIParser createParser(final JIParserConfig config,
+                          final JIParserGenerator generator) {
+      final var fields = generator.getFields();
+      if (fields == null || fields.isEmpty()) {
+        return null;
+      }
+      if (fields.size() >= 63) {
+        throw new IllegalStateException("Only up to 63 fields per object are supported for the strategy " + this.name());
+      }
+      final var parserName = formatParserName(generator.getParentNameChain().replace('.', '_'));
+      final var tab = config.getTab();
+      final var builder = new StringBuilder(format(
+          "%sprivate static final ContextFieldBufferMaskedPredicate<?> %s_PARSER = (builder, mask, buf, offset, len, ji) -> {",
+          tab, parserName))
+          .append(lineSeparator());
+      final var fieldIterator = fields.values().iterator();
+      var childGenerator = fieldIterator.next();
+      builder
+          .append(tab).append(tab).append(fields.size() > 31 ? "long i = 1;" : "int i = 1;")
+          .append(lineSeparator())
+          .append(tab).append(tab).append(format("if ((mask & i) == 0 && fieldEquals(\"%s\", buf, offset, len)) {", childGenerator.getParentName()))
+          .append(lineSeparator());
+      childGenerator.printLogic(config, builder, tab);
+      builder.append(tab).append(tab).append("} else ");
+      while (fieldIterator.hasNext()) {
+        childGenerator = fieldIterator.next();
+        builder
+            .append(format("if ((mask & (i <<= 1)) == 0 && fieldEquals(\"%s\", buf, offset, len)) {", childGenerator.getParentName()))
+            .append(lineSeparator());
+        childGenerator.printLogic(config, builder, tab);
+        builder.append(tab).append(tab).append("} else ");
+      }
+      if (config.skipUnexpectedFields()) {
+        builder.append(String.format("if (mask == 0b%sL) {", "1".repeat(fields.size())))
+            .append(lineSeparator())
+            .append(tab).append(tab).append(tab).append("do {")
+            .append(lineSeparator())
+            .append(tab).append(tab).append(tab).append(tab).append("ji.skip();")
+            .append(lineSeparator())
+            .append(tab).append(tab).append(tab).append("} while (ji.skipObjField() != null);")
+            .append(lineSeparator())
+            .append(tab).append(tab).append(tab).append("return Long.MIN_VALUE;")
+            .append(lineSeparator())
+            .append(tab).append(tab).append("} else {")
+            .append(lineSeparator())
+            .append(tab).append(tab).append(tab).append("ji.skip();")
+            .append(lineSeparator())
+            .append(tab).append(tab).append(tab).append("return mask;")
+            .append(lineSeparator());
+      } else {
+        builder.append('{').append(lineSeparator());
+        printUnexpected(tab + tab, tab, builder, generator);
+      }
+      final var parserCode = builder
+          .append(tab).append(tab).append('}')
+          .append(lineSeparator())
+          .append(tab).append(tab).append("return mask | i;")
+          .append(lineSeparator())
+          .append(tab).append("};")
+          .append(lineSeparator())
+          .toString();
+      return JIParser.create(parserName, parserCode);
+    }
+  },
   NLOGN {
     @Override
     JIParser createParser(final JIParserConfig config,
                           final JIParserGenerator generator) {
-      final var fields = generator.getSortedFields();
+      final var fields = generator.getFields();
       if (fields == null || fields.isEmpty()) {
         return null;
       }
@@ -194,7 +260,7 @@ public enum JIParserStyle {
     @Override
     JIParser createParser(final JIParserConfig config,
                           final JIParserGenerator generator) {
-      final var fields = generator.getSortedFields();
+      final var fields = generator.getFields();
       if (fields == null || fields.isEmpty()) {
         return null;
       }
