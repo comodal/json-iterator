@@ -13,11 +13,15 @@ final class ProductSymbolVal implements ProductSymbol {
   private final int quoteAssetPrecision;
   private final Set<OrderType> orderTypes;
   private final boolean icebergAllowed;
+  private final boolean ocoAllowed;
   private final int icebergPartsLimit;
   private final int maxNumAlgoOrders;
+  private final boolean isSpotTradingAllowed;
+  private final boolean isMarginTradingAllowed;
   private final PriceFilter priceFilter;
   private final PercentPriceFilter percentPriceFilter;
   private final LotSizeFilter lotSizeFilter;
+  private final LotSizeFilter marketLotSizeFilter;
   private final MinNotionalFilter minNotionalFilter;
 
   private ProductSymbolVal(final String symbol,
@@ -28,11 +32,15 @@ final class ProductSymbolVal implements ProductSymbol {
                            final int quoteAssetPrecision,
                            final Set<OrderType> orderTypes,
                            final boolean icebergAllowed,
+                           final boolean ocoAllowed,
+                           final boolean isSpotTradingAllowed,
+                           final boolean isMarginTradingAllowed,
                            final int icebergPartsLimit,
                            final int maxNumAlgoOrders,
                            final PriceFilter priceFilter,
                            final PercentPriceFilter percentPriceFilter,
                            final LotSizeFilter lotSizeFilter,
+                           final LotSizeFilter marketLotSizeFilter,
                            final MinNotionalFilter minNotionalFilter) {
     this.symbol = symbol;
     this.status = status;
@@ -42,11 +50,15 @@ final class ProductSymbolVal implements ProductSymbol {
     this.quoteAssetPrecision = quoteAssetPrecision;
     this.orderTypes = orderTypes;
     this.icebergAllowed = icebergAllowed;
+    this.ocoAllowed = ocoAllowed;
+    this.isSpotTradingAllowed = isSpotTradingAllowed;
+    this.isMarginTradingAllowed = isMarginTradingAllowed;
     this.icebergPartsLimit = icebergPartsLimit;
     this.maxNumAlgoOrders = maxNumAlgoOrders;
     this.priceFilter = priceFilter;
     this.percentPriceFilter = percentPriceFilter;
     this.lotSizeFilter = lotSizeFilter;
+    this.marketLotSizeFilter = marketLotSizeFilter;
     this.minNotionalFilter = minNotionalFilter;
   }
 
@@ -91,6 +103,21 @@ final class ProductSymbolVal implements ProductSymbol {
   }
 
   @Override
+  public boolean isOcoAllowed() {
+    return ocoAllowed;
+  }
+
+  @Override
+  public boolean isSpotTradingAllowed() {
+    return isSpotTradingAllowed;
+  }
+
+  @Override
+  public boolean isMarginTradingAllowed() {
+    return isMarginTradingAllowed;
+  }
+
+  @Override
   public int getIcebergPartsLimit() {
     return icebergPartsLimit;
   }
@@ -116,6 +143,11 @@ final class ProductSymbolVal implements ProductSymbol {
   }
 
   @Override
+  public LotSizeFilter getMarketLotSizeFilter() {
+    return marketLotSizeFilter;
+  }
+
+  @Override
   public MinNotionalFilter getMinNotionalFilter() {
     return minNotionalFilter;
   }
@@ -130,11 +162,15 @@ final class ProductSymbolVal implements ProductSymbol {
     private int quoteAssetPrecision;
     private Set<OrderType> orderTypes;
     private boolean icebergAllowed;
+    private boolean ocoAllowed;
+    private boolean isSpotTradingAllowed;
+    private boolean isMarginTradingAllowed;
     private int icebergPartsLimit;
     private int maxNumAlgoOrders;
     private PriceFilter priceFilter;
     private PercentPriceFilter percentPriceFilter;
     private LotSizeFilter lotSizeFilter;
+    private LotSizeFilter marketLotSizeFilter;
     private MinNotionalFilter minNotionalFilter;
 
     ProductSymbolBuilder() {
@@ -143,9 +179,10 @@ final class ProductSymbolVal implements ProductSymbol {
     @Override
     public ProductSymbol create() {
       return new ProductSymbolVal(symbol, status, baseAsset, baseAssetPrecision, quoteAsset, quoteAssetPrecision,
-          orderTypes == null ? EnumSet.noneOf(OrderType.class) : orderTypes, icebergAllowed,
+          orderTypes == null ? EnumSet.noneOf(OrderType.class) : orderTypes,
+          icebergAllowed, ocoAllowed, isSpotTradingAllowed, isMarginTradingAllowed,
           icebergPartsLimit, maxNumAlgoOrders,
-          priceFilter, percentPriceFilter, lotSizeFilter, minNotionalFilter);
+          priceFilter, percentPriceFilter, lotSizeFilter, marketLotSizeFilter, minNotionalFilter);
     }
 
     @Override
@@ -201,6 +238,24 @@ final class ProductSymbolVal implements ProductSymbol {
     }
 
     @Override
+    public Builder ocoAllowed(final boolean ocoAllowed) {
+      this.ocoAllowed = ocoAllowed;
+      return this;
+    }
+
+    @Override
+    public Builder isSpotTradingAllowed(final boolean isSpotTradingAllowed) {
+      this.isSpotTradingAllowed = isSpotTradingAllowed;
+      return this;
+    }
+
+    @Override
+    public Builder isMarginTradingAllowed(final boolean isMarginTradingAllowed) {
+      this.isMarginTradingAllowed = isMarginTradingAllowed;
+      return this;
+    }
+
+    @Override
     public Builder filter(final Filter.Builder filter) {
       filter.build(this);
       return this;
@@ -233,6 +288,12 @@ final class ProductSymbolVal implements ProductSymbol {
     @Override
     public Builder lotSizeFilter(final LotSizeFilter lotSizeFilter) {
       this.lotSizeFilter = lotSizeFilter;
+      return this;
+    }
+
+    @Override
+    public Builder marketLotSizeFilter(final LotSizeFilter marketLotSizeFilter) {
+      this.marketLotSizeFilter = marketLotSizeFilter;
       return this;
     }
 

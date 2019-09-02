@@ -16,7 +16,6 @@ final class FilterBuilder implements Filter.Builder {
   private BigDecimal stepSize;
   private BigDecimal minNotional;
   private boolean applyToMarket;
-
   private int limit;
   private int maxNumAlgoOrders;
 
@@ -40,6 +39,9 @@ final class FilterBuilder implements Filter.Builder {
         return this;
       case MAX_NUM_ALGO_ORDERS:
         builder.maxNumAlgoOrders(maxNumAlgoOrders);
+        return this;
+      case MARKET_LOT_SIZE:
+        builder.marketLotSizeFilter(new LotSizeFilterVal(minQty, maxQty, stepSize));
         return this;
       default:
         throw new IllegalStateException("Unhandled filter type " + type);

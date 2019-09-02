@@ -13,8 +13,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 import static systems.comodal.jsoniter.jmh.data.exchange.OrderType.*;
 import static systems.comodal.jsoniter.jmh.data.exchange.RateLimit.Type.ORDERS;
@@ -29,8 +28,6 @@ final class TestExchangeInfoParsers {
         "StaticFieldOrdering",
         "IocLoopCompareStringFieldToCharsIf",
         "IocLoopCompareStringFieldToCharsIfMask",
-        "IocLoopCompareStringFieldToCharsIfNHashN",
-        "IocLoopCompareStringFieldToCharsIfNLogN",
         "LoopStringSwitch",
         "LoopStringIf"
     );
@@ -46,17 +43,123 @@ final class TestExchangeInfoParsers {
   @TestFactory
   Stream<DynamicTest> testCharFieldParsers() {
     final var bench = new BenchCharFieldStyles();
-    final var styles = Set.of("StaticFieldOrdering", "IocLoopCharSwitch", "IocLoopCharIf");
+    final var styles = Set.of("IocLoopCharSwitch", "IocLoopCharIf");
     return styles.parallelStream()
         .map(filter -> JsonIterParserFactory.loadParser(ExchangeInfo.class, filter))
         .map(parser -> dynamicTest(parser.getClass().getSimpleName(), () -> {
-          validateExchangeInfo(parser.parse(bench.getLoadedBytesJsonIterator()));
-          validateExchangeInfo(parser.parse(bench.getLoadedCharsJsonIterator()));
-          validateExchangeInfo(parser.parse(bench.getLoadedBytesInputStreamJsonIterator(1_024)));
+          validateCompactExchangeInfo(parser.parse(bench.getLoadedBytesJsonIterator()));
+          validateCompactExchangeInfo(parser.parse(bench.getLoadedCharsJsonIterator()));
+          validateCompactExchangeInfo(parser.parse(bench.getLoadedBytesInputStreamJsonIterator(1_024)));
         }));
   }
 
   private void validateExchangeInfo(final ExchangeInfo info) {
+    assertEquals(TimeZone.getTimeZone("UTC"), info.getTimeZone());
+    assertEquals(1567391734169L, info.getServerTime());
+
+    final var rateLimits = info.getRateLimits();
+    assertEquals(3, info.getRateLimits().size());
+    var rateLimit = rateLimits.get(0);
+    assertEquals(REQUEST_WEIGHT, rateLimit.getType());
+    assertEquals(Duration.ofMinutes(1), rateLimit.getInterval());
+    assertEquals(1_200, rateLimit.getLimit());
+
+    rateLimit = rateLimits.get(1);
+    assertEquals(ORDERS, rateLimit.getType());
+    assertEquals(Duration.ofSeconds(1), rateLimit.getInterval());
+    assertEquals(10, rateLimit.getLimit());
+
+    rateLimit = rateLimits.get(2);
+    assertEquals(ORDERS, rateLimit.getType());
+    assertEquals(Duration.ofDays(1), rateLimit.getInterval());
+    assertEquals(100_000, rateLimit.getLimit());
+
+    final var symbols = info.getProductSymbols();
+    assertEquals(612, symbols.size());
+
+    var symbol = symbols.get(0);
+    assertEquals("ETHBTC", symbol.getSymbol());
+    assertEquals("TRADING", symbol.getStatus());
+    assertEquals("ETH", symbol.getBaseAsset());
+    assertEquals(8, symbol.getBaseAssetPrecision());
+    assertEquals("BTC", symbol.getQuoteAsset());
+    assertEquals(8, symbol.getQuoteAssetPrecision());
+    var expectedOrderTypes = Set.of(LIMIT, LIMIT_MAKER, MARKET, STOP_LOSS_LIMIT, TAKE_PROFIT_LIMIT);
+    assertEquals(expectedOrderTypes, symbol.getOrderTypes());
+    assertTrue(symbol.isIcebergAllowed());
+    assertTrue(symbol.isOcoAllowed());
+    assertTrue(symbol.isSpotTradingAllowed());
+    assertTrue(symbol.isMarginTradingAllowed());
+    assertEquals(10, symbol.getIcebergPartsLimit());
+    assertEquals(5, symbol.getMaxNumAlgoOrders());
+
+    var priceFilter = symbol.getPriceFilter();
+    assertEquals(new BigDecimal("0.00000100"), priceFilter.getMinPrice());
+    assertEquals(new BigDecimal("100000.00000000"), priceFilter.getMaxPrice());
+    assertEquals(new BigDecimal("0.00000100"), priceFilter.getTickSize());
+
+    var percentPriceFilter = symbol.getPercentPriceFilter();
+    assertEquals(new BigDecimal("5"), percentPriceFilter.getMultiplierUp());
+    assertEquals(new BigDecimal("0.2"), percentPriceFilter.getMultiplierDown());
+    assertEquals(5, percentPriceFilter.getAvgPriceMins());
+
+    var lotSizeFilter = symbol.getLotSizeFilter();
+    assertEquals(new BigDecimal("0.00100000"), lotSizeFilter.getMinQty());
+    assertEquals(new BigDecimal("100000.00000000"), lotSizeFilter.getMaxQty());
+    assertEquals(new BigDecimal("0.00100000"), lotSizeFilter.getStepSize());
+
+    lotSizeFilter = symbol.getMarketLotSizeFilter();
+    assertEquals(new BigDecimal("0.00000000"), lotSizeFilter.getMinQty());
+    assertEquals(new BigDecimal("63100.00000000"), lotSizeFilter.getMaxQty());
+    assertEquals(new BigDecimal("0.00000000"), lotSizeFilter.getStepSize());
+
+    var minNotionalFilter = symbol.getMinNotionalFilter();
+    assertEquals(new BigDecimal("0.00010000"), minNotionalFilter.getMinNotional());
+    assertTrue(minNotionalFilter.applyToMarket());
+    assertEquals(5, minNotionalFilter.getAvgPriceMins());
+
+    symbol = symbols.get(611);
+
+    assertEquals("CVCUSDT", symbol.getSymbol());
+    assertEquals("TRADING", symbol.getStatus());
+    assertEquals("CVC", symbol.getBaseAsset());
+    assertEquals(8, symbol.getBaseAssetPrecision());
+    assertEquals("USDT", symbol.getQuoteAsset());
+    assertEquals(8, symbol.getQuoteAssetPrecision());
+    expectedOrderTypes = Set.of(LIMIT, LIMIT_MAKER, MARKET, STOP_LOSS_LIMIT, TAKE_PROFIT_LIMIT);
+    assertEquals(expectedOrderTypes, symbol.getOrderTypes());
+    assertTrue(symbol.isIcebergAllowed());
+    assertTrue(symbol.isOcoAllowed());
+    assertTrue(symbol.isSpotTradingAllowed());
+    assertFalse(symbol.isMarginTradingAllowed());
+    assertEquals(10, symbol.getIcebergPartsLimit());
+    assertEquals(5, symbol.getMaxNumAlgoOrders());
+
+    priceFilter = symbol.getPriceFilter();
+    assertEquals(new BigDecimal("0.00001000"), priceFilter.getMinPrice());
+    assertEquals(new BigDecimal("1000.00000000"), priceFilter.getMaxPrice());
+    assertEquals(new BigDecimal("0.00001000"), priceFilter.getTickSize());
+
+    percentPriceFilter = symbol.getPercentPriceFilter();
+    assertEquals(new BigDecimal("5"), percentPriceFilter.getMultiplierUp());
+    assertEquals(new BigDecimal("0.2"), percentPriceFilter.getMultiplierDown());
+    assertEquals(5, percentPriceFilter.getAvgPriceMins());
+
+    lotSizeFilter = symbol.getLotSizeFilter();
+    assertEquals(new BigDecimal("0.10000000"), lotSizeFilter.getMinQty());
+    assertEquals(new BigDecimal("9000000.00000000"), lotSizeFilter.getMaxQty());
+    assertEquals(new BigDecimal("0.10000000"), lotSizeFilter.getStepSize());
+
+    assertNull(symbol.getMarketLotSizeFilter());
+
+    minNotionalFilter = symbol.getMinNotionalFilter();
+    assertEquals(new BigDecimal("10.00000000"), minNotionalFilter.getMinNotional());
+    assertTrue(minNotionalFilter.applyToMarket());
+    assertEquals(5, minNotionalFilter.getAvgPriceMins());
+  }
+
+
+  private void validateCompactExchangeInfo(final ExchangeInfo info) {
     assertEquals(TimeZone.getTimeZone("UTC"), info.getTimeZone());
     assertEquals(1544179074663L, info.getServerTime());
 

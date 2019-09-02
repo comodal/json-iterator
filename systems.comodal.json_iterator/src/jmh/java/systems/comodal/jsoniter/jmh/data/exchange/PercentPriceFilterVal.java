@@ -30,4 +30,37 @@ final class PercentPriceFilterVal implements PercentPriceFilter {
   public int getAvgPriceMins() {
     return avgPriceMins;
   }
+
+  static final class PercentPriceFilterBuilder implements PercentPriceFilter.Builder {
+
+    private BigDecimal multiplierUp;
+    private BigDecimal multiplierDown;
+    private int avgPriceMins;
+
+    PercentPriceFilterBuilder() {
+    }
+
+    @Override
+    public PercentPriceFilter create() {
+      return new PercentPriceFilterVal(multiplierUp, multiplierDown, avgPriceMins);
+    }
+
+    @Override
+    public Builder multiplierUp(final BigDecimal multiplierUp) {
+      this.multiplierUp = multiplierUp;
+      return this;
+    }
+
+    @Override
+    public Builder multiplierDown(final BigDecimal multiplierDown) {
+      this.multiplierDown = multiplierDown;
+      return this;
+    }
+
+    @Override
+    public Builder avgPriceMins(final int avgPriceMins) {
+      this.avgPriceMins = avgPriceMins;
+      return this;
+    }
+  }
 }

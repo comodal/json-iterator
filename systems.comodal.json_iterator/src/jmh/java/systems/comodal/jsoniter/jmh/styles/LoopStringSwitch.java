@@ -7,15 +7,13 @@ import systems.comodal.jsoniter.jmh.data.exchange.Filter;
 import systems.comodal.jsoniter.jmh.data.exchange.ProductSymbol;
 import systems.comodal.jsoniter.jmh.data.exchange.RateLimit;
 
-import java.io.IOException;
-
 final class LoopStringSwitch implements JsonIterParser<ExchangeInfo> {
 
   LoopStringSwitch() {
   }
 
   @Override
-  public ExchangeInfo parse(final JsonIterator ji) throws IOException {
+  public ExchangeInfo parse(final JsonIterator ji) {
     return parseExchangeInfo(ji);
   }
 
@@ -88,6 +86,15 @@ final class LoopStringSwitch implements JsonIterParser<ExchangeInfo> {
                   continue;
                 case "icebergAllowed":
                   symbol.icebergAllowed(ji.readBoolean());
+                  continue;
+                case "ocoAllowed":
+                  symbol.ocoAllowed(ji.readBoolean());
+                  continue;
+                case "isSpotTradingAllowed":
+                  symbol.isSpotTradingAllowed(ji.readBoolean());
+                  continue;
+                case "isMarginTradingAllowed":
+                  symbol.isMarginTradingAllowed(ji.readBoolean());
                   continue;
                 case "filters":
                   while (ji.readArray()) {

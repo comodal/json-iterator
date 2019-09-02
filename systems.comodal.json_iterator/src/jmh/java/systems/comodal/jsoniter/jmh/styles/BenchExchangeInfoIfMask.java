@@ -17,16 +17,14 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 2, time = 4)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-public class BenchGeneratedIOCStyles {
+public class BenchExchangeInfoIfMask {
 
   private static final byte[] BENCH_LARGE_JSON = BenchCharFieldStyles.INIT_JSON.initJson("/exchangeInfo.json");
   private static final char[] BENCH_LARGE_JSON_CHARS = new String(BENCH_LARGE_JSON).toCharArray();
-  
+
   @Param({
       "IocLoopCompareStringFieldToCharsIf",
-      "IocLoopCompareStringFieldToCharsIfMask",
-      "IocLoopCompareStringFieldToCharsIfNHashN",
-      "IocLoopCompareStringFieldToCharsIfNLogN"
+      "IocLoopCompareStringFieldToCharsIfMask"
   })
   private String style;
   private JsonIterParser<ExchangeInfo> parser;

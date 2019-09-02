@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import static systems.comodal.jsoniter.ContextFieldBufferMaskedPredicate.BREAK_OUT;
 import static systems.comodal.jsoniter.ValueType.*;
 
 abstract class BaseJsonIterator implements JsonIterator {
@@ -505,7 +506,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         len = parse();
         if ((c = nextToken()) != ':') {
           throw reportError("testObject", "expected :, but " + c);
-        } else if ((mask = test(context, mask, fieldBufferFunction, offset, len)) == Long.MIN_VALUE) {
+        } else if ((mask = test(context, mask, fieldBufferFunction, offset, len)) == BREAK_OUT) {
           return context;
         }
       } else if (c == '{') {
@@ -515,7 +516,7 @@ abstract class BaseJsonIterator implements JsonIterator {
           len = parse();
           if ((c = nextToken()) != ':') {
             throw reportError("testObject", "expected :, but " + c);
-          } else if ((mask = test(context, mask, fieldBufferFunction, offset, len)) == Long.MIN_VALUE) {
+          } else if ((mask = test(context, mask, fieldBufferFunction, offset, len)) == BREAK_OUT) {
             return context;
           }
         } else if (c == '}') { // end of object

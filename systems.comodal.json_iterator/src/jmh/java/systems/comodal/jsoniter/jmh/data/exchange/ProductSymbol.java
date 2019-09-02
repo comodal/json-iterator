@@ -20,6 +20,12 @@ public interface ProductSymbol {
 
   boolean isIcebergAllowed();
 
+  boolean isOcoAllowed();
+
+  boolean isSpotTradingAllowed();
+
+  boolean isMarginTradingAllowed();
+
   int getIcebergPartsLimit();
 
   int getMaxNumAlgoOrders();
@@ -29,6 +35,8 @@ public interface ProductSymbol {
   PercentPriceFilter getPercentPriceFilter();
 
   LotSizeFilter getLotSizeFilter();
+
+  LotSizeFilter getMarketLotSizeFilter();
 
   MinNotionalFilter getMinNotionalFilter();
 
@@ -56,6 +64,12 @@ public interface ProductSymbol {
 
     Builder icebergAllowed(final boolean icebergAllowed);
 
+    Builder ocoAllowed(final boolean ocoAllowed);
+
+    Builder isSpotTradingAllowed(final boolean isSpotTradingAllowed);
+
+    Builder isMarginTradingAllowed(final boolean isMarginTradingAllowed);
+
     Builder filter(final Filter.Builder filter);
 
     Builder icebergPartsLimit(final int icebergPartsLimit);
@@ -67,6 +81,8 @@ public interface ProductSymbol {
     Builder percentPriceFilter(final PercentPriceFilter percentPriceFilter);
 
     Builder lotSizeFilter(final LotSizeFilter lotSizeFilter);
+
+    Builder marketLotSizeFilter(final LotSizeFilter marketLotSizeFilter);
 
     Builder minNotionalFilter(final MinNotionalFilter minNotionalFilter);
   }

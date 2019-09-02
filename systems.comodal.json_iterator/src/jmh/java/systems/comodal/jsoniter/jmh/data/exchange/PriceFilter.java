@@ -10,9 +10,24 @@ public interface PriceFilter {
     return new PriceFilterVal(minPrice, maxPrice, tickSize);
   }
 
+  static PriceFilter.Builder build() {
+    return new PriceFilterVal.PriceFilterBuilder();
+  }
+
   BigDecimal getMinPrice();
 
   BigDecimal getMaxPrice();
 
   BigDecimal getTickSize();
+
+  interface Builder {
+
+    PriceFilter create();
+
+    Builder minPrice(final BigDecimal minPrice);
+
+    Builder maxPrice(final BigDecimal maxPrice);
+
+    Builder tickSize(final BigDecimal tickSize);
+  }
 }

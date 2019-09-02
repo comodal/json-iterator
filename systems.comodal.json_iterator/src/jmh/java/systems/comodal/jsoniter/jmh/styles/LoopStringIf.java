@@ -70,6 +70,12 @@ final class LoopStringIf implements JsonIterParser<ExchangeInfo> {
               }
             } else if ("icebergAllowed".equals(field)) {
               symbol.icebergAllowed(ji.readBoolean());
+            } else if ("ocoAllowed".equals(field)) {
+              symbol.ocoAllowed(ji.readBoolean());
+            } else if ("isSpotTradingAllowed".equals(field)) {
+              symbol.isSpotTradingAllowed(ji.readBoolean());
+            } else if ("isMarginTradingAllowed".equals(field)) {
+              symbol.isMarginTradingAllowed(ji.readBoolean());
             } else if ("filters".equals(field)) {
               while (ji.readArray()) {
                 final var filter = Filter.build();

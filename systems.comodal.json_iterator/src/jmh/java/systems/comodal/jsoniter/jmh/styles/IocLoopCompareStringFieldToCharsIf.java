@@ -3,12 +3,10 @@ package systems.comodal.jsoniter.jmh.styles;
 import systems.comodal.jsoniter.ContextFieldBufferPredicate;
 import systems.comodal.jsoniter.JsonIterator;
 import systems.comodal.jsoniter.factory.JsonIterParser;
-import systems.comodal.jsoniter.jmh.data.exchange.ExchangeInfo;
-import systems.comodal.jsoniter.jmh.data.exchange.Filter;
-import systems.comodal.jsoniter.jmh.data.exchange.ProductSymbol;
-import systems.comodal.jsoniter.jmh.data.exchange.RateLimit;
+import systems.comodal.jsoniter.jmh.data.exchange.*;
 
 import static systems.comodal.jsoniter.JsonIterator.fieldEquals;
+import static systems.comodal.jsoniter.jmh.styles.IocLoopCompareStringFieldToCharsIfMask.PARSE_FILTER_TYPE;
 
 final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<ExchangeInfo> {
 
@@ -20,37 +18,54 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
     return ji.testObject(ExchangeInfo.build(), EXCHANGE_INFO_IF_PARSER).create();
   }
 
-  private static final ContextFieldBufferPredicate<Filter.Builder> FILTER_IF_PARSER = (builder, buf, offset, len, ji) -> {
-    if (fieldEquals("filterType", buf, offset, len)) {
-      builder.type(ji.readString());
-    } else if (fieldEquals("minPrice", buf, offset, len)) {
-      builder.minPrice(ji.readBigDecimal());
-    } else if (fieldEquals("maxPrice", buf, offset, len)) {
-      builder.maxPrice(ji.readBigDecimal());
-    } else if (fieldEquals("tickSize", buf, offset, len)) {
-      builder.tickSize(ji.readBigDecimal());
-    } else if (fieldEquals("multiplierUp", buf, offset, len)) {
-      builder.multiplierUp(ji.readBigDecimal());
-    } else if (fieldEquals("multiplierDown", buf, offset, len)) {
-      builder.multiplierDown(ji.readBigDecimal());
+  private static final ContextFieldBufferPredicate<MinNotionalFilter.Builder> MIN_NOTIONAL_PARSER = (builder, buf, offset, len, ji) -> {
+    if (fieldEquals("minNotional", buf, offset, len)) {
+      builder.minNotional(ji.readBigDecimal());
+    } else if (fieldEquals("applyToMarket", buf, offset, len)) {
+      builder.applyToMarket(ji.readBoolean());
     } else if (fieldEquals("avgPriceMins", buf, offset, len)) {
       builder.avgPriceMins(ji.readInt());
-    } else if (fieldEquals("minQty", buf, offset, len)) {
+    } else {
+      throw new IllegalStateException("Unhandled MIN_NOTIONAL field " + new String(buf, offset, len));
+    }
+    return true;
+  };
+
+  private static final ContextFieldBufferPredicate<LotSizeFilter.Builder> LOT_SIZE_PARSER = (builder, buf, offset, len, ji) -> {
+    if (fieldEquals("minQty", buf, offset, len)) {
       builder.minQty(ji.readBigDecimal());
     } else if (fieldEquals("maxQty", buf, offset, len)) {
       builder.maxQty(ji.readBigDecimal());
     } else if (fieldEquals("stepSize", buf, offset, len)) {
       builder.stepSize(ji.readBigDecimal());
-    } else if (fieldEquals("minNotional", buf, offset, len)) {
-      builder.minNotional(ji.readBigDecimal());
-    } else if (fieldEquals("applyToMarket", buf, offset, len)) {
-      builder.applyToMarket(ji.readBoolean());
-    } else if (fieldEquals("limit", buf, offset, len)) {
-      builder.limit(ji.readInt());
-    } else if (fieldEquals("maxNumAlgoOrders", buf, offset, len)) {
-      builder.maxNumAlgoOrders(ji.readInt());
     } else {
-      throw new IllegalStateException("Unhandled filter field " + new String(buf, offset, len));
+      throw new IllegalStateException("Unhandled LOT_SIZE field " + new String(buf, offset, len));
+    }
+    return true;
+  };
+
+  private static final ContextFieldBufferPredicate<PercentPriceFilter.Builder> PERCENT_PRICE_PARSER = (builder, buf, offset, len, ji) -> {
+    if (fieldEquals("multiplierUp", buf, offset, len)) {
+      builder.multiplierUp(ji.readBigDecimal());
+    } else if (fieldEquals("multiplierDown", buf, offset, len)) {
+      builder.multiplierDown(ji.readBigDecimal());
+    } else if (fieldEquals("avgPriceMins", buf, offset, len)) {
+      builder.avgPriceMins(ji.readInt());
+    } else {
+      throw new IllegalStateException("Unhandled PERCENT_PRICE field " + new String(buf, offset, len));
+    }
+    return true;
+  };
+
+  private static final ContextFieldBufferPredicate<PriceFilter.Builder> PRICE_FILTER_PARSER = (builder, buf, offset, len, ji) -> {
+    if (fieldEquals("minPrice", buf, offset, len)) {
+      builder.minPrice(ji.readBigDecimal());
+    } else if (fieldEquals("maxPrice", buf, offset, len)) {
+      builder.maxPrice(ji.readBigDecimal());
+    } else if (fieldEquals("tickSize", buf, offset, len)) {
+      builder.tickSize(ji.readBigDecimal());
+    } else {
+      throw new IllegalStateException("Unhandled PRICE_FILTER field " + new String(buf, offset, len));
     }
     return true;
   };
@@ -74,9 +89,38 @@ final class IocLoopCompareStringFieldToCharsIf implements JsonIterParser<Exchang
       }
     } else if (fieldEquals("icebergAllowed", buf, offset, len)) {
       builder.icebergAllowed(ji.readBoolean());
+    } else if (fieldEquals("ocoAllowed", buf, offset, len)) {
+      builder.ocoAllowed(ji.readBoolean());
+    } else if (fieldEquals("isSpotTradingAllowed", buf, offset, len)) {
+      builder.isSpotTradingAllowed(ji.readBoolean());
+    } else if (fieldEquals("isMarginTradingAllowed", buf, offset, len)) {
+      builder.isMarginTradingAllowed(ji.readBoolean());
     } else if (fieldEquals("filters", buf, offset, len)) {
       while (ji.readArray()) {
-        builder.filter(ji.testObject(Filter.build(), FILTER_IF_PARSER));
+        switch (ji.skipObjField().applyChars(PARSE_FILTER_TYPE)) {
+          case PRICE_FILTER:
+            builder.priceFilter(ji.testObject(PriceFilter.build(), PRICE_FILTER_PARSER).create());
+            continue;
+          case PERCENT_PRICE:
+            builder.percentPriceFilter(ji.testObject(PercentPriceFilter.build(), PERCENT_PRICE_PARSER).create());
+            continue;
+          case MAX_NUM_ALGO_ORDERS:
+            builder.maxNumAlgoOrders(ji.skipUntil("maxNumAlgoOrders").readInt());
+            ji.closeObj();
+            continue;
+          case LOT_SIZE:
+            builder.lotSizeFilter(ji.testObject(LotSizeFilter.build(), LOT_SIZE_PARSER).create());
+            continue;
+          case MIN_NOTIONAL:
+            builder.minNotionalFilter(ji.testObject(MinNotionalFilter.build(), MIN_NOTIONAL_PARSER).create());
+            continue;
+          case ICEBERG_PARTS:
+            builder.icebergPartsLimit(ji.skipUntil("limit").readInt());
+            ji.closeObj();
+            continue;
+          case MARKET_LOT_SIZE:
+            builder.marketLotSizeFilter(ji.testObject(LotSizeFilter.build(), LOT_SIZE_PARSER).create());
+        }
       }
     } else {
       throw new IllegalStateException("Unhandled symbol field " + new String(buf, offset, len));

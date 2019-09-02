@@ -1,8 +1,11 @@
 package systems.comodal.jsoniter.jmh.styles;
 
+import systems.comodal.jsoniter.CharBufferPredicate;
 import systems.comodal.jsoniter.JsonIterator;
 import systems.comodal.jsoniter.factory.JsonIterParser;
 import systems.comodal.jsoniter.jmh.data.exchange.*;
+
+import static systems.comodal.jsoniter.JsonIterator.fieldEquals;
 
 final class StaticFieldOrdering implements JsonIterParser<ExchangeInfo> {
 
@@ -13,6 +16,8 @@ final class StaticFieldOrdering implements JsonIterParser<ExchangeInfo> {
   public ExchangeInfo parse(final JsonIterator ji) {
     return parseExchangeInfo(ji);
   }
+
+  private static final CharBufferPredicate HAS_MARKET_LOT_SIZE_FILTER = (buf, offset, len) -> fieldEquals("MARKET_LOT_SIZE", buf, offset, len);
 
   private static ExchangeInfo parseExchangeInfo(final JsonIterator ji) {
     final var info = ExchangeInfo.build();
@@ -29,6 +34,7 @@ final class StaticFieldOrdering implements JsonIterParser<ExchangeInfo> {
     for (ji.skipObjField(); ji.readArray(); ) { // exchangeFilters
       ji.skip();
     }
+
     for (ji.skipObjField(); ji.readArray(); ji.closeObj()) { // symbols
       final var symbol = ProductSymbol.build()
           .symbol(ji.skipObjField().readString())
@@ -41,6 +47,9 @@ final class StaticFieldOrdering implements JsonIterParser<ExchangeInfo> {
         symbol.orderType(ji.readString());
       }
       symbol.icebergAllowed(ji.skipObjField().readBoolean());
+      symbol.ocoAllowed(ji.skipObjField().readBoolean());
+      symbol.isSpotTradingAllowed(ji.skipObjField().readBoolean());
+      symbol.isMarginTradingAllowed(ji.skipObjField().readBoolean());
 
       ji.skipObjField().openArray(); // "filters": [
       ji.skipObjField().skip(); // { "filterType": "PRICE_FILTER",
@@ -61,8 +70,17 @@ final class StaticFieldOrdering implements JsonIterParser<ExchangeInfo> {
       ));
       ji.closeObj().continueArray().skipObjField().skip(); // } , {  "filterType": "ICEBERG_PARTS",
       symbol.icebergPartsLimit(ji.skipObjField().readInt());
-      ji.closeObj().continueArray().skipObjField().skip(); // } , {  "filterType": "MAX_NUM_ALGO_ORDERS",
+
+      ji.closeObj().continueArray().skipObjField();
+      if (ji.testChars(HAS_MARKET_LOT_SIZE_FILTER)) {
+        symbol.marketLotSizeFilter(LotSizeFilter.create(
+            ji.skipObjField().readBigDecimal(), ji.skipObjField().readBigDecimal(), ji.skipObjField().readBigDecimal()
+        ));
+        ji.closeObj().continueArray().skipObjField().skip(); // } , {  "filterType": "MAX_NUM_ALGO_ORDERS",
+      }
+
       symbol.maxNumAlgoOrders(ji.skipObjField().readInt());
+
       ji.closeObj().closeArray(); // } ]
       info.productSymbol(symbol.create());
     }

@@ -30,4 +30,37 @@ final class PriceFilterVal implements PriceFilter {
   public BigDecimal getTickSize() {
     return tickSize;
   }
+
+  static final class PriceFilterBuilder implements PriceFilter.Builder {
+
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
+    private BigDecimal tickSize;
+
+    PriceFilterBuilder() {
+    }
+
+    @Override
+    public PriceFilter create() {
+      return new PriceFilterVal(minPrice, maxPrice, tickSize);
+    }
+
+    @Override
+    public Builder minPrice(final BigDecimal minPrice) {
+      this.minPrice = minPrice;
+      return this;
+    }
+
+    @Override
+    public Builder maxPrice(final BigDecimal maxPrice) {
+      this.maxPrice = maxPrice;
+      return this;
+    }
+
+    @Override
+    public Builder tickSize(final BigDecimal tickSize) {
+      this.tickSize = tickSize;
+      return this;
+    }
+  }
 }

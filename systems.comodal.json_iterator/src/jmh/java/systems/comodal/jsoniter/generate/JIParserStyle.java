@@ -56,8 +56,8 @@ public enum JIParserStyle {
       if (fields == null || fields.isEmpty()) {
         return null;
       }
-      if (fields.size() >= 63) {
-        throw new IllegalStateException("Only up to 63 fields per object are supported for the strategy " + this.name());
+      if (fields.size() > 64) {
+        throw new IllegalStateException("Only up to 64 fields per object are supported for the strategy " + this.name());
       }
       final var parserName = formatParserName(generator.getParentNameChain().replace('.', '_'));
       final var tab = config.getTab();
@@ -68,7 +68,7 @@ public enum JIParserStyle {
       final var fieldIterator = fields.values().iterator();
       var childGenerator = fieldIterator.next();
       builder
-          .append(tab).append(tab).append(fields.size() > 31 ? "long i = 1;" : "int i = 1;")
+          .append(tab).append(tab).append("long i = 1;")
           .append(lineSeparator())
           .append(tab).append(tab).append(format("if ((mask & i) == 0 && fieldEquals(\"%s\", buf, offset, len)) {", childGenerator.getParentName()))
           .append(lineSeparator());
@@ -91,7 +91,7 @@ public enum JIParserStyle {
             .append(lineSeparator())
             .append(tab).append(tab).append(tab).append("} while (ji.skipObjField() != null);")
             .append(lineSeparator())
-            .append(tab).append(tab).append(tab).append("return Long.MIN_VALUE;")
+            .append(tab).append(tab).append(tab).append("return 0xffffffff_ffffffffL;")
             .append(lineSeparator())
             .append(tab).append(tab).append("} else {")
             .append(lineSeparator())
