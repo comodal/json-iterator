@@ -265,21 +265,21 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) {
+  final boolean breakOut(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
-      return fieldBufferFunction.test(chars, 0, chars.length, this);
+      return !fieldBufferFunction.test(chars, 0, chars.length, this);
     }
-    return fieldBufferFunction.test(buf, offset, len, this);
+    return !fieldBufferFunction.test(buf, offset, len, this);
   }
 
   @Override
-  final <C> boolean test(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) {
+  final <C> boolean breakOut(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
-      return fieldBufferFunction.test(context, chars, 0, chars.length, this);
+      return !fieldBufferFunction.test(context, chars, 0, chars.length, this);
     }
-    return fieldBufferFunction.test(context, buf, offset, len, this);
+    return !fieldBufferFunction.test(context, buf, offset, len, this);
   }
 
   @Override

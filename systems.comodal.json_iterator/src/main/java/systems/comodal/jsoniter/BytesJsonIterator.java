@@ -221,13 +221,13 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final boolean test(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) {
-    return fieldBufferFunction.test(charBuf, 0, len, this);
+  final boolean breakOut(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) {
+    return !fieldBufferFunction.test(charBuf, 0, len, this);
   }
 
   @Override
-  final <C> boolean test(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) {
-    return fieldBufferFunction.test(context, charBuf, 0, len, this);
+  final <C> boolean breakOut(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) {
+    return !fieldBufferFunction.test(context, charBuf, 0, len, this);
   }
 
   @Override
