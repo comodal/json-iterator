@@ -159,15 +159,15 @@ class BytesJsonIterator extends BaseJsonIterator {
       if (c == '"') {
         head = i;
         return j;
-      }
-      // If we encounter a backslash, which is a beginning of an escape sequence
-      // or a high bit was set - indicating an UTF-8 encoded multi-byte character,
-      // there is no chance that we can decode the string without instantiating
-      // a temporary buffer, so quit this loop
-      if ((c ^ '\\') < 1) {
+      } else if ((c ^ '\\') < 1) {
+        // If a backslash is encountered, which is a beginning of an escape sequence
+        // or a high bit was set - indicating an UTF-8 encoded multi-byte character,
+        // there is no chance that we can decode the string without instantiating
+        // a temporary buffer, so quit this loop.
         break;
+      } else {
+        charBuf[j] = (char) c;
       }
-      charBuf[j] = (char) c;
     }
     final int alreadyCopied;
     if (i > head) {
@@ -257,8 +257,7 @@ class BytesJsonIterator extends BaseJsonIterator {
         bc = read();
         if (bc == '"') {
           return j;
-        }
-        if (bc == '\\') {
+        } else if (bc == '\\') {
           bc = read();
           switch (bc) {
             case 'b':
@@ -361,6 +360,7 @@ class BytesJsonIterator extends BaseJsonIterator {
 
   @Override
   final int parseNumber() {
+    char c;
     for (int i = head, len = 0; ; i++) {
       if (i == tail) {
         if (loadMore()) {
@@ -373,8 +373,7 @@ class BytesJsonIterator extends BaseJsonIterator {
       if (len == charBuf.length) {
         doubleReusableCharBuffer();
       }
-      final char c = peekChar(i);
-      switch (c) {
+      switch ((c = peekChar(i))) {
         case ' ':
           continue;
         case '.':

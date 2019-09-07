@@ -136,8 +136,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
       if (c == '"') {
         head = i + 1;
         return i - from;
-      }
-      if (c == '\\') {
+      } else if (c == '\\') {
         ++numEscapes;
         ++i;
       }
@@ -151,8 +150,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
         head = tail;
         return len;
       }
-      final char c = peekChar(i);
-      switch (c) {
+      switch (peekChar(i)) {
         case ' ':
           continue;
         case '.':
