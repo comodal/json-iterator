@@ -1,8 +1,13 @@
 name: CI
 
 on:
-  push:
   release:
+    types: [created]
+  push:
+    branches:
+      - master
+    tags:        
+      - '*' 
   pull_request:
   schedule: 
     - cron:  '0 0 * * 1,4'
@@ -27,4 +32,4 @@ jobs:
         BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
         BINTRAY_GPG_PASSPHRASE: ${{ secrets.BINTRAY_GPG_PASSPHRASE }}
       run: ./gradlew --no-daemon :json-iterator:bintrayUpload
-      if: github.event == 'release'
+      if: success() && github.event_name == 'release'
