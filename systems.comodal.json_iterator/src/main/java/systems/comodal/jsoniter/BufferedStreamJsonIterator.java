@@ -74,12 +74,14 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
       if (n < 1) {
         if (n == -1) {
           return false;
+        } else {
+          throw reportError("loadMore", "read from input stream returned " + n);
         }
-        throw reportError("loadMore", "read from input stream returned " + n);
+      } else {
+        head = 0;
+        tail = n;
+        return true;
       }
-      head = 0;
-      tail = n;
-      return true;
     } catch (final IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -89,7 +91,8 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
   byte read() {
     if (head == tail && !loadMore()) {
       throw reportError("read", "no more to read");
+    } else {
+      return buf[head++];
     }
-    return buf[head++];
   }
 }

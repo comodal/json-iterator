@@ -21,5 +21,9 @@ jobs:
       run: ./gradlew --no-daemon check
         
     - name: Publish
+      env:
+        BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+        BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+        BINTRAY_GPG_PASSPHRASE: ${{ secrets.BINTRAY_GPG_PASSPHRASE }}
       run: ./gradlew --no-daemon :json-iterator:bintrayUpload
       if: github.event == 'release'
