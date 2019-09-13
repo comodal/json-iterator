@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  schedule: 
+    - cron:  '0 0 * * 1,4'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install JDK 12
+      uses: actions/setup-java@v1
+      with:
+        java-version: 12
+        
+    - name: Gradle Check
+      run: ./gradlew --no-daemon check
+        
+    - name: Publish
+      run: ./gradlew --no-daemon :json-iterator:bintrayUpload
+      if: github.event == 'release'
