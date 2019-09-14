@@ -24,13 +24,13 @@ jobs:
         java-version: 12
         
     - name: Gradle Check
-      run: ./gradlew check
+      run: ./gradlew check --stacktrace
 
     - name: Github Publish
       env:
         GITHUB_USER: ${{ secrets.GITHUB_USER }}
         GITHUB_DEPLOY_TOKEN: ${{ secrets.GITHUB_DEPLOY_TOKEN }}
-      run: ./gradlew :json-iterator:publishAllPublicationsToGithubPackageRegistryRepository
+      run: ./gradlew :json-iterator:publishMavenJavaPublicationToGithubPackageRegistryRepository
       if: success() && github.event_name == 'create'
         
     - name: Publish
