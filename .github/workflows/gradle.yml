@@ -23,9 +23,6 @@ jobs:
       with:
         java-version: 12
         
-    - name: Event Name
-      run: echo ${{ github.event_name }}  
-        
     - name: Gradle Check
       run: ./gradlew check
         

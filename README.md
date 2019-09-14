@@ -1,4 +1,4 @@
-# JSON Iterator [![Build Status](https://travis-ci.org/comodal/json-iterator.svg?branch=master)](https://travis-ci.org/comodal/json-iterator) [ ![Download](https://api.bintray.com/packages/comodal/libraries/json-iterator/images/download.svg) ](https://bintray.com/comodal/libraries/json-iterator/_latestVersion)
+# JSON Iterator [![Download](https://api.bintray.com/packages/comodal/libraries/json-iterator/images/download.svg) ](https://bintray.com/comodal/libraries/json-iterator/_latestVersion)
 
 JSON Iterator is a minimal adaption of the [stream parsing features](http://jsoniter.com/java-features.html#iterator-to-rescue) from the project [json-iterator/java](https://github.com/json-iterator/java).
 
