@@ -27,12 +27,12 @@ jobs:
       run: echo ${{ github.event_name }}  
         
     - name: Gradle Check
-      run: ./gradlew --no-daemon check
+      run: ./gradlew check
         
     - name: Publish
       env:
         BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
         BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
         BINTRAY_GPG_PASSPHRASE: ${{ secrets.BINTRAY_GPG_PASSPHRASE }}
-      run: ./gradlew --no-daemon :json-iterator:bintrayUpload
+      run: ./gradlew :json-iterator:bintrayUpload
       if: success() && github.event_name == 'create'
