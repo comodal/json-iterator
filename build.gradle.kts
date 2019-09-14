@@ -6,4 +6,5 @@ plugins {
   id("org.javamodularity.moduleplugin") version "1.6.0" apply false
   id("me.champeau.gradle.jmh") version "0.5.0-rc-2" apply false
   id("io.morethan.jmhreport") version "0.9.0" apply false
+  id("io.freefair.github.package-registry-maven-publish") version "4.1.0" apply false
 }

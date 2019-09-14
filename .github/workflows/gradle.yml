@@ -29,8 +29,8 @@ jobs:
     - name: Github Publish
       env:
         GITHUB_USER: ${{ secrets.GITHUB_USER }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew :json-iterator:uploadArchives
+        GITHUB_DEPLOY_TOKEN: ${{ secrets.GITHUB_DEPLOY_TOKEN }}
+      run: ./gradlew :json-iterator:publishMavenJavaPublicationToGithubPackageRegistryRepository
       if: success() && github.event_name == 'create'
         
     - name: Publish
