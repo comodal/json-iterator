@@ -25,6 +25,13 @@ jobs:
         
     - name: Gradle Check
       run: ./gradlew check
+
+    - name: Github Publish
+      env:
+        GITHUB_USER: ${{ secrets.GITHUB_USER }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: ./gradlew :json-iterator:uploadArchives
+      if: success() && github.event_name == 'create'
         
     - name: Publish
       env:

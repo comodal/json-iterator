@@ -1,6 +1,7 @@
 plugins {
   id 'java-library'
   id 'maven-publish'
+  id 'maven'
   id "com.jfrog.bintray"
   id "pl.allegro.tech.build.axion-release"
   id "org.javamodularity.moduleplugin"
@@ -16,7 +17,7 @@ scmVersion {
 }
 
 project.version = scmVersion.version
-project.group = 'systems.comodal'
+project.group = 'comodal'
 
 ext {
   desc = 'Json Parser'
@@ -31,6 +32,10 @@ repositories {
   jcenter()
 }
 
+configurations {
+  deployerJars
+}
+
 dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-api:+'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:+'
@@ -41,6 +46,8 @@ dependencies {
 
   jmh 'org.openjdk.jmh:jmh-core:+'
   jmh 'org.openjdk.jmh:jmh-generator-annprocess:+'
+
+  deployerJars "org.apache.maven.wagon:wagon-http:2.2"
 }
 
 jmh {
@@ -106,18 +113,27 @@ test {
   }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  archiveClassifier.set('sources')
+task sourcesJar(type: Jar) {
   from sourceSets.main.allJava
+  archiveClassifier.set('sources')
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
+task javadocJar(type: Jar) {
+  from javadoc
   archiveClassifier.set('javadoc')
-  from javadoc.destinationDir
 }
 
 artifacts {
   archives sourcesJar
+}
+
+uploadArchives {
+  repositories.mavenDeployer {
+    configuration = configurations.deployerJars
+    repository(url: 'https://maven.pkg.github.com/') {
+      authentication(userName: System.getenv('GITHUB_USER'), password: System.getenv('GITHUB_TOKEN'))
+    }
+  }
 }
 
 publishing {
@@ -125,11 +141,41 @@ publishing {
     mavenJava(MavenPublication) {
       from components.java
       artifact sourcesJar
-      groupId project.group
+      artifact javadocJar
+      groupId "systems.comodal" //project.group
       artifactId project.name
       version = project.version
+      pom {
+        name = project.name
+        description = project.desc
+        url = project.vcsUrl
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://github.com/comodal/json-iterator/blob/master/LICENSE'
+          }
+        }
+        developers {
+          developer {
+            email = 'james.p.edwards42@gmail.com'
+          }
+        }
+        scm {
+          connection = 'scm:git:git@github.com:comodal/json-iterator.git'
+          url = project.vcsUrl
+        }
+      }
     }
   }
+  repositories {
+    maven {
+      url = 'https://maven.pkg.github.com/'
+    }
+  }
+}
+
+javadoc {
+  options.addBooleanOption('html5', true)
 }
 
 bintray {
@@ -151,7 +197,7 @@ bintray {
       vcsTag = project.name + '-' + project.version
       gpg {
         sign = true
-        passphrase = project.hasProperty("bintrayGPGPassphrase") ? bintrayGPGPassphrase : System.getenv('BINTRAY_GPG_PASSPHRASE')
+        passphrase = project.hasProperty("bintrayGPGPassphrase") ? project.bintrayGPGPassphrase : System.getenv('BINTRAY_GPG_PASSPHRASE')
       }
     }
   }
