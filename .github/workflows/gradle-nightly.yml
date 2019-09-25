@@ -22,5 +22,5 @@ jobs:
       - uses: eskatos/gradle-command-action@v1
         with:
           gradle-version: nightly
-          arguments: check --stacktrace
+          arguments: check  --warning-mode=all --stacktrace
 
