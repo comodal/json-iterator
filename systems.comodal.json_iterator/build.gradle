@@ -6,7 +6,7 @@ plugins {
   id "org.javamodularity.moduleplugin"
   id "me.champeau.gradle.jmh"
   id "io.morethan.jmhreport"
-  id "io.freefair.github.package-registry-maven-publish"
+//  id "io.freefair.github.package-registry-maven-publish"
 }
 
 sourceCompatibility = JavaVersion.VERSION_12
@@ -28,11 +28,11 @@ ext {
   bench = project.properties['bench'] ?: 'BenchCharFieldStyles'
 }
 
-github {
-  slug
-  username = System.getenv('GITHUB_USER')
-  token = System.getenv('GITHUB_DEPLOY_TOKEN')
-}
+//github {
+//  slug
+//  username = System.getenv('GITHUB_USER')
+//  token = System.getenv('GITHUB_DEPLOY_TOKEN')
+//}
 
 repositories {
   jcenter()
