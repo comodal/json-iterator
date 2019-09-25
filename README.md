@@ -2,7 +2,7 @@
 
 JSON Iterator is a minimal adaption of the [stream parsing features](http://jsoniter.com/java-features.html#iterator-to-rescue) from the project [json-iterator/java](https://github.com/json-iterator/java).
 
-Functionality has been extended by embracing inversion-of-control mechanics to minimize object creation.
+Functionality has been extended with inversion-of-control mechanics to help minimize object creation.
 
 Parsing supports String, byte[], char[] and InputStream data sources.
 

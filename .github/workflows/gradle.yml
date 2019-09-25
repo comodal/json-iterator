@@ -3,7 +3,7 @@ name: CI
 on:
   create:
     tags:
-      - '*'
+      - '\d+\.\d+\.\d+'
   push:
     branches:
       - master
@@ -12,22 +12,20 @@ on:
     - cron:  '0 0 * * 1,4'
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
+  check-and-publish:
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v1
-    
-    - name: Install JDK 12
-      uses: actions/setup-java@v1
+    - uses: actions/setup-java@v1
       with:
         java-version: 12
-        
-    - name: Gradle Check
-      run: ./gradlew check --stacktrace
+    - uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: check --stacktrace
 
 #    - name: Github Publish
 #      env:
@@ -41,5 +39,7 @@ jobs:
         BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
         BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
         BINTRAY_GPG_PASSPHRASE: ${{ secrets.BINTRAY_GPG_PASSPHRASE }}
-      run: ./gradlew :json-iterator:bintrayUpload
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: :json-iterator:bintrayUpload
       if: success() && github.event_name == 'create'

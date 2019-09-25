@@ -161,8 +161,8 @@ publishing {
 }
 
 bintray {
-  user = project.hasProperty("bintrayUser") ? bintrayUser : System.getenv('BINTRAY_USER')
-  key = project.hasProperty("bintrayApiKey") ? bintrayApiKey : System.getenv('BINTRAY_API_KEY')
+  user = project.findProperty("bintrayUser") ?: System.getenv('BINTRAY_USER')
+  key = project.findProperty("bintrayApiKey") ?: System.getenv('BINTRAY_API_KEY')
   publications = ['mavenJava']
   pkg {
     userOrg = project.bintrayOrg
@@ -179,7 +179,7 @@ bintray {
       vcsTag = project.name + '-' + project.version
       gpg {
         sign = true
-        passphrase = project.hasProperty("bintrayGPGPassphrase") ? bintrayGPGPassphrase : System.getenv('BINTRAY_GPG_PASSPHRASE')
+        passphrase = project.findProperty("bintrayGPGPassphrase") ?: System.getenv('BINTRAY_GPG_PASSPHRASE')
       }
     }
   }
