@@ -31,7 +31,7 @@ ext {
 github {
   slug = 'comodal/json-iterator'
   username = System.getenv('GITHUB_USER')
-  token = System.getenv('GITHUB_DEPLOY_TOKEN')
+  token = System.getenv('GITHUB_TOKEN')
 }
 
 repositories {
@@ -118,20 +118,21 @@ task sourcesJar(type: Jar) {
   archiveClassifier.set('sources')
 }
 
-//task javadocJar(type: Jar) {
-//  from javadoc
-//  archiveClassifier.set('javadoc')
-//}
+task javadocJar(type: Jar) {
+  from javadoc
+  archiveClassifier.set('javadoc')
+}
 
-//javadoc {
-//  options.addBooleanOption('html5', true)
-//}
+javadoc {
+  options.addBooleanOption('html5', true)
+}
 
 publishing {
   publications {
     mavenJava(MavenPublication) {
       from components.java
       artifact sourcesJar
+      artifact javadocJar
       groupId project.group
       artifactId project.name
       version = project.version
