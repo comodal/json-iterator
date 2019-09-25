@@ -1,9 +1,6 @@
-name: CI
+name: Gradle Check
 
 on:
-  create:
-    tags:
-      - '\d+\.\d+\.\d+'
   push:
     branches:
       - master
@@ -12,10 +9,10 @@ on:
     - cron:  '0 0 * * 1,4'
 
 jobs:
-  check-and-publish:
+  check:
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -26,20 +23,3 @@ jobs:
     - uses: eskatos/gradle-command-action@v1
       with:
         arguments: check --stacktrace
-
-#    - name: Github Publish
-#      env:
-#        GITHUB_USER: ${{ secrets.GITHUB_USER }}
-#        GITHUB_DEPLOY_TOKEN: ${{ secrets.GITHUB_DEPLOY_TOKEN }}
-#      run: ./gradlew :json-iterator:publishMavenJavaPublicationToGithubPackageRegistryRepository
-#      if: success() && github.event_name == 'create'
-        
-    - name: Publish
-      env:
-        BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-        BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
-        BINTRAY_GPG_PASSPHRASE: ${{ secrets.BINTRAY_GPG_PASSPHRASE }}
-      uses: eskatos/gradle-command-action@v1
-      with:
-        arguments: :json-iterator:bintrayUpload
-      if: success() && github.event_name == 'create'
