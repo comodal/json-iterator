@@ -6,7 +6,7 @@ plugins {
   id "org.javamodularity.moduleplugin"
   id "me.champeau.gradle.jmh"
   id "io.morethan.jmhreport"
-//  id "io.freefair.github.package-registry-maven-publish"
+  id "io.freefair.github.package-registry-maven-publish"
 }
 
 sourceCompatibility = JavaVersion.VERSION_12
@@ -28,11 +28,11 @@ ext {
   bench = project.properties['bench'] ?: 'BenchCharFieldStyles'
 }
 
-//github {
-//  slug
-//  username = System.getenv('GITHUB_USER')
-//  token = System.getenv('GITHUB_DEPLOY_TOKEN')
-//}
+github {
+  slug = 'comodal/json-iterator'
+  username = System.getenv('GITHUB_USER')
+  token = System.getenv('GITHUB_DEPLOY_TOKEN')
+}
 
 repositories {
   jcenter()
@@ -118,21 +118,20 @@ task sourcesJar(type: Jar) {
   archiveClassifier.set('sources')
 }
 
-task javadocJar(type: Jar) {
-  from javadoc
-  archiveClassifier.set('javadoc')
-}
+//task javadocJar(type: Jar) {
+//  from javadoc
+//  archiveClassifier.set('javadoc')
+//}
 
-javadoc {
-  options.addBooleanOption('html5', true)
-}
+//javadoc {
+//  options.addBooleanOption('html5', true)
+//}
 
 publishing {
   publications {
     mavenJava(MavenPublication) {
       from components.java
       artifact sourcesJar
-      artifact javadocJar
       groupId project.group
       artifactId project.name
       version = project.version
