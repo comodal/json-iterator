@@ -1,10 +1,10 @@
 package systems.comodal.jsoniter;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
 
 public interface JsonIterator extends Closeable {
 
@@ -183,6 +183,18 @@ public interface JsonIterator extends Closeable {
   BigDecimal readBigDecimalStripTrailingZeroes();
 
   BigInteger readBigInteger();
+
+  /**
+   * Parses ISO-like or RFC_1123_DATE_TIME formats such as:
+   *  - YYYY*MM*DD*HH*MM*SS.?\d{0,9}Z?
+   *  - YYYY*MM*DD*HH*MM*SS[+-]HH*MM
+   *  - Tue, 3 Jun 2008 11:05:30 GMT
+   *
+   * Defaults to UTC if no offset is provided.
+   *
+   * @throws java.time.DateTimeException - on any unexpected character or length
+   */
+  Instant readDateTime();
 
   // IOC Field Value Methods
 
