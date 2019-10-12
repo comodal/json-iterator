@@ -3,11 +3,11 @@ buildscript {
     maven { url = 'https://plugins.gradle.org/m2/' }
   }
   dependencies {
-    classpath "pl.allegro.tech.build:axion-release-plugin:1.10.2"
-    classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4"
-    classpath "org.javamodularity:moduleplugin:1.6.0"
-    classpath "me.champeau.gradle:jmh-gradle-plugin:0.5.0-rc-2"
-    classpath "gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0"
-    classpath "io.freefair.gradle:github-plugin:4.1.1" // https://plugins.gradle.org/plugin/io.freefair.github.package-registry-maven-publish
+    classpath "pl.allegro.tech.build:axion-release-plugin:+"
+    classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:+"
+    classpath "org.javamodularity:moduleplugin:+"
+    classpath "me.champeau.gradle:jmh-gradle-plugin:+"
+    classpath "gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:+"
+    classpath "io.freefair.gradle:github-plugin:+" // https://plugins.gradle.org/plugin/io.freefair.github.package-registry-maven-publish
   }
 }
