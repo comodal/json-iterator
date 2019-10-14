@@ -261,7 +261,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       } else if (c == '}') {
         return null;
       } else {
-        throw reportError("skipUntil", "expected { or , or } or n, but found: " + c);
+        throw reportError("skipUntil", "expected [\\{\\}n], but found: " + c);
       }
     }
   }
@@ -302,7 +302,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return false;
     } else {
-      throw reportError("testObjField", "expected { or , or } or n, but found: " + c);
+      throw reportError("testObjField", "expected [\\{\\}n], but found: " + c);
     }
   }
 
@@ -342,7 +342,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return null;
     } else {
-      throw reportError("readObjField", "expected { or , or } or n, but found: " + c);
+      throw reportError("readObjField", "expected [\\{\\}n], but found: " + c);
     }
   }
 
@@ -377,7 +377,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return null;
     } else {
-      throw reportError("skipObjField", "expected { or , or } or n, but found: " + c);
+      throw reportError("skipObjField", "expected [\\{\\}n], but found: " + c);
     }
   }
 
@@ -428,7 +428,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         skip(3);
         return;
       } else {
-        throw reportError("testObject", "expected { or , or } or n, but found: " + c);
+        throw reportError("testObject", "expected [\\{\\}n], but found: " + c);
       }
     }
   }
@@ -472,7 +472,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         skip(3);
         return context;
       } else {
-        throw reportError("testObject", "expected { or , or } or n, but found: " + c);
+        throw reportError("testObject", "expected [\\{\\}n], but found: " + c);
       }
     }
   }
@@ -519,7 +519,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         skip(3);
         return context;
       } else {
-        throw reportError("testObject", "expected { or , or } or n, but found: " + c);
+        throw reportError("testObject", "expected [\\{\\}n], but found: " + c);
       }
     }
   }
@@ -563,7 +563,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return null;
     } else {
-      throw reportError("applyObject", "expected { or , or } or n, but found: " + c);
+      throw reportError("applyObject", "expected [\\{\\}n], but found: " + c);
     }
   }
 
@@ -603,7 +603,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return null;
     } else {
-      throw reportError("applyObject", "expected { or , or } or n, but found: " + c);
+      throw reportError("applyObject", "expected [\\{\\}n], but found: " + c);
     }
   }
 
@@ -627,12 +627,14 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = BigDecimal::new;
+  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = (chars, offset, len) -> len == 0 ? null : new BigDecimal(chars, offset, len);
   private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (chars, offset, len) -> {
     if (len == 1) {
       return chars[offset] == '0'
           ? BigDecimal.ZERO
           : new BigDecimal(chars, offset, len);
+    } else if (len == 0) {
+      return null;
     }
     int pos = (offset + len) - 1;
     if (chars[pos] != '0') {
