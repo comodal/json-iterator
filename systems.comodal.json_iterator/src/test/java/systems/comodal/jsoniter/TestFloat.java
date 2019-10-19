@@ -10,12 +10,15 @@ import java.time.Instant;
 import static java.math.BigDecimal.ZERO;
 import static java.time.Instant.ofEpochSecond;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
   void testStripTrailingZeroes(final JsonIteratorFactory factory) {
+    assertNull(factory.create("\"\"").readBigDecimalStripTrailingZeroes());
+
     var expected = new BigDecimal("123.456");
     assertEquals(expected, factory.create("123.456").readBigDecimalStripTrailingZeroes());
     assertEquals(expected, factory.create("123.4560").readBigDecimalStripTrailingZeroes());
@@ -186,6 +189,8 @@ final class TestFloat {
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
   void testBigDecimal(final JsonIteratorFactory factory) {
+    assertNull(factory.create("\"\"").readBigDecimal());
+
     assertEquals(new BigDecimal("100.100"), factory.create("100.100").readBigDecimal());
     assertEquals(new BigDecimal("100.1"), factory.create("100.1000").readBigDecimalStripTrailingZeroes());
     assertEquals(new BigDecimal("100"), factory.create("100.000").readBigDecimalStripTrailingZeroes());
