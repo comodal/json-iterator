@@ -70,7 +70,7 @@ public interface JsonIterator extends Closeable {
 
   static boolean fieldStartsWith(final String field, final char[] buf, final int offset, final int len) {
     final int to = field.length();
-    if (to <= len) {
+    if (to > len) {
       return false;
     }
     for (int i = 0, j = offset; i < to; i++, j++) {
@@ -107,7 +107,7 @@ public interface JsonIterator extends Closeable {
 
   static boolean fieldStartsWithIgnoreCase(final String field, final char[] buf, final int offset, final int len) {
     final int to = field.length();
-    if (to <= len) {
+    if (to > len) {
       return false;
     }
     for (int i = 0, j = offset, c, d; i < to; i++, j++) {
