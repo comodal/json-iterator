@@ -68,6 +68,19 @@ public interface JsonIterator extends Closeable {
     return true;
   }
 
+  static boolean fieldStartsWith(final String field, final char[] buf, final int offset, final int len) {
+    final int to = field.length();
+    if (to <= len) {
+      return false;
+    }
+    for (int i = 0, j = offset; i < to; i++, j++) {
+      if (field.charAt(i) != buf[j]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   static boolean fieldEqualsIgnoreCase(final String field, final char[] buf) {
     return fieldEqualsIgnoreCase(field, buf, 0, buf.length);
   }
@@ -81,6 +94,23 @@ public interface JsonIterator extends Closeable {
       return false;
     }
     for (int i = 0, j = offset, c, d; i < len; i++, j++) {
+      c = field.charAt(i);
+      d = buf[j];
+      if (c != d
+          && Character.toLowerCase(c) != d
+          && Character.toUpperCase(c) != d) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static boolean fieldStartsWithIgnoreCase(final String field, final char[] buf, final int offset, final int len) {
+    final int to = field.length();
+    if (to <= len) {
+      return false;
+    }
+    for (int i = 0, j = offset, c, d; i < to; i++, j++) {
       c = field.charAt(i);
       d = buf[j];
       if (c != d
@@ -186,10 +216,10 @@ public interface JsonIterator extends Closeable {
 
   /**
    * Parses ISO-like or RFC_1123_DATE_TIME formats such as:
-   *  - YYYY*MM*DD*HH*MM*SS.?\d{0,9}Z?
-   *  - YYYY*MM*DD*HH*MM*SS[+-]HH*MM
-   *  - Tue, 3 Jun 2008 11:05:30 GMT
-   *
+   * - YYYY*MM*DD*HH*MM*SS.?\d{0,9}Z?
+   * - YYYY*MM*DD*HH*MM*SS[+-]HH*MM
+   * - Tue, 3 Jun 2008 11:05:30 GMT
+   * <p>
    * Defaults to UTC if no offset is provided.
    *
    * @throws java.time.DateTimeException - on any unexpected character or length
