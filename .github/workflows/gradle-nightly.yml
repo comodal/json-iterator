@@ -11,7 +11,7 @@ jobs:
   check:
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest] #, macOS-latest
     runs-on: ${{ matrix.os }}
     env:
       JDK_VERSION: 14
@@ -23,9 +23,9 @@ jobs:
           java-version: 13
       - run: printf "org.gradle.java.home=%s" "$JAVA_HOME" > gradle.properties
 
-      - name: Download Darwin OpenJDK
-        if: contains(matrix.os, 'macOS') == true
-        run: curl -o ./openjdk.tar.gz "https://download.java.net/java/early_access/jdk${JDK_VERSION}/${JDK_BUILD}/GPL/openjdk-${JDK_VERSION}-ea+${JDK_BUILD}_osx-x64_bin.tar.gz"
+#      - name: Download Darwin OpenJDK
+#        if: contains(matrix.os, 'macOS') == true
+#        run: curl -o ./openjdk.tar.gz "https://download.java.net/java/early_access/jdk${JDK_VERSION}/${JDK_BUILD}/GPL/openjdk-${JDK_VERSION}-ea+${JDK_BUILD}_osx-x64_bin.tar.gz"
 
       - name: Download Linux OpenJDK
         if: contains(matrix.os, 'ubuntu') == true
