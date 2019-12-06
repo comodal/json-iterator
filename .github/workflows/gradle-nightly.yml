@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       JDK_VERSION: 14
-      JDK_BUILD: 22
+      JDK_BUILD: 26
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-java@v1

@@ -372,7 +372,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return null;
     } else {
-      throw reportError("skipObjField", "expected [\\{\\}n], but found: " + c);
+      throw reportError("skipObjField", "expected [,{}n], but found: " + c);
     }
   }
 
@@ -423,7 +423,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         skip(3);
         return;
       } else {
-        throw reportError("testObject", "expected [\\{\\}n], but found: " + c);
+        throw reportError("testObject", "expected [,{}n], but found: " + c);
       }
     }
   }
@@ -467,7 +467,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         skip(3);
         return context;
       } else {
-        throw reportError("testObject", "expected [\\{\\}n], but found: " + c);
+        throw reportError("testObject", "expected [,{}n], but found: " + c);
       }
     }
   }
@@ -514,7 +514,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         skip(3);
         return context;
       } else {
-        throw reportError("testObject", "expected [\\{\\}n], but found: " + c);
+        throw reportError("testObject", "expected [,{}n], but found: " + c);
       }
     }
   }
@@ -558,7 +558,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return null;
     } else {
-      throw reportError("applyObject", "expected [\\{\\}n], but found: " + c);
+      throw reportError("applyObject", "expected [,{}n], but found: " + c);
     }
   }
 
@@ -598,7 +598,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return null;
     } else {
-      throw reportError("applyObject", "expected [\\{\\}n], but found: " + c);
+      throw reportError("applyObject", "expected [,{}n], but found: " + c);
     }
   }
 

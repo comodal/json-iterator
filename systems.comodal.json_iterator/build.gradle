@@ -6,7 +6,7 @@ plugins {
   id "org.javamodularity.moduleplugin"
   id "me.champeau.gradle.jmh"
   id "io.morethan.jmhreport"
-  id "io.freefair.github.package-registry-maven-publish"
+//  id "io.freefair.github.package-registry-maven-publish"
 }
 
 sourceCompatibility = JavaVersion.toVersion("${project.findProperty('targetJava') ?: '13'}")
@@ -28,11 +28,11 @@ ext {
   bench = project.properties['bench'] ?: 'BenchCharFieldStyles'
 }
 
-github {
-  slug = 'comodal/json-iterator'
-  username = System.getenv('GITHUB_USER')
-  token = System.getenv('GITHUB_TOKEN')
-}
+//github {
+//  slug = 'comodal/json-iterator'
+//  username = System.getenv('GITHUB_USER')
+//  token = System.getenv('GITHUB_TOKEN')
+//}
 
 repositories {
   jcenter()
