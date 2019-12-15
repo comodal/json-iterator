@@ -144,6 +144,20 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
+  void skipPastEndQuote() {
+    char c;
+    while (head < tail) {
+      c = buf[head++];
+      if (c == '"') {
+        return;
+      } else if (c == '\\') {
+        ++head;
+      }
+    }
+    throw reportError("skipPastEndQuote", "incomplete string");
+  }
+
+  @Override
   final int parseNumber() {
     for (int i = head, len = 0; ; i++) {
       if (i == tail) {

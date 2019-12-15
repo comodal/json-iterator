@@ -118,14 +118,22 @@ abstract class BaseJsonIterator implements JsonIterator {
     throw reportError("closeArray", "expected ']' but found: " + c);
   }
 
-  private static final CharBufferFunction<String> READ_STRING_FUNCTION = String::new;
-
   @Override
   public final String readString() {
-    return applyChars(READ_STRING_FUNCTION);
+    final char c = nextToken();
+    if (c == '"') {
+      return parseString();
+    } else if (c == 'n') {
+      skip(3);
+      return null;
+    } else {
+      throw reportError("readString", "expected string or null, but " + c);
+    }
   }
 
   abstract int parse();
+
+  abstract void skipPastEndQuote();
 
   @Override
   public final <R> R applyChars(final CharBufferFunction<R> applyChars) {
@@ -301,12 +309,19 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
+  protected static final CharBufferFunction<String> READ_STRING_FUNCTION = String::new;
+
+  protected String parseString() {
+    return parse(READ_STRING_FUNCTION);
+  }
+
   private String readField() {
     final char c = nextToken();
-    if (c != '"') {
+    if (c == '"') {
+      return parseString();
+    } else {
       throw reportError("readField", "expected field string, but " + c);
     }
-    return parse(READ_STRING_FUNCTION);
   }
 
   @Override
@@ -314,18 +329,20 @@ abstract class BaseJsonIterator implements JsonIterator {
     char c = nextToken();
     if (c == ',') {
       final var field = readField();
-      if ((c = nextToken()) != ':') {
+      if ((c = nextToken()) == ':') {
+        return field;
+      } else {
         throw reportError("readObjField", "expected :, but " + c);
       }
-      return field;
     } else if (c == '{') {
       c = nextToken();
       if (c == '"') {
-        final var field = parse(READ_STRING_FUNCTION);
-        if ((c = nextToken()) != ':') {
+        final var field = parseString();
+        if ((c = nextToken()) == ':') {
+          return field;
+        } else {
           throw reportError("readObjField", "expected :, but " + c);
         }
-        return field;
       } else if (c == '}') {
         return null; // end of object
       } else {
@@ -349,18 +366,20 @@ abstract class BaseJsonIterator implements JsonIterator {
         throw reportError("skipObjField", "expected string field, but " + c);
       }
       parse();
-      if ((c = nextToken()) != ':') {
+      if ((c = nextToken()) == ':') {
+        return this;
+      } else {
         throw reportError("skipObjField", "expected :, but " + c);
       }
-      return this;
     } else if (c == '{') {
       c = nextToken();
       if (c == '"') {
         parse();
-        if ((c = nextToken()) != ':') {
+        if ((c = nextToken()) == ':') {
+          return this;
+        } else {
           throw reportError("skipObjField", "expected :, but " + c);
         }
-        return this;
       } else if (c == '}') { // end of object
         return null;
       } else {
@@ -381,8 +400,9 @@ abstract class BaseJsonIterator implements JsonIterator {
     final char c = nextToken();
     if (c == '}') {
       return this;
+    } else {
+      throw reportError("closeObj", "expected '}' but found: " + c);
     }
-    throw reportError("closeObj", "expected '}' but found: " + c);
   }
 
   @Override
@@ -536,8 +556,9 @@ abstract class BaseJsonIterator implements JsonIterator {
       final int len = parse();
       if ((c = nextToken()) != ':') {
         throw reportError("applyObject", "expected :, but " + c);
+      } else {
+        return apply(fieldBufferFunction, offset, len);
       }
-      return apply(fieldBufferFunction, offset, len);
     } else if (c == '{') {
       c = nextToken();
       if (c == '"') {
@@ -545,8 +566,9 @@ abstract class BaseJsonIterator implements JsonIterator {
         final int len = parse();
         if ((c = nextToken()) != ':') {
           throw reportError("applyObject", "expected :, but " + c);
+        } else {
+          return apply(fieldBufferFunction, offset, len);
         }
-        return apply(fieldBufferFunction, offset, len);
       } else if (c == '}') { // end of object
         return null;
       } else {
@@ -576,8 +598,9 @@ abstract class BaseJsonIterator implements JsonIterator {
       final int len = parse();
       if ((c = nextToken()) != ':') {
         throw reportError("applyObject", "expected :, but " + c);
+      } else {
+        return apply(context, fieldBufferFunction, offset, len);
       }
-      return apply(context, fieldBufferFunction, offset, len);
     } else if (c == '{') {
       c = nextToken();
       if (c == '"') {
@@ -585,8 +608,9 @@ abstract class BaseJsonIterator implements JsonIterator {
         final int len = parse();
         if ((c = nextToken()) != ':') {
           throw reportError("applyObject", "expected :, but " + c);
+        } else {
+          return apply(context, fieldBufferFunction, offset, len);
         }
-        return apply(context, fieldBufferFunction, offset, len);
       } else if (c == '}') { // end of object
         return null;
       } else {
@@ -694,6 +718,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       throw reportError("readBigInteger", "Must be a number, string or null but found " + valueType);
     }
   }
+
   @Override
   public final Instant readDateTime() {
     return applyChars(InstantParser.INSTANT_PARSER);
@@ -717,32 +742,6 @@ abstract class BaseJsonIterator implements JsonIterator {
   @Override
   public final ValueType whatIsNext() {
     return VALUE_TYPES[peekToken()];
-  }
-
-  private void skipString() {
-    char c;
-    for (int i = head; ; ++i) {
-      if (i >= tail) {
-        if (loadMore()) {
-          i = head;
-        } else {
-          throw reportError("skipString", "incomplete string");
-        }
-      }
-      c = peekChar(i);
-      if (c == '"') {
-        head = i + 1;
-        return;
-      } else if (c == '\\') {
-        if (++i == tail) {
-          if (loadMore()) {
-            i = head;
-          } else {
-            throw reportError("skipString", "incomplete string");
-          }
-        }
-      }
-    }
   }
 
   private void skipUntilBreak() {
@@ -781,8 +780,8 @@ abstract class BaseJsonIterator implements JsonIterator {
       }
       if ((c = peekChar(i)) == '"') { // If inside string, skip it
         head = i + 1;
-        skipString();
-        i = head - 1; // it will be i++ soon
+        skipPastEndQuote();
+        i = head - 1;
       } else if (c == '[') { // If open symbol, increase level
         level++;
       } else if (c == ']') { // If close symbol, increase level
@@ -808,7 +807,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       }
       if ((c = peekChar(i)) == '"') { // If inside string, skip it
         head = i + 1;
-        skipString();
+        skipPastEndQuote();
         i = head - 1; // it will be i++ soon
       } else if (c == '{') { // If open symbol, increase level
         level++;
@@ -828,7 +827,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     final char c = nextToken();
     switch (c) {
       case '"':
-        skipString();
+        skipPastEndQuote();
         return this;
       case '-':
       case '0':
@@ -860,7 +859,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         throw reportError("skip", "do not know how to skip: " + c);
     }
 //    return switch (c) {
-//      case '"' ->skipString();
+//      case '"' ->skipPastEndQuote();
 //      case '-','0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ->skipUntilBreak();
 //      case 't','n' ->skip(3); // true or null
 //      case 'f' ->skip(4); // false
