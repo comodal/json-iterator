@@ -38,7 +38,7 @@ public class BenchCharFieldStyles {
   }
 
   @Param({
-      "StaticFieldOrdering",
+      "CompactStaticFieldOrdering",
       "IocLoopCharSwitch",
       "IocLoopCharIf"
   })

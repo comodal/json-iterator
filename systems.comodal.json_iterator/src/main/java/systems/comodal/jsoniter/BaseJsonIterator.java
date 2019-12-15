@@ -84,8 +84,9 @@ abstract class BaseJsonIterator implements JsonIterator {
         if (more == 0) {
           head = tail;
           return;
+        } else {
+          throw reportError("skip", "unexpected end");
         }
-        throw reportError("skip", "unexpected end");
       }
       head += more;
     }
@@ -96,8 +97,9 @@ abstract class BaseJsonIterator implements JsonIterator {
     final char c = nextToken();
     if (c == '[') {
       return this;
+    } else {
+      throw reportError("openArray", "expected '[' but found: " + c);
     }
-    throw reportError("openArray", "expected '[' but found: " + c);
   }
 
   @Override
@@ -105,8 +107,9 @@ abstract class BaseJsonIterator implements JsonIterator {
     final char c = nextToken();
     if (c == ',') {
       return this;
+    } else {
+      throw reportError("continueArray", "expected ',' but found: " + c);
     }
-    throw reportError("continueArray", "expected ',' but found: " + c);
   }
 
   @Override
@@ -114,8 +117,9 @@ abstract class BaseJsonIterator implements JsonIterator {
     final char c = nextToken();
     if (c == ']') {
       return this;
+    } else {
+      throw reportError("closeArray", "expected ']' but found: " + c);
     }
-    throw reportError("closeArray", "expected ']' but found: " + c);
   }
 
   @Override
@@ -273,8 +277,9 @@ abstract class BaseJsonIterator implements JsonIterator {
     final char c = nextToken();
     if (c != '"') {
       throw reportError("testField", "expected field string, but " + c);
+    } else {
+      return parse(testField);
     }
-    return parse(testField);
   }
 
   @Override
@@ -365,7 +370,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       if (c != '"') {
         throw reportError("skipObjField", "expected string field, but " + c);
       }
-      parse();
+      skipPastEndQuote();
       if ((c = nextToken()) == ':') {
         return this;
       } else {
@@ -374,7 +379,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     } else if (c == '{') {
       c = nextToken();
       if (c == '"') {
-        parse();
+        skipPastEndQuote();
         if ((c = nextToken()) == ':') {
           return this;
         } else {

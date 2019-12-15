@@ -12,6 +12,7 @@ public final class ExchangeInfoParserFactories {
   private static final LoopStringIf LOOP_STRING_IF_INSTANCE = new LoopStringIf();
   private static final LoopStringSwitch LOOP_STRING_SWITCH_INSTANCE = new LoopStringSwitch();
   private static final StaticFieldOrdering STATIC_FIELD_ORDERING_INSTANCE = new StaticFieldOrdering();
+  private static final CompactStaticFieldOrdering COMPACT_STATIC_FIELD_ORDERING_INSTANCE = new CompactStaticFieldOrdering();
 
   public static final class IocLoopCharSwitchFactoryExchangeInfo implements JsonIterParserFactory<ExchangeInfo> {
 
@@ -66,6 +67,14 @@ public final class ExchangeInfoParserFactories {
     @Override
     public StaticFieldOrdering create(final Class<ExchangeInfo> parserType) {
       return STATIC_FIELD_ORDERING_INSTANCE;
+    }
+  }
+
+  public static final class CompactStaticFieldOrderingFactoryExchangeInfo implements JsonIterParserFactory<ExchangeInfo> {
+
+    @Override
+    public CompactStaticFieldOrdering create(final Class<ExchangeInfo> parserType) {
+      return COMPACT_STATIC_FIELD_ORDERING_INSTANCE;
     }
   }
 }
