@@ -35,7 +35,7 @@ jobs:
         with:
           java-version: 14-ea
           architecture: x64
-          jdkFile: ./openjdk.tar.gz
+#          jdkFile: ./openjdk.tar.gz
       - run: java --version
       - uses: eskatos/gradle-command-action@v1
         with:
