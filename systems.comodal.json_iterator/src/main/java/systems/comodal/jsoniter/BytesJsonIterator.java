@@ -40,6 +40,8 @@ class BytesJsonIterator extends BaseJsonIterator {
   }
 
   private static boolean containsPattern(final long input) {
+    // https://richardstartin.github.io/posts/finding-bytes
+    // Hacker's Delight ch. 6: https://books.google.com/books?id=VicPJYM0I5QC&lpg=PP1&pg=PA117#v=onepage&q&f=false
     return ~(((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL) | input | 0x7F7F7F7F7F7F7F7FL) != 0;
   }
 
@@ -175,7 +177,7 @@ class BytesJsonIterator extends BaseJsonIterator {
 
   @Override
   final int parse() {
-    byte c; // try fast path first
+    byte c;
     for (int j = 0; head < tail || loadMore(); ) {
       c = buf[head];
       if (c == '"') {
@@ -205,10 +207,6 @@ class BytesJsonIterator extends BaseJsonIterator {
         head++;
         return;
       } else if ((c ^ '\\') < 1) {
-        // If a backslash is encountered, which is a beginning of an escape sequence
-        // or a high bit was set - indicating an UTF-8 encoded multi-byte character,
-        // there is no chance that we can decode the string without instantiating
-        // a temporary buffer, so quit this loop.
         skipPastMultiByteEndQuote();
         return;
       }
@@ -239,7 +237,7 @@ class BytesJsonIterator extends BaseJsonIterator {
             nextOffset += Long.BYTES;
             if (nextOffset > tail) {
               if (head < tail) {
-                head = tail - 8;
+                head = tail - Long.BYTES;
               } else if (loadMore()) {
                 nextOffset = head + Long.BYTES;
                 if (nextOffset > tail) {
@@ -283,7 +281,7 @@ class BytesJsonIterator extends BaseJsonIterator {
             nextOffset += Long.BYTES;
             if (nextOffset > tail) {
               if (i < tail) {
-                i = tail - 8;
+                i = tail - Long.BYTES;
               } else if (supportsMarkReset()) { // Hack to check if reading from stream or not.
                 throw reportError("parseString", "incomplete string");
               } else {

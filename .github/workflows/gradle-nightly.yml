@@ -11,7 +11,7 @@ jobs:
   check:
     strategy:
       matrix:
-        os: [ubuntu-latest] #, macOS-latest
+        os: [ubuntu-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
     env:
       JDK_VERSION: 14
@@ -27,13 +27,13 @@ jobs:
 #        if: contains(matrix.os, 'macOS') == true
 #        run: curl -o ./openjdk.tar.gz "https://download.java.net/java/early_access/jdk${JDK_VERSION}/${JDK_BUILD}/GPL/openjdk-${JDK_VERSION}-ea+${JDK_BUILD}_osx-x64_bin.tar.gz"
 
-      - name: Download Linux OpenJDK
-        if: contains(matrix.os, 'ubuntu') == true
-        run: curl -o ./openjdk.tar.gz "https://download.java.net/java/early_access/jdk${JDK_VERSION}/${JDK_BUILD}/GPL/openjdk-${JDK_VERSION}-ea+${JDK_BUILD}_linux-x64_bin.tar.gz"
+#      - name: Download Linux OpenJDK
+#        if: contains(matrix.os, 'ubuntu') == true
+#        run: curl -o ./openjdk.tar.gz "https://download.java.net/java/early_access/jdk${JDK_VERSION}/${JDK_BUILD}/GPL/openjdk-${JDK_VERSION}-ea+${JDK_BUILD}_linux-x64_bin.tar.gz"
 
       - uses: actions/setup-java@v1
         with:
-          java-version: 14
+          java-version: 14-ea
           architecture: x64
           jdkFile: ./openjdk.tar.gz
       - run: java --version
