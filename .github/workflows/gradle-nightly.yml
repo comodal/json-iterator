@@ -13,27 +13,16 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
-    env:
-      JDK_VERSION: 14
-      JDK_BUILD: 27
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
         with:
           java-version: 13
       - run: printf "org.gradle.java.home=%s" "$JAVA_HOME" > gradle.properties
 
-      #      - name: Download Darwin OpenJDK
-      #        if: contains(matrix.os, 'macOS') == true
-      #        run: curl -o ./openjdk.tar.gz "https://download.java.net/java/early_access/jdk${JDK_VERSION}/${JDK_BUILD}/GPL/openjdk-${JDK_VERSION}-ea+${JDK_BUILD}_osx-x64_bin.tar.gz"
-
-#      - name: Download Linux OpenJDK
-#        if: contains(matrix.os, 'ubuntu') == true
-#        run: curl -o ./openjdk.tar.gz "https://download.java.net/java/early_access/jdk${JDK_VERSION}/${JDK_BUILD}/GPL/openjdk-${JDK_VERSION}-ea+${JDK_BUILD}_linux-x64_bin.tar.gz"
-
       - uses: actions/setup-java@v1
         with:
-          java-version: 14.0.0-ea
+          java-version: 14-ea
       - run: java --version
       - uses: eskatos/gradle-command-action@v1
         with:
