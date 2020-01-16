@@ -1000,12 +1000,14 @@ abstract class BaseJsonIterator implements JsonIterator {
     final char c = nextToken();
     if (c == '-') {
       return readInt(readChar());
+    } else {
+      final int val = readInt(c);
+      if (val == Integer.MIN_VALUE) {
+        throw reportError("readInt", "value is too large for int");
+      } else {
+        return -val;
+      }
     }
-    final int val = readInt(c);
-    if (val == Integer.MIN_VALUE) {
-      throw reportError("readInt", "value is too large for int");
-    }
-    return -val;
   }
 
   @Override
@@ -1013,8 +1015,9 @@ abstract class BaseJsonIterator implements JsonIterator {
     final int v = readInt();
     if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
       return (short) v;
+    } else {
+      throw reportError("readShort", "short overflow: " + v);
     }
-    throw reportError("readShort", "short overflow: " + v);
   }
 
   private long readLongSlowPath(long value) {
