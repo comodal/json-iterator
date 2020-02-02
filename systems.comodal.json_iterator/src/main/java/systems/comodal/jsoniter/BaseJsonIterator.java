@@ -831,47 +831,15 @@ abstract class BaseJsonIterator implements JsonIterator {
   public final JsonIterator skip() {
     final char c = nextToken();
     switch (c) {
-      case '"':
-        skipPastEndQuote();
-        return this;
-      case '-':
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        skipUntilBreak();
-        return this;
-      case 't':
-      case 'n':
-        skip(3); // true or null
-        return this;
-      case 'f':
-        skip(4); // false
-        return this;
-      case '[':
-        skipArray();
-        return this;
-      case '{':
-        skipObject();
-        return this;
-      default:
-        throw reportError("skip", "do not know how to skip: " + c);
+      case '"' -> skipPastEndQuote();
+      case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> skipUntilBreak();
+      case 't', 'n' -> skip(3); // true or null
+      case 'f' -> skip(4); // false
+      case '[' -> skipArray();
+      case '{' -> skipObject();
+      default -> throw reportError("skip", "Cannot skip: " + c);
     }
-//    return switch (c) {
-//      case '"' ->skipPastEndQuote();
-//      case '-','0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ->skipUntilBreak();
-//      case 't','n' ->skip(3); // true or null
-//      case 'f' ->skip(4); // false
-//      case '[' ->skipArray();
-//      case '{' ->skipObject();
-//      default ->throw reportError("skip", "do not know how to skip: " + c);
-//    } ;
+    return this;
   }
 
   @Override
@@ -880,8 +848,9 @@ abstract class BaseJsonIterator implements JsonIterator {
     if (c == 'n') {
       skip(4); // null
       return true;
+    } else {
+      return false;
     }
-    return false;
   }
 
   @Override
@@ -903,10 +872,9 @@ abstract class BaseJsonIterator implements JsonIterator {
       return;
     }
     final int peek = peekChar();
-    if (peek >= INT_DIGITS.length || INT_DIGITS[peek] == INVALID_CHAR_FOR_NUMBER) {
-      return;
+    if (peek < INT_DIGITS.length && INT_DIGITS[peek] != INVALID_CHAR_FOR_NUMBER) {
+      throw reportError("assertNotLeadingZero", "leading zero is invalid");
     }
-    throw reportError("assertNotLeadingZero", "leading zero is invalid");
   }
 
   private int readIntSlowPath(int value) {

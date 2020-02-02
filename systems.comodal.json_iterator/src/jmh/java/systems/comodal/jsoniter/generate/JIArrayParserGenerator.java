@@ -45,17 +45,10 @@ final class JIArrayParserGenerator extends BaseJIParserGenerator {
         builder.append("ji.skip();");
       } else {
         switch (arrayType) {
-          case NUMBER:
-            builder.append("ji.readBigDecimalStripTrailingZeroes();");
-            break;
-          case STRING:
-            builder.append("ji.readString();");
-            break;
-          case BOOLEAN:
-            builder.append("ji.readBoolean();");
-            break;
-          default:
-            builder.append("ji.skip();");
+          case NUMBER -> builder.append("ji.readBigDecimalStripTrailingZeroes();");
+          case STRING -> builder.append("ji.readString();");
+          case BOOLEAN -> builder.append("ji.readBoolean();");
+          default -> builder.append("ji.skip();");
         }
       }
       builder.append(lineSeparator());

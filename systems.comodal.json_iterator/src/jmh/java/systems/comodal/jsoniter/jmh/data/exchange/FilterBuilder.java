@@ -22,30 +22,16 @@ final class FilterBuilder implements Filter.Builder {
   @Override
   public Filter.Builder build(final ProductSymbol.Builder builder) {
     switch (type) {
-      case PRICE_FILTER:
-        builder.priceFilter(new PriceFilterVal(minPrice, maxPrice, tickSize));
-        return this;
-      case PERCENT_PRICE:
-        builder.percentPriceFilter(new PercentPriceFilterVal(multiplierUp, multiplierDown, avgPriceMins));
-        return this;
-      case LOT_SIZE:
-        builder.lotSizeFilter(new LotSizeFilterVal(minQty, maxQty, stepSize));
-        return this;
-      case MIN_NOTIONAL:
-        builder.minNotionalFilter(new MinNotionalFilterVal(minNotional, applyToMarket, avgPriceMins));
-        return this;
-      case ICEBERG_PARTS:
-        builder.icebergPartsLimit(limit);
-        return this;
-      case MAX_NUM_ALGO_ORDERS:
-        builder.maxNumAlgoOrders(maxNumAlgoOrders);
-        return this;
-      case MARKET_LOT_SIZE:
-        builder.marketLotSizeFilter(new LotSizeFilterVal(minQty, maxQty, stepSize));
-        return this;
-      default:
-        throw new IllegalStateException("Unhandled filter type " + type);
+      case PRICE_FILTER -> builder.priceFilter(new PriceFilterVal(minPrice, maxPrice, tickSize));
+      case PERCENT_PRICE -> builder.percentPriceFilter(new PercentPriceFilterVal(multiplierUp, multiplierDown, avgPriceMins));
+      case LOT_SIZE -> builder.lotSizeFilter(new LotSizeFilterVal(minQty, maxQty, stepSize));
+      case MIN_NOTIONAL -> builder.minNotionalFilter(new MinNotionalFilterVal(minNotional, applyToMarket, avgPriceMins));
+      case ICEBERG_PARTS -> builder.icebergPartsLimit(limit);
+      case MAX_NUM_ALGO_ORDERS -> builder.maxNumAlgoOrders(maxNumAlgoOrders);
+      case MARKET_LOT_SIZE -> builder.marketLotSizeFilter(new LotSizeFilterVal(minQty, maxQty, stepSize));
+      default -> throw new IllegalStateException("Unhandled filter type " + type);
     }
+    return this;
   }
 
   @Override

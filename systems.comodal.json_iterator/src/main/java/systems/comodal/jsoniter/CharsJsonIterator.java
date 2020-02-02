@@ -212,8 +212,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(from, len);
       return applyChars.apply(chars, 0, chars.length);
+    } else {
+      return applyChars.apply(buf, from, len);
     }
-    return applyChars.apply(buf, from, len);
   }
 
   @Override
@@ -223,8 +224,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(from, len);
       return applyChars.apply(context, chars, 0, chars.length);
+    } else {
+      return applyChars.apply(context, buf, from, len);
     }
-    return applyChars.apply(context, buf, from, len);
   }
 
   @Override
@@ -234,8 +236,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(from, len);
       return testChars.apply(chars, 0, chars.length);
+    } else {
+      return testChars.apply(buf, from, len);
     }
-    return testChars.apply(buf, from, len);
   }
 
   @Override
@@ -245,8 +248,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(from, len);
       return testChars.apply(context, chars, 0, chars.length);
+    } else {
+      return testChars.apply(context, buf, from, len);
     }
-    return testChars.apply(context, buf, from, len);
   }
 
   @Override
@@ -256,8 +260,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(from, len);
       testChars.accept(chars, 0, chars.length);
+    } else {
+      testChars.accept(buf, from, len);
     }
-    testChars.accept(buf, from, len);
   }
 
   @Override
@@ -267,8 +272,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(from, len);
       testChars.accept(context, chars, 0, chars.length);
+    } else {
+      testChars.accept(context, buf, from, len);
     }
-    testChars.accept(context, buf, from, len);
   }
 
   @Override
@@ -281,8 +287,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return !fieldBufferFunction.test(chars, 0, chars.length, this);
+    } else {
+      return !fieldBufferFunction.test(buf, offset, len, this);
     }
-    return !fieldBufferFunction.test(buf, offset, len, this);
   }
 
   @Override
@@ -290,8 +297,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return !fieldBufferFunction.test(context, chars, 0, chars.length, this);
+    } else {
+      return !fieldBufferFunction.test(context, buf, offset, len, this);
     }
-    return !fieldBufferFunction.test(context, buf, offset, len, this);
   }
 
   @Override
@@ -299,8 +307,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.test(context, mask, chars, 0, chars.length, this);
+    } else {
+      return fieldBufferFunction.test(context, mask, buf, offset, len, this);
     }
-    return fieldBufferFunction.test(context, mask, buf, offset, len, this);
   }
 
   @Override
@@ -308,8 +317,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.apply(chars, 0, chars.length, this);
+    } else {
+      return fieldBufferFunction.apply(buf, offset, len, this);
     }
-    return fieldBufferFunction.apply(buf, offset, len, this);
   }
 
   @Override
@@ -317,8 +327,9 @@ final class CharsJsonIterator extends BaseJsonIterator {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.apply(context, chars, 0, chars.length, this);
+    } else {
+      return fieldBufferFunction.apply(context, buf, offset, len, this);
     }
-    return fieldBufferFunction.apply(context, buf, offset, len, this);
   }
 
   @Override

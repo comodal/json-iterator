@@ -9,7 +9,7 @@ plugins {
 //  id "io.freefair.github.package-registry-maven-publish"
 }
 
-sourceCompatibility = JavaVersion.toVersion("${project.findProperty('targetJava') ?: '13'}")
+sourceCompatibility = JavaVersion.toVersion("${project.findProperty('targetJava') ?: '14'}")
 
 scmVersion {
   tag.prefix = ''
@@ -26,6 +26,30 @@ ext {
   vcsUrl = 'https://github.com/comodal/json-iterator'
   moduleName = 'systems.comodal.json_iterator'
   bench = project.properties['bench'] ?: 'BenchCharFieldStyles'
+}
+
+// https://docs.gradle.org/5.6.2/userguide/building_java_projects.html#sec:java_cross_compilation
+def javaHomePath = new File("${project.findProperty('javaHome') ?: System.getenv('JAVA_HOME')}")
+def javaExecutables = [:].withDefault { execName ->
+  def executable = new File(javaHomePath, "bin/${execName}")
+  assert executable.exists(): "There is no ${execName} executable in ${javaHomePath}/bin"
+  executable
+}
+
+tasks.withType(AbstractCompile) {
+  options.with {
+    fork = true
+    forkOptions.javaHome = javaHomePath
+  }
+}
+tasks.withType(Javadoc) {
+  executable = javaExecutables.javadoc
+}
+tasks.withType(Test) {
+  executable = javaExecutables.java
+}
+tasks.withType(JavaExec) {
+  executable = javaExecutables.java
 }
 
 //github {
@@ -48,17 +72,16 @@ dependencies {
 
   jmh 'org.openjdk.jmh:jmh-core:+'
   jmh 'org.openjdk.jmh:jmh-generator-annprocess:+'
+  jmh 'org.junit.jupiter:junit-jupiter-engine:+'
+  jmh 'org.openjdk.jmh:jmh-core:+'
+  jmh 'org.openjdk.jmh:jmh-generator-annprocess:+'
 }
 
 jmh {
   // ./gradlew -q --console=plain --no-daemon jmh -Pbench=BenchStringFieldStyles
-  if (project.properties['bench.graal'] == 'true') {
-    jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC', '-XX:+UseNUMA', '-XX:+UnlockExperimentalVMOptions', '-XX:+UseJVMCICompiler']
-    resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/graal_results.json")
-  } else {
-    jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC', '-XX:+UseNUMA']
-    resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/results.json")
-  }
+  jvm = javaHomePath // Custom JVM to use when forking.
+  jvmArgsPrepend = ['-XX:+AlwaysPreTouch', '-XX:-UseBiasedLocking', '-XX:+DisableExplicitGC', '-XX:+UseNUMA', '-XX:+UnlockExperimentalVMOptions', '-XX:+UseZGC']
+  resultsFile = project.parent.file("benchmark-results/$bench/jmh_report/results.json")
   warmupIterations = 3
   warmup = '4s'
   iterations = 5
@@ -191,28 +214,4 @@ task genParser(type: JavaExec) {
   workingDir = project.getRootDir()
   classpath = sourceSets.jmh.getRuntimeClasspath()
   main = 'systems.comodal.jsoniter.generate.JIParserGeneratorEntryPoint'
-}
-
-// https://docs.gradle.org/5.6.2/userguide/building_java_projects.html#sec:java_cross_compilation
-def javaHomePath = new File("${project.findProperty('javaHome') ?: System.getenv('JAVA_HOME')}")
-def javaExecutables = [:].withDefault { execName ->
-  def executable = new File(javaHomePath, "bin/${execName}")
-  assert executable.exists(): "There is no ${execName} executable in ${javaHomePath}/bin"
-  executable
-}
-
-tasks.withType(AbstractCompile) {
-  options.with {
-    fork = true
-    forkOptions.javaHome = javaHomePath
-  }
-}
-tasks.withType(Javadoc) {
-  executable = javaExecutables.javadoc
-}
-tasks.withType(Test) {
-  executable = javaExecutables.java
-}
-tasks.withType(JavaExec) {
-  executable = javaExecutables.java
 }

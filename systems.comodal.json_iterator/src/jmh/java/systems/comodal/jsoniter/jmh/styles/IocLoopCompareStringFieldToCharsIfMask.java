@@ -124,28 +124,19 @@ final class IocLoopCompareStringFieldToCharsIfMask implements JsonIterParser<Exc
     } else if ((mask & (i <<= 1)) == 0 && fieldEquals("filters", buf, offset, len)) {
       while (ji.readArray()) {
         switch (ji.skipObjField().applyChars(PARSE_FILTER_TYPE)) {
-          case PRICE_FILTER:
-            builder.priceFilter(ji.testObject(PriceFilter.build(), PRICE_FILTER_PARSER).create());
-            continue;
-          case PERCENT_PRICE:
-            builder.percentPriceFilter(ji.testObject(PercentPriceFilter.build(), PERCENT_PRICE_PARSER).create());
-            continue;
-          case MAX_NUM_ALGO_ORDERS:
+          case PRICE_FILTER -> builder.priceFilter(ji.testObject(PriceFilter.build(), PRICE_FILTER_PARSER).create());
+          case PERCENT_PRICE -> builder.percentPriceFilter(ji.testObject(PercentPriceFilter.build(), PERCENT_PRICE_PARSER).create());
+          case MAX_NUM_ALGO_ORDERS -> {
             builder.maxNumAlgoOrders(ji.skipUntil("maxNumAlgoOrders").readInt());
             ji.closeObj();
-            continue;
-          case LOT_SIZE:
-            builder.lotSizeFilter(ji.testObject(LotSizeFilter.build(), LOT_SIZE_PARSER).create());
-            continue;
-          case MIN_NOTIONAL:
-            builder.minNotionalFilter(ji.testObject(MinNotionalFilter.build(), MIN_NOTIONAL_PARSER).create());
-            continue;
-          case ICEBERG_PARTS:
+          }
+          case LOT_SIZE -> builder.lotSizeFilter(ji.testObject(LotSizeFilter.build(), LOT_SIZE_PARSER).create());
+          case MIN_NOTIONAL -> builder.minNotionalFilter(ji.testObject(MinNotionalFilter.build(), MIN_NOTIONAL_PARSER).create());
+          case ICEBERG_PARTS -> {
             builder.icebergPartsLimit(ji.skipUntil("limit").readInt());
             ji.closeObj();
-            continue;
-          case MARKET_LOT_SIZE:
-            builder.marketLotSizeFilter(ji.testObject(LotSizeFilter.build(), LOT_SIZE_PARSER).create());
+          }
+          case MARKET_LOT_SIZE -> builder.marketLotSizeFilter(ji.testObject(LotSizeFilter.build(), LOT_SIZE_PARSER).create());
         }
       }
     } else {

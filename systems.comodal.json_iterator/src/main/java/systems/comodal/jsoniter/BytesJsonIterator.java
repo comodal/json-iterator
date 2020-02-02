@@ -10,9 +10,9 @@ import java.nio.ByteOrder;
 class BytesJsonIterator extends BaseJsonIterator {
 
   private static final VarHandle TO_LONG = MethodHandles.byteArrayViewVarHandle(long[].class, ByteOrder.LITTLE_ENDIAN);
-  private static final long QUOTE_PATTERN = compilePattern((byte) '"');
-  private static final long ESCAPE_PATTERN = compilePattern((byte) ('\\' & 0xFF));
-  private static final long MULTI_BYTE_CHAR_PATTERN = compilePattern((byte) 0b1000_0000);
+  private static final long QUOTE_PATTERN = JIUtil.compileReplacePattern((byte) '"');
+  private static final long ESCAPE_PATTERN = JIUtil.compileReplacePattern((byte) ('\\' & 0xFF));
+  private static final long MULTI_BYTE_CHAR_PATTERN = JIUtil.compileReplacePattern((byte) 0b1000_0000);
 
   byte[] buf;
   private char[] charBuf;
@@ -25,18 +25,6 @@ class BytesJsonIterator extends BaseJsonIterator {
     super(head, tail);
     this.buf = buf;
     this.charBuf = new char[charBufferLength];
-  }
-
-  private static long compilePattern(final byte byteToFind) {
-    final long pattern = byteToFind & 0xFFL;
-    return pattern
-        | (pattern << 8)
-        | (pattern << 16)
-        | (pattern << 24)
-        | (pattern << 32)
-        | (pattern << 40)
-        | (pattern << 48)
-        | (pattern << 56);
   }
 
   private static boolean containsPattern(final long input) {
