@@ -187,6 +187,8 @@ public interface JsonIterator extends Closeable {
   /**
    * Advances the iterator if the next item is 'null' and returns true.
    * Otherwise, stays in place and returns false.
+   *
+   * @return true if value was 'null'.
    */
   boolean readNull();
 
@@ -222,6 +224,7 @@ public interface JsonIterator extends Closeable {
    * <p>
    * Defaults to UTC if no offset is provided.
    *
+   * @return the parsed Instant
    * @throws java.time.DateTimeException - on any unexpected character or length
    */
   Instant readDateTime();
