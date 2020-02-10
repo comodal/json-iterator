@@ -170,6 +170,36 @@ abstract class BaseJsonIterator implements JsonIterator {
   abstract <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars);
 
   @Override
+  public final int applyCharsAsInt(final CharBufferToIntFunction applyChars) {
+    final char c = nextToken();
+    if (c == '"') {
+      return parse(applyChars);
+    } else if (c == 'n') {
+      skip(3);
+      return applyChars.applyAsInt(new char[0], 0, 0);
+    } else {
+      throw reportError("applyChars", "expected string or null, but " + c);
+    }
+  }
+
+  abstract int parse(final CharBufferToIntFunction applyChars);
+
+  @Override
+  public final <C> int applyCharsAsInt(final C context, final ContextCharBufferToIntFunction<C> applyChars) {
+    final char c = nextToken();
+    if (c == '"') {
+      return parse(context, applyChars);
+    } else if (c == 'n') {
+      skip(3);
+      return applyChars.applyAsInt(context, new char[0], 0, 0);
+    } else {
+      throw reportError("applyChars", "expected string or null, but " + c);
+    }
+  }
+
+  abstract <C> int parse(final C context, final ContextCharBufferToIntFunction<C> applyChars);
+
+  @Override
   public final boolean testChars(final CharBufferPredicate testChars) {
     final char c = nextToken();
     if (c == '"') {
@@ -760,15 +790,10 @@ abstract class BaseJsonIterator implements JsonIterator {
         }
       }
       switch (peekChar(i)) {
-        case ' ':
-        case '\t':
-        case '\n':
-        case '\r':
-        case ',':
-        case '}':
-        case ']':
+        case ' ', '\t', '\n', '\r', ',', '}', ']' -> {
           head = i;
           return;
+        }
       }
     }
   }
@@ -1138,4 +1163,20 @@ abstract class BaseJsonIterator implements JsonIterator {
   abstract <C, R> R parseNumber(final C context,
                                 final ContextCharBufferFunction<C, R> applyChars,
                                 final int len);
+
+  @Override
+  public final int applyNumberCharsAsInt(final CharBufferToIntFunction applyChars) {
+    return parseNumber(applyChars, parseNumber());
+  }
+
+  abstract int parseNumber(final CharBufferToIntFunction applyChars, final int len);
+
+  @Override
+  public final <C> int applyNumberCharsAsInt(final C context, final ContextCharBufferToIntFunction<C> applyChars) {
+    return parseNumber(context, applyChars, parseNumber());
+  }
+
+  abstract <C> int parseNumber(final C context,
+                               final ContextCharBufferToIntFunction<C> applyChars,
+                               final int len);
 }
