@@ -72,7 +72,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
         case '\n':
         case '\r':
         case '\t':
-          continue;
+          break;
         default:
           head = i;
           return c;
@@ -90,7 +90,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
         case '\n':
         case '\r':
         case '\t':
-          continue;
+          break;
         default:
           head = i;
           return c;
