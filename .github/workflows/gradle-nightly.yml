@@ -22,6 +22,7 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: 13
+          java-package: jre
       - run: printf "org.gradle.java.home=%s" "$JAVA_HOME" > gradle.properties
 
       - uses: actions/setup-java@v1
