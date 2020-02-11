@@ -735,66 +735,6 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  @Override
-  public final long readUnscaledAsLong(final int scale) {
-    char c = nextToken();
-    final var valueType = VALUE_TYPES[c];
-    final boolean closeString = valueType == STRING;
-    if (closeString) {
-      c = nextToken();
-    } else if (valueType != NUMBER) {
-      throw reportError("readUnscaledAsLong", "Must be a number, string but found " + valueType);
-    }
-    final boolean negative;
-    final long integer;
-    if (c == '-') {
-      negative = true;
-      integer = readLong(readChar());
-    } else {
-      negative = false;
-      integer = readLong(c);
-      if (-integer == Long.MIN_VALUE) {
-        throw reportError("readUnscaledAsLong", "value is too large for long");
-      }
-    }
-    final long unscaled;
-    if (head == tail || peekChar(head) != '.') {
-      if (integer == 0) {
-        if (closeString) {
-          nextToken();
-        }
-        return 0L;
-      }
-      unscaled = scaleLong(-integer, 0, scale);
-    } else {
-      ++head;
-      unscaled = readLongSlowPath(integer, scale);
-    }
-    if (closeString) {
-      nextToken();
-    }
-    if (negative) {
-      return unscaled;
-    } else if (unscaled == Long.MIN_VALUE) {
-      throw reportError("readUnscaledAsLong", "value is too large for long");
-    } else {
-      return -unscaled;
-    }
-  }
-
-  private long scaleLong(long value, int scale, final int scaleLimit) {
-    while (scale++ < scaleLimit) {
-      if (value < -922337203685477580L) { // limit / 10
-        throw reportError("readLongSlowPath", "value is too large for long");
-      }
-      value = (value << 3) + (value << 1);
-      if (value >= 0) {
-        throw reportError("readLongSlowPath", "value is too large for long");
-      }
-    }
-    return value;
-  }
-
   private long readLongSlowPath(long value, final int scaleLimit) {
     boolean zero;
     if (value == 0) {
@@ -806,10 +746,10 @@ abstract class BaseJsonIterator implements JsonIterator {
     int scale = 0;
     for (int i = head, ind; ; i++) {
       if (i == tail) {
+        head = tail;
         if (loadMore()) {
           i = head;
         } else {
-          head = tail;
           break;
         }
       }
@@ -833,6 +773,108 @@ abstract class BaseJsonIterator implements JsonIterator {
       }
     }
     return zero ? 0 : scaleLong(value, scale, scaleLimit);
+  }
+
+  private long readUnscaledDigits(final long integer, final int scale) {
+    final int mark = ++head;
+    long unscaled = readLongSlowPath(integer, scale);
+    if (head < tail) {
+      final char c = peekChar(head);
+      if (c == 'e' || c == 'E') {
+        ++head;
+        final int exponent = readInt();
+        if (exponent < 0) {
+          return reduceScale(unscaled, exponent);
+        } else if (supportsMarkReset()) {
+          final int mark2 = head;
+          head = mark;
+          unscaled = readLongSlowPath(integer, scale + exponent);
+          head = mark2;
+        } else {
+          throw reportError("readUnscaledAsLong", "Requires mark/reset.");
+        }
+      }
+    }
+    return unscaled;
+  }
+
+  @Override
+  public final long readUnscaledAsLong(final int scale) {
+    char c = nextToken();
+    final var valueType = VALUE_TYPES[c];
+    final boolean closeString = valueType == STRING;
+    if (closeString) {
+      c = nextToken();
+    } else if (valueType != NUMBER) {
+      throw reportError("readUnscaledAsLong", "Must be a number, string but found " + valueType);
+    }
+    final boolean negative;
+    final long integer;
+    if (c == '-') {
+      negative = true;
+      integer = readLong(readChar());
+    } else {
+      negative = false;
+      integer = readLong(c);
+      if (-integer == Long.MIN_VALUE) {
+        throw reportError("readUnscaledAsLong", "value is too large for long");
+      }
+    }
+    final long unscaled;
+    if (head == tail) {
+      if (integer == 0) {
+        return 0L;
+      }
+      unscaled = scaleLong(-integer, 0, scale);
+    } else {
+      c = peekChar(head);
+      if (c == '.') {
+        unscaled = readUnscaledDigits(integer, scale);
+      } else if (c == 'e' || c == 'E') {
+        ++head;
+        final int exponent = scale + readInt();
+        unscaled = exponent < 0
+            ? reduceScale(-integer, exponent)
+            : scaleLong(-integer, 0, exponent);
+      } else if (integer == 0) {
+        if (closeString) {
+          nextToken();
+        }
+        return 0L;
+      } else {
+        unscaled = scaleLong(-integer, 0, scale);
+      }
+    }
+    if (closeString) {
+      nextToken();
+    }
+    if (negative) {
+      return unscaled;
+    } else if (unscaled == Long.MIN_VALUE) {
+      throw reportError("readUnscaledAsLong", "value is too large for long");
+    } else {
+      return -unscaled;
+    }
+  }
+
+  private long reduceScale(long value, final int scaleLimit) {
+    for (int scale = 0; scale-- > scaleLimit; ) {
+      value /= 10;
+    }
+    return value;
+  }
+
+  private long scaleLong(long value, int scale, final int scaleLimit) {
+    while (scale++ < scaleLimit) {
+      if (value < -922337203685477580L) { // limit / 10
+        throw reportError("readLongSlowPath", "value is too large for long");
+      }
+      value = (value << 3) + (value << 1);
+      if (value >= 0) {
+        throw reportError("readLongSlowPath", "value is too large for long");
+      }
+    }
+    return value;
   }
 
   abstract BigDecimal parseBigDecimal(final CharBufferFunction<BigDecimal> parseChars);

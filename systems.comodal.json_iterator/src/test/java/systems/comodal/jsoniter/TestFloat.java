@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 final class TestFloat {
 
   @ParameterizedTest
-  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  @MethodSource("systems.comodal.jsoniter.TestFactories#markableFactories")
   void testUnscaled(final JsonIteratorFactory factory) {
     assertEquals(12300L, factory.create("123").readUnscaledAsLong(2));
     assertEquals(12300L, factory.create("123.").readUnscaledAsLong(2));
@@ -66,7 +66,7 @@ final class TestFloat {
     ji = factory.create("[\"123.4567\",123.4567]");
     assertEquals(123456L, ji.openArray().readUnscaledAsLong(3));
     assertEquals(123456L, ji.continueArray().readUnscaledAsLong(3));
-    
+
     ji = factory.create("[\"0.0\",0.0]");
     assertEquals(0L, ji.openArray().readUnscaledAsLong(3));
     assertEquals(0L, ji.continueArray().readUnscaledAsLong(3));
@@ -86,6 +86,34 @@ final class TestFloat {
     ji = factory.create("[\"0.456\",0.456]");
     assertEquals(456L, ji.openArray().readUnscaledAsLong(3));
     assertEquals(456L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"45e2\",45E2]");
+    assertEquals(4500_000L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(4500_000L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"45e-2\",45E-2]");
+    assertEquals(450L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(450L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"0.45e2\",0.45E2]");
+    assertEquals(45_000L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(45_000L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"1.45e2\",1.45E2]");
+    assertEquals(145_000L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(145_000L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"1.456789e2\",1.456789E2]");
+    assertEquals(145_678L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(145_678L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"0.45e-2\",0.45E-2]");
+    assertEquals(4L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(4L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"1.45e-2\",1.45E-2]");
+    assertEquals(14L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(14L, ji.continueArray().readUnscaledAsLong(3));
   }
 
   @ParameterizedTest
