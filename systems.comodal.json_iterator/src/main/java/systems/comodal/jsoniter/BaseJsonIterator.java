@@ -682,7 +682,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = (chars, offset, len) -> len == 0 ? null : new BigDecimal(chars, offset, len);
-  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION = (chars, offset, len) -> {
+  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_DROP_TRAILING_ZEROES_FUNCTION = (chars, offset, len) -> {
     if (len == 1) {
       return chars[offset] == '0'
           ? BigDecimal.ZERO
@@ -717,8 +717,8 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   @Override
-  public final BigDecimal readBigDecimalStripTrailingZeroes() {
-    return readBigDecimal(READ_BIG_DECIMAL_STRIP_TRAILING_ZEROES_FUNCTION);
+  public final BigDecimal readBigDecimalDropZeroes() {
+    return readBigDecimal(READ_BIG_DECIMAL_DROP_TRAILING_ZEROES_FUNCTION);
   }
 
   private BigDecimal readBigDecimal(final CharBufferFunction<BigDecimal> parseChars) {
@@ -733,6 +733,106 @@ abstract class BaseJsonIterator implements JsonIterator {
     } else {
       throw reportError("readBigDecimal", "Must be a number, string or null but found " + valueType);
     }
+  }
+
+  @Override
+  public final long readUnscaledAsLong(final int scale) {
+    char c = nextToken();
+    final var valueType = VALUE_TYPES[c];
+    final boolean closeString = valueType == STRING;
+    if (closeString) {
+      c = nextToken();
+    } else if (valueType != NUMBER) {
+      throw reportError("readUnscaledAsLong", "Must be a number, string but found " + valueType);
+    }
+    final boolean negative;
+    final long integer;
+    if (c == '-') {
+      negative = true;
+      integer = readLong(readChar());
+    } else {
+      negative = false;
+      integer = readLong(c);
+      if (-integer == Long.MIN_VALUE) {
+        throw reportError("readUnscaledAsLong", "value is too large for long");
+      }
+    }
+    final long unscaled;
+    if (head == tail || peekChar(head) != '.') {
+      if (integer == 0) {
+        if (closeString) {
+          nextToken();
+        }
+        return 0L;
+      }
+      unscaled = scaleLong(-integer, 0, scale);
+    } else {
+      ++head;
+      unscaled = readLongSlowPath(integer, scale);
+    }
+    if (closeString) {
+      nextToken();
+    }
+    if (negative) {
+      return unscaled;
+    } else if (unscaled == Long.MIN_VALUE) {
+      throw reportError("readUnscaledAsLong", "value is too large for long");
+    } else {
+      return -unscaled;
+    }
+  }
+
+  private long scaleLong(long value, int scale, final int scaleLimit) {
+    while (scale++ < scaleLimit) {
+      if (value < -922337203685477580L) { // limit / 10
+        throw reportError("readLongSlowPath", "value is too large for long");
+      }
+      value = (value << 3) + (value << 1);
+      if (value >= 0) {
+        throw reportError("readLongSlowPath", "value is too large for long");
+      }
+    }
+    return value;
+  }
+
+  private long readLongSlowPath(long value, final int scaleLimit) {
+    boolean zero;
+    if (value == 0) {
+      zero = true;
+    } else {
+      zero = false;
+      value = -value; // add negatives to avoid redundant checks for Long.MIN_VALUE on each iteration
+    }
+    int scale = 0;
+    for (int i = head, ind; ; i++) {
+      if (i == tail) {
+        if (loadMore()) {
+          i = head;
+        } else {
+          head = tail;
+          break;
+        }
+      }
+      ind = peekIntDigitChar(i);
+      if (ind == INVALID_CHAR_FOR_NUMBER) {
+        head = i;
+        break;
+      } else if (!zero && value < -922337203685477580L) { // limit / 10
+        throw reportError("readLongSlowPath", "value is too large for long");
+      } else if (scale < scaleLimit) {
+        if (zero) {
+          value = -ind;
+          zero = value == 0;
+        } else {
+          value = (value << 3) + (value << 1) - ind;
+          if (value >= 0) {
+            throw reportError("readLongSlowPath", "value is too large for long");
+          }
+        }
+        ++scale;
+      }
+    }
+    return zero ? 0 : scaleLong(value, scale, scaleLimit);
   }
 
   abstract BigDecimal parseBigDecimal(final CharBufferFunction<BigDecimal> parseChars);
@@ -910,13 +1010,13 @@ abstract class BaseJsonIterator implements JsonIterator {
           i = head;
         } else {
           head = tail;
-          return value;
+          return -value;
         }
       }
       ind = peekIntDigitChar(i);
       if (ind == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return value;
+        return -value;
       } else if (value < -214748364) { // limit / 10
         throw reportError("readIntSlowPath", "value is too large for int");
       } else {
@@ -929,7 +1029,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   private int readInt(final char c) {
-    int ind = INT_DIGITS[c];
+    final int ind = INT_DIGITS[c];
     if (ind == 0) {
       assertNotLeadingZero();
       return 0;
@@ -940,49 +1040,44 @@ abstract class BaseJsonIterator implements JsonIterator {
       final int ind2 = peekIntDigitChar(i);
       if (ind2 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return -ind;
+        return ind;
       }
       final int ind3 = peekIntDigitChar(++i);
       if (ind3 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 10 + ind2;
-        return -ind;
+        return ind * 10 + ind2;
       }
       final int ind4 = peekIntDigitChar(++i);
       if (ind4 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 100 + ind2 * 10 + ind3;
-        return -ind;
+        return ind * 100 + ind2 * 10 + ind3;
       }
       final int ind5 = peekIntDigitChar(++i);
       if (ind5 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
-        return -ind;
+        return ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
       }
       final int ind6 = peekIntDigitChar(++i);
       if (ind6 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
-        return -ind;
+        return ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
       }
       final int ind7 = peekIntDigitChar(++i);
       if (ind7 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
-        return -ind;
+        return ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
       }
       final int ind8 = peekIntDigitChar(++i);
       if (ind8 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
-        return -ind;
+        return ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
       }
-      final int ind9 = peekIntDigitChar(++i);
-      ind = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
-      head = i;
-      if (ind9 == INVALID_CHAR_FOR_NUMBER) {
-        return -ind;
+      final int result = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
+      head = ++i;
+      if (peekIntDigitChar(i) == INVALID_CHAR_FOR_NUMBER) {
+        return result;
+      } else {
+        return readIntSlowPath(result);
       }
     }
     return readIntSlowPath(ind);
@@ -992,13 +1087,13 @@ abstract class BaseJsonIterator implements JsonIterator {
   public final int readInt() {
     final char c = nextToken();
     if (c == '-') {
-      return readInt(readChar());
+      return -readInt(readChar());
     } else {
       final int val = readInt(c);
-      if (val == Integer.MIN_VALUE) {
+      if (-val == Integer.MIN_VALUE) {
         throw reportError("readInt", "value is too large for int");
       } else {
-        return -val;
+        return val;
       }
     }
   }
@@ -1021,13 +1116,13 @@ abstract class BaseJsonIterator implements JsonIterator {
           i = head;
         } else {
           head = tail;
-          return value;
+          return -value;
         }
       }
       ind = peekIntDigitChar(i);
       if (ind == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return value;
+        return -value;
       } else if (value < -922337203685477580L) { // limit / 10
         throw reportError("readLongSlowPath", "value is too large for long");
       } else {
@@ -1040,7 +1135,7 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   private long readLong(final char c) {
-    long ind = INT_DIGITS[c];
+    final long ind = INT_DIGITS[c];
     if (ind == 0) {
       assertNotLeadingZero();
       return 0;
@@ -1051,49 +1146,44 @@ abstract class BaseJsonIterator implements JsonIterator {
       final int ind2 = peekIntDigitChar(i);
       if (ind2 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return -ind;
+        return ind;
       }
       final int ind3 = peekIntDigitChar(++i);
       if (ind3 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 10 + ind2;
-        return -ind;
+        return ind * 10 + ind2;
       }
       final int ind4 = peekIntDigitChar(++i);
       if (ind4 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 100 + ind2 * 10 + ind3;
-        return -ind;
+        return ind * 100 + ind2 * 10 + ind3;
       }
       final int ind5 = peekIntDigitChar(++i);
       if (ind5 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
-        return -ind;
+        return ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
       }
       final int ind6 = peekIntDigitChar(++i);
       if (ind6 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
-        return -ind;
+        return ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
       }
       final int ind7 = peekIntDigitChar(++i);
       if (ind7 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
-        return -ind;
+        return ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
       }
       final int ind8 = peekIntDigitChar(++i);
       if (ind8 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        ind = ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
-        return -ind;
+        return ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
       }
-      final int ind9 = peekIntDigitChar(++i);
-      ind = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
-      head = i;
-      if (ind9 == INVALID_CHAR_FOR_NUMBER) {
-        return -ind;
+      final long result = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
+      head = ++i;
+      if (peekIntDigitChar(i) == INVALID_CHAR_FOR_NUMBER) {
+        return result;
+      } else {
+        return readLongSlowPath(result);
       }
     }
     return readLongSlowPath(ind);
@@ -1103,21 +1193,14 @@ abstract class BaseJsonIterator implements JsonIterator {
   public final long readLong() {
     char c = nextToken();
     if (c == '-') {
-      c = readChar();
-      if (INT_DIGITS[c] == 0) {
-        assertNotLeadingZero();
-        return 0;
-      }
-      return readLong(c);
-    } else if (INT_DIGITS[c] == 0) {
-      assertNotLeadingZero();
-      return 0;
+      return -readLong(readChar());
     } else {
       final long val = readLong(c);
-      if (val == Long.MIN_VALUE) {
+      if (-val == Long.MIN_VALUE) {
         throw reportError("readLong", "value is too large for long");
+      } else {
+        return val;
       }
-      return -val;
     }
   }
 

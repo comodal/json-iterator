@@ -16,64 +16,138 @@ final class TestFloat {
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void testUnscaled(final JsonIteratorFactory factory) {
+    assertEquals(12300L, factory.create("123").readUnscaledAsLong(2));
+    assertEquals(12300L, factory.create("123.").readUnscaledAsLong(2));
+    assertEquals(12300L, factory.create("123.0").readUnscaledAsLong(2));
+    assertEquals(12300L, factory.create("123.00").readUnscaledAsLong(2));
+    assertEquals(12345L, factory.create("123.45").readUnscaledAsLong(2));
+    assertEquals(12345L, factory.create("123.456").readUnscaledAsLong(2));
+
+    assertEquals(0L, factory.create("0.0").readUnscaledAsLong(2));
+    assertEquals(0L, factory.create("0.00").readUnscaledAsLong(2));
+    assertEquals(4L, factory.create("0.045").readUnscaledAsLong(2));
+    assertEquals(45L, factory.create("0.45").readUnscaledAsLong(2));
+    assertEquals(45L, factory.create("0.456").readUnscaledAsLong(2));
+
+    assertEquals(12300L, factory.create("\"123\"").readUnscaledAsLong(2));
+    assertEquals(12300L, factory.create("\"123.\"").readUnscaledAsLong(2));
+    assertEquals(12300L, factory.create("\"123.0\"").readUnscaledAsLong(2));
+    assertEquals(12300L, factory.create("\"123.00\"").readUnscaledAsLong(2));
+    assertEquals(12345L, factory.create("\"123.45\"").readUnscaledAsLong(2));
+    assertEquals(12345L, factory.create("\"123.456\"").readUnscaledAsLong(2));
+
+    assertEquals(0L, factory.create("\"0.0\"").readUnscaledAsLong(2));
+    assertEquals(0L, factory.create("\"0.00\"").readUnscaledAsLong(2));
+    assertEquals(4L, factory.create("\"0.045\"").readUnscaledAsLong(2));
+    assertEquals(45L, factory.create("\"0.45\"").readUnscaledAsLong(2));
+    assertEquals(45L, factory.create("\"0.456\"").readUnscaledAsLong(2));
+
+    var ji = factory.create("[\"123\",123]");
+    assertEquals(123000L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(123000L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"123.\",123.]");
+    assertEquals(123000L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(123000L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"123.0\",123.0]");
+    assertEquals(123000L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(123000L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"123.00\",123.00]");
+    assertEquals(123000L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(123000L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"123.45\",123.45]");
+    assertEquals(123450L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(123450L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"123.4567\",123.4567]");
+    assertEquals(123456L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(123456L, ji.continueArray().readUnscaledAsLong(3));
+    
+    ji = factory.create("[\"0.0\",0.0]");
+    assertEquals(0L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(0L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"0.00\",0.00]");
+    assertEquals(0L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(0L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"0.045\",0.045]");
+    assertEquals(45L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(45L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"0.45\",0.45]");
+    assertEquals(450L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(450L, ji.continueArray().readUnscaledAsLong(3));
+
+    ji = factory.create("[\"0.456\",0.456]");
+    assertEquals(456L, ji.openArray().readUnscaledAsLong(3));
+    assertEquals(456L, ji.continueArray().readUnscaledAsLong(3));
+  }
+
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
   void testStripTrailingZeroes(final JsonIteratorFactory factory) {
-    assertNull(factory.create("\"\"").readBigDecimalStripTrailingZeroes());
+    assertNull(factory.create("\"\"").readBigDecimalDropZeroes());
 
     var expected = new BigDecimal("123.456");
-    assertEquals(expected, factory.create("123.456").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("123.4560").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("123.45600").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("123.456000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("123.456000000000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0123.456").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0123.4560").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0123.45600").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0123.456000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0123.456000000000").readBigDecimalStripTrailingZeroes());
+    assertEquals(expected, factory.create("123.456").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("123.4560").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("123.45600").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("123.456000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("123.456000000000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0123.456").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0123.4560").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0123.45600").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0123.456000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0123.456000000000").readBigDecimalDropZeroes());
 
-    assertEquals(new BigDecimal("123456"), factory.create("123456").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("1234560"), factory.create("1234560").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("12345600"), factory.create("12345600").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("123456000"), factory.create("123456000").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("123456000000000"), factory.create("123456000000000").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("123456"), factory.create("000123456").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("1234560"), factory.create("0001234560").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("12345600"), factory.create("00012345600").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("123456000"), factory.create("000123456000").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("123456000000000"), factory.create("000123456000000000").readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("123456"), factory.create("123456").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("1234560"), factory.create("1234560").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("12345600"), factory.create("12345600").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("123456000"), factory.create("123456000").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("123456000000000"), factory.create("123456000000000").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("123456"), factory.create("000123456").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("1234560"), factory.create("0001234560").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("12345600"), factory.create("00012345600").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("123456000"), factory.create("000123456000").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("123456000000000"), factory.create("000123456000000000").readBigDecimalDropZeroes());
 
     expected = new BigDecimal("0.123456");
-    assertEquals(expected, factory.create("0.123456").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0.1234560").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0.12345600").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0.123456000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("0.123456000000000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("00.123456").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("00.1234560").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("00.12345600").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("00.123456000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("00.123456000000000").readBigDecimalStripTrailingZeroes());
+    assertEquals(expected, factory.create("0.123456").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0.1234560").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0.12345600").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0.123456000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("0.123456000000000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("00.123456").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("00.1234560").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("00.12345600").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("00.123456000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("00.123456000000000").readBigDecimalDropZeroes());
 
     expected = new BigDecimal("123");
-    assertEquals(expected, factory.create("123.").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("123.0").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("123.00").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("123.000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("123.000000000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("000123.0").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("000123.00").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("000123.000").readBigDecimalStripTrailingZeroes());
-    assertEquals(expected, factory.create("000123.000000000").readBigDecimalStripTrailingZeroes());
+    assertEquals(expected, factory.create("123.").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("123.0").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("123.00").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("123.000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("123.000000000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("000123.0").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("000123.00").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("000123.000").readBigDecimalDropZeroes());
+    assertEquals(expected, factory.create("000123.000000000").readBigDecimalDropZeroes());
 
-    assertEquals(ZERO, factory.create("0").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("0.").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("0.0").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("0.00").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("0.000").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("0.000000000").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("00000").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("00000.").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("00000.0").readBigDecimalStripTrailingZeroes());
+    assertEquals(ZERO, factory.create("0").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("0.").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("0.0").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("0.00").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("0.000").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("0.000000000").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("00000").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("00000.").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("00000.0").readBigDecimalDropZeroes());
   }
 
   @ParameterizedTest
@@ -183,7 +257,7 @@ final class TestFloat {
     final var json = "{\"U\":\"2019-02-25T02:57:39.118962Z\",\"f\":\"1\"}";
     final var ji = factory.create(json);
     assertEquals("2019-02-25T02:57:39.118962Z", ji.skipObjField().readString());
-    assertEquals(BigDecimal.ONE, ji.skipObjField().readBigDecimalStripTrailingZeroes());
+    assertEquals(BigDecimal.ONE, ji.skipObjField().readBigDecimalDropZeroes());
   }
 
   @ParameterizedTest
@@ -192,24 +266,24 @@ final class TestFloat {
     assertNull(factory.create("\"\"").readBigDecimal());
 
     assertEquals(new BigDecimal("100.100"), factory.create("100.100").readBigDecimal());
-    assertEquals(new BigDecimal("100.1"), factory.create("100.1000").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("100"), factory.create("100.000").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("1000"), factory.create("1000").readBigDecimalStripTrailingZeroes());
-    assertEquals(BigDecimal.ONE.movePointRight(10).toPlainString(), factory.create("1e10").readBigDecimalStripTrailingZeroes().toPlainString());
-    assertEquals(ZERO, factory.create("0000").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("0.000").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("0.0").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("0.").readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("100.1"), factory.create("100.1000").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("100"), factory.create("100.000").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("1000"), factory.create("1000").readBigDecimalDropZeroes());
+    assertEquals(BigDecimal.ONE.movePointRight(10).toPlainString(), factory.create("1e10").readBigDecimalDropZeroes().toPlainString());
+    assertEquals(ZERO, factory.create("0000").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("0.000").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("0.0").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("0.").readBigDecimalDropZeroes());
 
     assertEquals(new BigDecimal("100.100"), factory.create("\"100.100\"").readBigDecimal());
-    assertEquals(new BigDecimal("100.1"), factory.create("\"100.1000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("100"), factory.create("\"100.000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(new BigDecimal("1000"), factory.create("\"1000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(BigDecimal.ONE.movePointRight(10).toPlainString(), factory.create("\"1e10\"").readBigDecimalStripTrailingZeroes().toPlainString());
-    assertEquals(ZERO, factory.create("\"0000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("\"0.000\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("\"0.0\"").readBigDecimalStripTrailingZeroes());
-    assertEquals(ZERO, factory.create("\"0.\"").readBigDecimalStripTrailingZeroes());
+    assertEquals(new BigDecimal("100.1"), factory.create("\"100.1000\"").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("100"), factory.create("\"100.000\"").readBigDecimalDropZeroes());
+    assertEquals(new BigDecimal("1000"), factory.create("\"1000\"").readBigDecimalDropZeroes());
+    assertEquals(BigDecimal.ONE.movePointRight(10).toPlainString(), factory.create("\"1e10\"").readBigDecimalDropZeroes().toPlainString());
+    assertEquals(ZERO, factory.create("\"0000\"").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("\"0.000\"").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("\"0.0\"").readBigDecimalDropZeroes());
+    assertEquals(ZERO, factory.create("\"0.\"").readBigDecimalDropZeroes());
   }
 
   @ParameterizedTest

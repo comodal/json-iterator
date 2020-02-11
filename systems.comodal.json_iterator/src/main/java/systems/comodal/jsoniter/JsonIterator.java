@@ -212,7 +212,17 @@ public interface JsonIterator extends Closeable {
 
   BigDecimal readBigDecimal();
 
-  BigDecimal readBigDecimalStripTrailingZeroes();
+  @Deprecated
+  default BigDecimal readBigDecimalStripTrailingZeroes() {
+    return readBigDecimalDropZeroes();
+  }
+
+  /**
+   * Drops trailing decimal zeroes.
+   */
+  BigDecimal readBigDecimalDropZeroes();
+
+  long readUnscaledAsLong(final int scale);
 
   BigInteger readBigInteger();
 
