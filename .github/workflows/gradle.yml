@@ -34,3 +34,5 @@ jobs:
     - uses: eskatos/gradle-command-action@v1
       with:
         arguments: check --stacktrace
+
+    - uses: gradle/wrapper-validation-action@v1
