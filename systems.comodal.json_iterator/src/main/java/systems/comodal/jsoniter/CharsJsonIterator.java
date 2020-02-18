@@ -254,6 +254,30 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
+  long parse(final CharBufferToLongFunction applyChars) {
+    final int from = head;
+    final int len = parse(from);
+    if (numEscapes > 0) {
+      final char[] chars = handleEscapes(from, len);
+      return applyChars.applyAsLong(chars, 0, chars.length);
+    } else {
+      return applyChars.applyAsLong(buf, from, len);
+    }
+  }
+
+  @Override
+  <C> long parse(final C context, final ContextCharBufferToLongFunction<C> applyChars) {
+    final int from = head;
+    final int len = parse(from);
+    if (numEscapes > 0) {
+      final char[] chars = handleEscapes(from, len);
+      return applyChars.applyAsLong(context, chars, 0, chars.length);
+    } else {
+      return applyChars.applyAsLong(context, buf, from, len);
+    }
+  }
+
+  @Override
   final boolean parse(final CharBufferPredicate testChars) {
     final int from = head;
     final int len = parse(from);
@@ -387,5 +411,15 @@ final class CharsJsonIterator extends BaseJsonIterator {
   @Override
   <C> int parseNumber(final C context, final ContextCharBufferToIntFunction<C> applyChars, final int len) {
     return applyChars.applyAsInt(context, buf, 0, len);
+  }
+
+  @Override
+  long parseNumber(final CharBufferToLongFunction applyChars, final int len) {
+    return applyChars.applyAsLong(buf, 0, len);
+  }
+
+  @Override
+  <C> long parseNumber(final C context, final ContextCharBufferToLongFunction<C> applyChars, final int len) {
+    return applyChars.applyAsLong(context, buf, 0, len);
   }
 }

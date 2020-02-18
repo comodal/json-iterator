@@ -266,6 +266,14 @@ public interface JsonIterator extends Closeable {
 
   <C> int applyNumberCharsAsInt(final C context, final ContextCharBufferToIntFunction<C> applyChars);
 
+  long applyCharsAsLong(final CharBufferToLongFunction applyChars);
+
+  <C> long applyCharsAsLong(final C context, final ContextCharBufferToLongFunction<C> applyChars);
+
+  long applyNumberCharsAsLong(final CharBufferToLongFunction applyChars);
+
+  <C> long applyNumberCharsAsLong(final C context, final ContextCharBufferToLongFunction<C> applyChars);
+
   boolean testChars(final CharBufferPredicate testChars);
 
   <C> boolean testChars(final C context, final ContextCharBufferPredicate<C> testChars);

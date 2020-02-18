@@ -178,7 +178,7 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return applyChars.applyAsInt(new char[0], 0, 0);
     } else {
-      throw reportError("applyChars", "expected string or null, but " + c);
+      throw reportError("applyCharsAsInt", "expected string or null, but " + c);
     }
   }
 
@@ -193,11 +193,42 @@ abstract class BaseJsonIterator implements JsonIterator {
       skip(3);
       return applyChars.applyAsInt(context, new char[0], 0, 0);
     } else {
-      throw reportError("applyChars", "expected string or null, but " + c);
+      throw reportError("applyCharsAsInt", "expected string or null, but " + c);
     }
   }
 
   abstract <C> int parse(final C context, final ContextCharBufferToIntFunction<C> applyChars);
+
+
+  @Override
+  public final long applyCharsAsLong(final CharBufferToLongFunction applyChars) {
+    final char c = nextToken();
+    if (c == '"') {
+      return parse(applyChars);
+    } else if (c == 'n') {
+      skip(3);
+      return applyChars.applyAsLong(new char[0], 0, 0);
+    } else {
+      throw reportError("applyCharsAsLong", "expected string or null, but " + c);
+    }
+  }
+
+  abstract long parse(final CharBufferToLongFunction applyChars);
+
+  @Override
+  public final <C> long applyCharsAsLong(final C context, final ContextCharBufferToLongFunction<C> applyChars) {
+    final char c = nextToken();
+    if (c == '"') {
+      return parse(context, applyChars);
+    } else if (c == 'n') {
+      skip(3);
+      return applyChars.applyAsLong(context, new char[0], 0, 0);
+    } else {
+      throw reportError("applyCharsAsLong", "expected string or null, but " + c);
+    }
+  }
+
+  abstract <C> long parse(final C context, final ContextCharBufferToLongFunction<C> applyChars);
 
   @Override
   public final boolean testChars(final CharBufferPredicate testChars) {
@@ -1304,4 +1335,20 @@ abstract class BaseJsonIterator implements JsonIterator {
   abstract <C> int parseNumber(final C context,
                                final ContextCharBufferToIntFunction<C> applyChars,
                                final int len);
+
+  @Override
+  public final long applyNumberCharsAsLong(final CharBufferToLongFunction applyChars) {
+    return parseNumber(applyChars, parseNumber());
+  }
+
+  abstract long parseNumber(final CharBufferToLongFunction applyChars, final int len);
+
+  @Override
+  public final <C> long applyNumberCharsAsLong(final C context, final ContextCharBufferToLongFunction<C> applyChars) {
+    return parseNumber(context, applyChars, parseNumber());
+  }
+
+  abstract <C> long parseNumber(final C context,
+                                final ContextCharBufferToLongFunction<C> applyChars,
+                                final int len);
 }
