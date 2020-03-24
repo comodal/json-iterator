@@ -21,13 +21,13 @@ jobs:
 
       - uses: actions/setup-java@v1
         with:
-          java-version: 13
+          java-version: 14
           java-package: jre
       - run: printf "org.gradle.java.home=%s" "$JAVA_HOME" > gradle.properties
 
       - uses: actions/setup-java@v1
         with:
-          java-version: 14-ea
+          java-version: 15-ea
       - run: java --version
 
       - uses: eskatos/gradle-command-action@v1
