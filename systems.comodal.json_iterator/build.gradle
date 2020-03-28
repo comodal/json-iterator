@@ -6,10 +6,9 @@ plugins {
   id "org.javamodularity.moduleplugin"
   id "me.champeau.gradle.jmh"
   id "io.morethan.jmhreport"
-//  id "io.freefair.github.package-registry-maven-publish"
 }
 
-sourceCompatibility = JavaVersion.toVersion("${project.findProperty('targetJava') ?: '14'}")
+sourceCompatibility = JavaVersion.toVersion(project.findProperty('targetJava') ?: JavaVersion.VERSION_14)
 
 scmVersion {
   tag.prefix = ''
