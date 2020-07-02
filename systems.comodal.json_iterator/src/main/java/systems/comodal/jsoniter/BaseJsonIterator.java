@@ -375,6 +375,39 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
+  @Override
+  public final <R> R applyObjField(final CharBufferFunction<R> applyChars) {
+    char c = nextToken();
+    if (c == ',') {
+      final var result = parse(applyChars);
+      if ((c = nextToken()) != ':') {
+        throw reportError("testObjField", "expected :, but " + c);
+      }
+      return result;
+    } else if (c == '{') {
+      c = nextToken();
+      if (c == '"') {
+        final var result = parse(applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("testObjField", "expected :, but " + c);
+        }
+        return result;
+      } else if (c == '}') {
+        return null; // end of object
+      } else {
+        throw reportError("testObjField", "expected \" after {");
+      }
+    } else if (c == '}') {
+      return null; // end of object
+    } else if (c == 'n') {
+      final var result = applyChars.apply(new char[0], 0, 0);
+      skip(3);
+      return result;
+    } else {
+      throw reportError("applyObjField", "expected [\\{\\}n], but found: " + c);
+    }
+  }
+
   protected static final CharBufferFunction<String> READ_STRING_FUNCTION = String::new;
 
   protected String parseString() {

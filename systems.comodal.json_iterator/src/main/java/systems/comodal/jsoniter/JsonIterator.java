@@ -286,6 +286,8 @@ public interface JsonIterator extends Closeable {
 
   boolean testObjField(final CharBufferPredicate testField);
 
+  <R> R applyObjField(final CharBufferFunction<R> applyChars);
+
   <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction);
 
   <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction);
