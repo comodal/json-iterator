@@ -334,34 +334,33 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private boolean testField(final CharBufferPredicate testField) {
-    final char c = nextToken();
-    if (c != '"') {
-      throw reportError("testField", "expected field string, but " + c);
-    } else {
-      return parse(testField);
-    }
-  }
 
   @Override
   public final boolean testObjField(final CharBufferPredicate testField) {
     char c = nextToken();
     if (c == ',') {
-      final boolean result = testField(testField);
-      if ((c = nextToken()) != ':') {
-        throw reportError("testObjField", "expected :, but " + c);
+      c = nextToken();
+      if (c != '"') {
+        throw reportError("testObjField", "expected field string, but " + c);
+      } else {
+        final boolean result = parse(testField);
+        if ((c = nextToken()) != ':') {
+          throw reportError("testObjField", "expected :, but " + c);
+        } else {
+          return result;
+        }
       }
-      return result;
     } else if (c == '{') {
       c = nextToken();
       if (c == '"') {
         final boolean result = parse(testField);
         if ((c = nextToken()) != ':') {
           throw reportError("testObjField", "expected :, but " + c);
+        } else {
+          return result;
         }
-        return result;
       } else if (c == '}') {
-        return false; // end of object
+        return false; // empty object
       } else {
         throw reportError("testObjField", "expected \" after {");
       }
@@ -379,23 +378,30 @@ abstract class BaseJsonIterator implements JsonIterator {
   public final <R> R applyObjField(final CharBufferFunction<R> applyChars) {
     char c = nextToken();
     if (c == ',') {
-      final var result = parse(applyChars);
-      if ((c = nextToken()) != ':') {
-        throw reportError("testObjField", "expected :, but " + c);
+      c = nextToken();
+      if (c != '"') {
+        throw reportError("applyObjField", "expected field string, but " + c);
+      } else {
+        final var result = parse(applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjField", "expected :, but " + c);
+        } else {
+          return result;
+        }
       }
-      return result;
     } else if (c == '{') {
       c = nextToken();
       if (c == '"') {
         final var result = parse(applyChars);
         if ((c = nextToken()) != ':') {
-          throw reportError("testObjField", "expected :, but " + c);
+          throw reportError("applyObjField", "expected :, but " + c);
+        } else {
+          return result;
         }
-        return result;
       } else if (c == '}') {
-        return null; // end of object
+        return null; // empty object
       } else {
-        throw reportError("testObjField", "expected \" after {");
+        throw reportError("applyObjField", "expected \" after {");
       }
     } else if (c == '}') {
       return null; // end of object
@@ -414,24 +420,20 @@ abstract class BaseJsonIterator implements JsonIterator {
     return parse(READ_STRING_FUNCTION);
   }
 
-  private String readField() {
-    final char c = nextToken();
-    if (c == '"') {
-      return parseString();
-    } else {
-      throw reportError("readField", "expected field string, but " + c);
-    }
-  }
-
   @Override
   public final String readObjField() {
     char c = nextToken();
     if (c == ',') {
-      final var field = readField();
-      if ((c = nextToken()) == ':') {
-        return field;
+      c = nextToken();
+      if (c == '"') {
+        final var field = parseString();
+        if ((c = nextToken()) == ':') {
+          return field;
+        } else {
+          throw reportError("readObjField", "expected :, but " + c);
+        }
       } else {
-        throw reportError("readObjField", "expected :, but " + c);
+        throw reportError("readObjField", "expected field string, but " + c);
       }
     } else if (c == '{') {
       c = nextToken();
@@ -443,7 +445,7 @@ abstract class BaseJsonIterator implements JsonIterator {
           throw reportError("readObjField", "expected :, but " + c);
         }
       } else if (c == '}') {
-        return null; // end of object
+        return null; // empty object
       } else {
         throw reportError("readObjField", "expected \" after {");
       }
@@ -463,12 +465,13 @@ abstract class BaseJsonIterator implements JsonIterator {
       c = nextToken();
       if (c != '"') {
         throw reportError("skipObjField", "expected string field, but " + c);
-      }
-      skipPastEndQuote();
-      if ((c = nextToken()) == ':') {
-        return this;
       } else {
-        throw reportError("skipObjField", "expected :, but " + c);
+        skipPastEndQuote();
+        if ((c = nextToken()) == ':') {
+          return this;
+        } else {
+          throw reportError("skipObjField", "expected :, but " + c);
+        }
       }
     } else if (c == '{') {
       c = nextToken();
@@ -479,7 +482,7 @@ abstract class BaseJsonIterator implements JsonIterator {
         } else {
           throw reportError("skipObjField", "expected :, but " + c);
         }
-      } else if (c == '}') { // end of object
+      } else if (c == '}') { // empty object
         return null;
       } else {
         throw reportError("skipObjField", "expected \" after {");
@@ -650,13 +653,14 @@ abstract class BaseJsonIterator implements JsonIterator {
       c = nextToken();
       if (c != '"') {
         throw reportError("applyObject", "expected string field, but " + c);
-      }
-      final int offset = head;
-      final int len = parse();
-      if ((c = nextToken()) != ':') {
-        throw reportError("applyObject", "expected :, but " + c);
       } else {
-        return apply(fieldBufferFunction, offset, len);
+        final int offset = head;
+        final int len = parse();
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObject", "expected :, but " + c);
+        } else {
+          return apply(fieldBufferFunction, offset, len);
+        }
       }
     } else if (c == '{') {
       c = nextToken();
@@ -692,13 +696,14 @@ abstract class BaseJsonIterator implements JsonIterator {
       c = nextToken();
       if (c != '"') {
         throw reportError("applyObject", "expected string field, but " + c);
-      }
-      final int offset = head;
-      final int len = parse();
-      if ((c = nextToken()) != ':') {
-        throw reportError("applyObject", "expected :, but " + c);
       } else {
-        return apply(context, fieldBufferFunction, offset, len);
+        final int offset = head;
+        final int len = parse();
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObject", "expected :, but " + c);
+        } else {
+          return apply(context, fieldBufferFunction, offset, len);
+        }
       }
     } else if (c == '{') {
       c = nextToken();
