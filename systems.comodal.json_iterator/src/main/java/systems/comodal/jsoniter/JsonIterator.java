@@ -122,6 +122,36 @@ public interface JsonIterator extends Closeable {
     return true;
   }
 
+  static boolean fieldEndsWith(final String field, final char[] buf, final int offset, final int len) {
+    int i = field.length();
+    if (i > len) {
+      return false;
+    }
+    for (int j = offset + len; --i >= 0; ) {
+      if (field.charAt(i) != buf[--j]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static boolean fieldEndsWithIgnoreCase(final String field, final char[] buf, final int offset, final int len) {
+    int i = field.length();
+    if (i > len) {
+      return false;
+    }
+    for (int j = offset + len, c, d; --i >= 0; ) {
+      c = field.charAt(i);
+      d = buf[--j];
+      if (c != d
+          && Character.toLowerCase(c) != d
+          && Character.toUpperCase(c) != d) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   JsonIterator reset(final int mark);
 
   JsonIterator reset(final byte[] buf);
