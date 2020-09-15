@@ -10,6 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 final class TestIO {
 
   @Test
+  void printJavaRuntimeVersion() {
+    System.out.println(Runtime.version());
+  }
+
+  @Test
   void test_read_byte() {
     final var ji = (BufferedStreamJsonIterator) JsonIterator.parse(new ByteArrayInputStream("1".getBytes()), 64);
     assertEquals('1', ji.read());
