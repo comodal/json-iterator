@@ -1,7 +1,5 @@
 plugins {
   id 'java-library'
-  id 'maven-publish'
-  id "com.jfrog.bintray"
   id "pl.allegro.tech.build.axion-release"
   id "me.champeau.gradle.jmh"
   id "io.morethan.jmhreport"
@@ -17,8 +15,6 @@ project.group = 'systems.comodal'
 
 ext {
   desc = 'Json Parser'
-  bintrayOrg = 'comodal'
-  bintrayRepo = 'libraries'
   vcsUrl = 'https://github.com/comodal/json-iterator'
   moduleName = 'systems.comodal.json_iterator'
   bench = project.properties['bench'] ?: 'BenchCharFieldStyles'
@@ -26,18 +22,12 @@ ext {
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(project.findProperty('targetJava') as Integer ?: 15)
+    languageVersion = JavaLanguageVersion.of(project.findProperty('targetJava') as Integer ?: 16)
   }
 }
 
-//github {
-//  slug = 'comodal/json-iterator'
-//  username = System.getenv('GITHUB_USER')
-//  token = System.getenv('GITHUB_TOKEN')
-//}
-
 repositories {
-  jcenter()
+  mavenCentral()
 }
 
 dependencies {
@@ -113,64 +103,6 @@ task javadocJar(type: Jar) {
 
 javadoc {
   options.addBooleanOption('html5', true)
-}
-
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      from components.java
-      artifact sourcesJar
-      artifact javadocJar
-      groupId project.group
-      artifactId project.name
-      version = project.version
-      pom {
-        name = project.name
-        description = project.desc
-        url = project.vcsUrl
-        licenses {
-          license {
-            name = 'MIT License'
-            url = 'https://github.com/comodal/json-iterator/blob/master/LICENSE'
-          }
-        }
-        developers {
-          developer {
-            email = 'james.p.edwards42@gmail.com'
-          }
-        }
-        scm {
-          connection = 'scm:git:git@github.com:comodal/json-iterator.git'
-          url = project.vcsUrl
-        }
-      }
-    }
-  }
-}
-
-bintray {
-  user = project.findProperty("bintrayUser") ?: System.getenv('BINTRAY_USER')
-  key = project.findProperty("bintrayApiKey") ?: System.getenv('BINTRAY_API_KEY')
-  publications = ['mavenJava']
-  pkg {
-    userOrg = project.bintrayOrg
-    repo = project.bintrayRepo
-    name = project.name
-    desc = project.desc
-    vcsUrl = project.vcsUrl
-    websiteUrl = project.vcsUrl
-    issueTrackerUrl = project.vcsUrl + '/issues'
-    licenses = ["MIT License"]
-    publish = true
-    version {
-      name = project.version
-      vcsTag = project.name + '-' + project.version
-      gpg {
-        sign = true
-        passphrase = project.findProperty("bintrayGPGPassphrase") ?: System.getenv('BINTRAY_GPG_PASSPHRASE')
-      }
-    }
-  }
 }
 
 // ./gradlew :json-iterator:genParser --args='<style>[ifelse, nlogn, nhashn] <unexpected_field_behavior>[throw, skip] <tab_size>[2, 4, etc.] <camelCaseRootName> <file_or_url>(asdf.json, https://)'
