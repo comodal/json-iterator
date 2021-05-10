@@ -1,8 +1,9 @@
 plugins {
   id 'java-library'
-  id "pl.allegro.tech.build.axion-release"
-  id "me.champeau.gradle.jmh"
-  id "io.morethan.jmhreport"
+  id 'maven-publish'
+  id 'pl.allegro.tech.build.axion-release'
+  id 'me.champeau.gradle.jmh'
+  id 'io.morethan.jmhreport'
 }
 
 scmVersion {
@@ -17,7 +18,7 @@ ext {
   desc = 'Json Parser'
   vcsUrl = 'https://github.com/comodal/json-iterator'
   moduleName = 'systems.comodal.json_iterator'
-  bench = project.properties['bench'] ?: 'BenchCharFieldStyles'
+  bench = project.findProperty('bench') ?: 'BenchCharFieldStyles'
 }
 
 java {
@@ -103,6 +104,44 @@ task javadocJar(type: Jar) {
 
 javadoc {
   options.addBooleanOption('html5', true)
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+      artifact sourcesJar
+      artifact javadocJar
+      groupId project.group
+      artifactId project.name
+      version = project.version
+      pom {
+        name = project.name
+        description = project.desc
+        url = project.vcsUrl
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://github.com/comodal/json-iterator/blob/master/LICENSE'
+          }
+        }
+        scm {
+          connection = 'scm:git:git@github.com:comodal/json-iterator.git'
+          url = project.vcsUrl
+        }
+      }
+    }
+  }
+  repositories {
+    maven {
+      name = "GitHubPackages"
+      url = "https://maven.pkg.github.com/comodal/json-iterator"
+      credentials {
+        username = System.getenv("GITHUB_ACTOR")
+        password = System.getenv("GITHUB_TOKEN")
+      }
+    }
+  }
 }
 
 // ./gradlew :json-iterator:genParser --args='<style>[ifelse, nlogn, nhashn] <unexpected_field_behavior>[throw, skip] <tab_size>[2, 4, etc.] <camelCaseRootName> <file_or_url>(asdf.json, https://)'

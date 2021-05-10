@@ -1,0 +1,32 @@
+name: Publish Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: 16
+      - run: java --version
+
+      - name: Gradle Check
+        run: ./gradlew check --stacktrace
+
+      - uses: gradle/wrapper-validation-action@v1
+
+      - name: Github Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew :json-iterator:publish
