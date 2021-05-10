@@ -1,8 +1,9 @@
 name: Publish Release
 
 on:
-  release:
-    types: [created]
+  create:
+    tags:
+      - '\d+\.\d+\.\d+'
 
 jobs:
   publish:
@@ -27,6 +28,6 @@ jobs:
       - uses: gradle/wrapper-validation-action@v1
 
       - name: Github Packages
+        run: ./gradlew :json-iterator:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew :json-iterator:publish
