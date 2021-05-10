@@ -48,8 +48,8 @@ public final class InstantParser {
       }
     }
     return (86400 * (total - DAYS_0000_TO_1970))
-        + (hour * SECONDS_PER_HOUR)
-        + (minute * 60)
+        + ((long) hour * SECONDS_PER_HOUR)
+        + (minute * 60L)
         + second;
   }
 

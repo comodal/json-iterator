@@ -1267,29 +1267,29 @@ abstract class BaseJsonIterator implements JsonIterator {
       final int ind4 = peekIntDigitChar(++i);
       if (ind4 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return ind * 100 + ind2 * 10 + ind3;
+        return ind * 100 + ind2 * 10L + ind3;
       }
       final int ind5 = peekIntDigitChar(++i);
       if (ind5 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
+        return ind * 1000 + ind2 * 100L + ind3 * 10L + ind4;
       }
       final int ind6 = peekIntDigitChar(++i);
       if (ind6 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
+        return ind * 10000 + ind2 * 1000L + ind3 * 100L + ind4 * 10L + ind5;
       }
       final int ind7 = peekIntDigitChar(++i);
       if (ind7 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
+        return ind * 100000 + ind2 * 10000L + ind3 * 1000L + ind4 * 100L + ind5 * 10L + ind6;
       }
       final int ind8 = peekIntDigitChar(++i);
       if (ind8 == INVALID_CHAR_FOR_NUMBER) {
         head = i;
-        return ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
+        return ind * 1000000 + ind2 * 100000L + ind3 * 10000L + ind4 * 1000L + ind5 * 100L + ind6 * 10L + ind7;
       }
-      final long result = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
+      final long result = ind * 10000000 + ind2 * 1000000L + ind3 * 100000L + ind4 * 10000L + ind5 * 1000L + ind6 * 100L + ind7 * 10L + ind8;
       head = ++i;
       if (peekIntDigitChar(i) == INVALID_CHAR_FOR_NUMBER) {
         return result;
