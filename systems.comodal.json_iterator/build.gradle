@@ -149,5 +149,5 @@ publishing {
 task genParser(type: JavaExec) {
   workingDir = project.getRootDir()
   classpath = sourceSets.jmh.getRuntimeClasspath()
-  main = 'systems.comodal.jsoniter.generate.JIParserGeneratorEntryPoint'
+  mainClass = 'systems.comodal.jsoniter.generate.JIParserGeneratorEntryPoint'
 }
