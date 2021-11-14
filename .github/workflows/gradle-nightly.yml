@@ -22,7 +22,7 @@ jobs:
           distribution: 'zulu'
           java-version: 17
       - run: java --version
-        -
+
 #      - uses: actions/setup-java@v2
 #        with:
 #          distribution: 'zulu'
