@@ -10,23 +10,43 @@ import static systems.comodal.jsoniter.ValueType.*;
 
 abstract class BaseJsonIterator implements JsonIterator {
 
+  protected static final CharBufferFunction<String> READ_STRING_FUNCTION = String::new;
+
   static final int INVALID_CHAR_FOR_NUMBER = -1;
   static final int[] INT_DIGITS = INIT_INT_DIGITS.initIntDigits();
 
-  private static final class INIT_INT_DIGITS {
+  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = (chars, offset, len) -> len == 0 ? null : new BigDecimal(chars, offset, len);
 
-    private INIT_INT_DIGITS() {
+  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_DROP_TRAILING_ZEROES_FUNCTION = (chars, offset, len) -> {
+    if (len == 1) {
+      return chars[offset] == '0'
+          ? BigDecimal.ZERO
+          : new BigDecimal(chars, offset, len);
+    } else if (len == 0) {
+      return null;
     }
-
-    private static int[] initIntDigits() {
-      final int[] intDigits = new int[127];
-      Arrays.fill(intDigits, INVALID_CHAR_FOR_NUMBER);
-      for (int i = '0'; i <= '9'; ++i) {
-        intDigits[i] = (i - '0');
+    int pos = (offset + len) - 1;
+    if (chars[pos] != '0') {
+      return new BigDecimal(chars, offset, len);
+    }
+    char c = chars[--pos];
+    while (c == '0') {
+      if (pos == offset) {
+        return BigDecimal.ZERO;
       }
-      return intDigits;
+      c = chars[--pos];
     }
-  }
+    for (int j = pos; c != '.'; c = chars[--j]) {
+      if ((c == 'e') || (c == 'E')) {
+        return new BigDecimal(chars, offset, len).stripTrailingZeros();
+      } else if (j == offset) { // Not a decimal
+        return new BigDecimal(chars, offset, len);
+      }
+    }
+    return new BigDecimal(chars, offset, (pos + 1) - offset);
+  };
+
+  private static final CharBufferFunction<BigInteger> READ_BIG_INTEGER_FUNCTION = (chars, offset, len) -> new BigInteger(new String(chars, offset, len));
 
   int head;
   int tail;
@@ -199,7 +219,6 @@ abstract class BaseJsonIterator implements JsonIterator {
 
   abstract <C> int parse(final C context, final ContextCharBufferToIntFunction<C> applyChars);
 
-
   @Override
   public final long applyCharsAsLong(final CharBufferToLongFunction applyChars) {
     final char c = nextToken();
@@ -334,7 +353,6 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-
   @Override
   public final boolean testObjField(final CharBufferPredicate testField) {
     char c = nextToken();
@@ -414,7 +432,165 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  protected static final CharBufferFunction<String> READ_STRING_FUNCTION = String::new;
+  @Override
+  public final int applyObjFieldAsInt(final CharBufferToIntFunction applyChars, final int terminalSentinel) {
+    char c = nextToken();
+    if (c == ',') {
+      c = nextToken();
+      if (c != '"') {
+        throw reportError("applyObjFieldAsInt", "expected field string, but " + c);
+      } else {
+        final var result = parse(applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjFieldAsInt", "expected :, but " + c);
+        } else {
+          return result;
+        }
+      }
+    } else if (c == '{') {
+      c = nextToken();
+      if (c == '"') {
+        final var result = parse(applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjFieldAsInt", "expected :, but " + c);
+        } else {
+          return result;
+        }
+      } else if (c == '}') {
+        return terminalSentinel; // empty object
+      } else {
+        throw reportError("applyObjFieldAsInt", "expected \" after {");
+      }
+    } else if (c == '}') {
+      return terminalSentinel; // end of object
+    } else if (c == 'n') {
+      final var result = applyChars.applyAsInt(new char[0], 0, 0);
+      skip(3); // null
+      return result;
+    } else {
+      throw reportError("applyObjFieldAsInt", "expected [\\{\\}n], but found: " + c);
+    }
+  }
+
+  @Override
+  public final <C> int applyObjFieldAsInt(final C context, final ContextCharBufferToIntFunction<C> applyChars, final int terminalSentinel) {
+    char c = nextToken();
+    if (c == ',') {
+      c = nextToken();
+      if (c != '"') {
+        throw reportError("applyObjFieldAsInt", "expected field string, but " + c);
+      } else {
+        final var result = parse(context, applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjFieldAsInt", "expected :, but " + c);
+        } else {
+          return result;
+        }
+      }
+    } else if (c == '{') {
+      c = nextToken();
+      if (c == '"') {
+        final var result = parse(context, applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjFieldAsInt", "expected :, but " + c);
+        } else {
+          return result;
+        }
+      } else if (c == '}') {
+        return terminalSentinel; // empty object
+      } else {
+        throw reportError("applyObjFieldAsInt", "expected \" after {");
+      }
+    } else if (c == '}') {
+      return terminalSentinel; // end of object
+    } else if (c == 'n') {
+      final var result = applyChars.applyAsInt(context, new char[0], 0, 0);
+      skip(3); // null
+      return result;
+    } else {
+      throw reportError("applyObjFieldAsInt", "expected [\\{\\}n], but found: " + c);
+    }
+  }
+
+  @Override
+  public final long applyObjFieldAsLong(final CharBufferToLongFunction applyChars, final long terminalSentinel) {
+    char c = nextToken();
+    if (c == ',') {
+      c = nextToken();
+      if (c != '"') {
+        throw reportError("applyObjFieldAsLong", "expected field string, but " + c);
+      } else {
+        final var result = parse(applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjFieldAsLong", "expected :, but " + c);
+        } else {
+          return result;
+        }
+      }
+    } else if (c == '{') {
+      c = nextToken();
+      if (c == '"') {
+        final var result = parse(applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjFieldAsLong", "expected :, but " + c);
+        } else {
+          return result;
+        }
+      } else if (c == '}') {
+        return terminalSentinel; // empty object
+      } else {
+        throw reportError("applyObjFieldAsLong", "expected \" after {");
+      }
+    } else if (c == '}') {
+      return terminalSentinel; // end of object
+    } else if (c == 'n') {
+      final var result = applyChars.applyAsLong(new char[0], 0, 0);
+      skip(3); // null
+      return result;
+    } else {
+      throw reportError("applyObjFieldAsLong", "expected [\\{\\}n], but found: " + c);
+    }
+  }
+
+  @Override
+  public final <C> long applyObjFieldAsLong(final C context, final ContextCharBufferToLongFunction<C> applyChars, final long terminalSentinel) {
+    char c = nextToken();
+    if (c == ',') {
+      c = nextToken();
+      if (c != '"') {
+        throw reportError("applyObjFieldAsLong", "expected field string, but " + c);
+      } else {
+        final var result = parse(context, applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjFieldAsLong", "expected :, but " + c);
+        } else {
+          return result;
+        }
+      }
+    } else if (c == '{') {
+      c = nextToken();
+      if (c == '"') {
+        final var result = parse(context, applyChars);
+        if ((c = nextToken()) != ':') {
+          throw reportError("applyObjFieldAsLong", "expected :, but " + c);
+        } else {
+          return result;
+        }
+      } else if (c == '}') {
+        return terminalSentinel; // empty object
+      } else {
+        throw reportError("applyObjFieldAsLong", "expected \" after {");
+      }
+    } else if (c == '}') {
+      return terminalSentinel; // end of object
+    } else if (c == 'n') {
+      final var result = applyChars.applyAsLong(context, new char[0], 0, 0);
+      skip(3); // null
+      return result;
+    } else {
+      throw reportError("applyObjFieldAsLong", "expected [\\{\\}n], but found: " + c);
+    }
+  }
 
   protected String parseString() {
     return parse(READ_STRING_FUNCTION);
@@ -750,36 +926,6 @@ abstract class BaseJsonIterator implements JsonIterator {
     }
   }
 
-  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_FUNCTION = (chars, offset, len) -> len == 0 ? null : new BigDecimal(chars, offset, len);
-  private static final CharBufferFunction<BigDecimal> READ_BIG_DECIMAL_DROP_TRAILING_ZEROES_FUNCTION = (chars, offset, len) -> {
-    if (len == 1) {
-      return chars[offset] == '0'
-          ? BigDecimal.ZERO
-          : new BigDecimal(chars, offset, len);
-    } else if (len == 0) {
-      return null;
-    }
-    int pos = (offset + len) - 1;
-    if (chars[pos] != '0') {
-      return new BigDecimal(chars, offset, len);
-    }
-    char c = chars[--pos];
-    while (c == '0') {
-      if (pos == offset) {
-        return BigDecimal.ZERO;
-      }
-      c = chars[--pos];
-    }
-    for (int j = pos; c != '.'; c = chars[--j]) {
-      if ((c == 'e') || (c == 'E')) {
-        return new BigDecimal(chars, offset, len).stripTrailingZeros();
-      } else if (j == offset) { // Not a decimal
-        return new BigDecimal(chars, offset, len);
-      }
-    }
-    return new BigDecimal(chars, offset, (pos + 1) - offset);
-  };
-
   @Override
   public final BigDecimal readBigDecimal() {
     return readBigDecimal(READ_BIG_DECIMAL_FUNCTION);
@@ -947,8 +1093,6 @@ abstract class BaseJsonIterator implements JsonIterator {
   }
 
   abstract BigDecimal parseBigDecimal(final CharBufferFunction<BigDecimal> parseChars);
-
-  private static final CharBufferFunction<BigInteger> READ_BIG_INTEGER_FUNCTION = (chars, offset, len) -> new BigInteger(new String(chars, offset, len));
 
   @Override
   public final BigInteger readBigInteger() {
@@ -1389,4 +1533,19 @@ abstract class BaseJsonIterator implements JsonIterator {
   abstract <C> long parseNumber(final C context,
                                 final ContextCharBufferToLongFunction<C> applyChars,
                                 final int len);
+
+  private static final class INIT_INT_DIGITS {
+
+    private INIT_INT_DIGITS() {
+    }
+
+    private static int[] initIntDigits() {
+      final int[] intDigits = new int[127];
+      Arrays.fill(intDigits, INVALID_CHAR_FOR_NUMBER);
+      for (int i = '0'; i <= '9'; ++i) {
+        intDigits[i] = (i - '0');
+      }
+      return intDigits;
+    }
+  }
 }

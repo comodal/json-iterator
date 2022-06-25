@@ -320,6 +320,14 @@ public interface JsonIterator extends Closeable {
 
   <C, R> R applyObject(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction);
 
+  int applyObjFieldAsInt(final CharBufferToIntFunction applyChars, final int terminalSentinel);
+
+  long applyObjFieldAsLong(final CharBufferToLongFunction applyChars, final long terminalSentinel);
+
+  <C> int applyObjFieldAsInt(final C context, final ContextCharBufferToIntFunction<C> applyChars, final int terminalSentinel);
+
+  <C> long applyObjFieldAsLong(final C context, final ContextCharBufferToLongFunction<C> applyChars, final long terminalSentinel);
+
   <R> R applyObject(final FieldBufferFunction<R> fieldBufferFunction);
 
   <C> C testObject(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction);
