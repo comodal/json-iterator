@@ -312,6 +312,7 @@ public interface JsonIterator extends Closeable {
 
   <C> void consumeChars(final C context, final ContextCharBufferConsumer<C> testChars);
 
+
   // IOC Field Methods
 
   boolean testObjField(final CharBufferPredicate testField);
