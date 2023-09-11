@@ -1341,7 +1341,13 @@ abstract class BaseJsonIterator implements JsonIterator {
   @Override
   public final int readInt() {
     final char c = nextToken();
-    if (c == '-') {
+    if (c == '"') {
+      final int val = readInt();
+      if (nextToken() != '"') {
+        throw reportError("readInt", "Lenient parsing of number string did not close with a quote.");
+      }
+      return val;
+    } else if (c == '-') {
       return -readInt(readChar());
     } else {
       final int val = readInt(c);
@@ -1446,8 +1452,14 @@ abstract class BaseJsonIterator implements JsonIterator {
 
   @Override
   public final long readLong() {
-    char c = nextToken();
-    if (c == '-') {
+    final char c = nextToken();
+    if (c == '"') {
+      final long val = readLong();
+      if (nextToken() != '"') {
+        throw reportError("readLong", "Lenient parsing of number string did not close with a quote.");
+      }
+      return val;
+    } else if (c == '-') {
       return -readLong(readChar());
     } else {
       final long val = readLong(c);
@@ -1468,10 +1480,13 @@ abstract class BaseJsonIterator implements JsonIterator {
         return false;
       }
       return true;
-    } else if (c == ']' || c == 'n') {
-      return false;
     } else if (c == ',') {
       return true;
+    } else if (c == ']') {
+      return false;
+    } else if (c == 'n') {
+      skip(3); // null
+      return false;
     } else {
       throw reportError("readArray", "expected [ or , or n or ], but found: " + c);
     }
