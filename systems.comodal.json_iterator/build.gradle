@@ -1,23 +1,14 @@
 plugins {
   id 'java-library'
   id 'maven-publish'
-  id 'pl.allegro.tech.build.axion-release'
   id 'me.champeau.gradle.jmh'
   id 'io.morethan.jmhreport'
 }
 
-scmVersion {
-  tag.prefix = ''
-  repository.pushTagsOnly = true
-}
-
-project.version = scmVersion.version
+project.version = "$VERSION"
 project.group = 'systems.comodal'
 
 ext {
-  desc = 'Json Parser'
-  vcsUrl = 'https://github.com/comodal/json-iterator'
-  moduleName = 'systems.comodal.json_iterator'
   bench = project.findProperty('bench') ?: 'BenchCharFieldStyles'
 }
 
@@ -117,8 +108,8 @@ publishing {
       version = project.version
       pom {
         name = project.name
-        description = project.desc
-        url = project.vcsUrl
+        description = "$DESCRIPTION"
+        url = "$VCS_URL"
         licenses {
           license {
             name = 'MIT License'
@@ -127,7 +118,7 @@ publishing {
         }
         scm {
           connection = 'scm:git:git@github.com:comodal/json-iterator.git'
-          url = project.vcsUrl
+          url = "$VCS_URL"
         }
       }
     }
