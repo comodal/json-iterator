@@ -250,14 +250,13 @@ class BytesJsonIterator extends BaseJsonIterator {
     T apply(final byte[] buf, final int from, final int to);
   }
 
-  private static final BytesFunction<byte[]> BASE64_DECODER = (buf, from, to) -> Base64.getDecoder()
-      .decode(Arrays.copyOfRange(buf, from, to));
+  private static final BytesFunction<byte[]> BASE64_DECODER = (buf, from, to) -> Base64.getDecoder().decode(Arrays.copyOfRange(buf, from, to));
 
   @Override
   public byte[] decodeBase64String() {
     final char c = nextToken();
     if (c == '"') {
-      return parseString(BASE64_DECODER);
+      return parseBase64String();
     } else if (c == 'n') {
       skip(3);
       return null;
@@ -266,27 +265,26 @@ class BytesJsonIterator extends BaseJsonIterator {
     }
   }
 
-  protected final <T> T parseString(final BytesFunction<T> adapter) {
+  final byte[] parseBase64String() {
     final int from = head;
     int nextOffset = head + Long.BYTES;
     if (nextOffset > tail) {
       final int len = parse();
-      return adapter.apply(buf, from, from + len);
+      return BytesJsonIterator.BASE64_DECODER.apply(buf, from, from + len);
     } else {
       long word, input, tmp;
       for (int i = head; ; ) {
         word = (long) TO_LONG.get(buf, i);
-        if (containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN)
-            || containsPattern(word ^ ESCAPE_PATTERN)) {
+        if (containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN) || containsPattern(word ^ ESCAPE_PATTERN)) {
           final int len = parseMultiByteString(0);
-          return adapter.apply(buf, from, from + len);
+          return BytesJsonIterator.BASE64_DECODER.apply(buf, from, from + len);
         } else {
           input = word ^ QUOTE_PATTERN;
           tmp = ~(((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL) | input | 0x7F7F7F7F7F7F7F7FL);
           if (tmp != 0) {
             i += (Long.numberOfTrailingZeros(tmp << 1) >>> 3);
             final int to = i - 1;
-            final var str = adapter.apply(buf, head, to);
+            final var str = BytesJsonIterator.BASE64_DECODER.apply(buf, head, to);
             head = i;
             return str;
           } else {
@@ -299,7 +297,7 @@ class BytesJsonIterator extends BaseJsonIterator {
                 throw reportError("parseString", "incomplete string");
               } else {
                 final int len = parseMultiByteString(0);
-                return adapter.apply(buf, from, from + len);
+                return BytesJsonIterator.BASE64_DECODER.apply(buf, from, from + len);
               }
             }
           }
@@ -318,8 +316,7 @@ class BytesJsonIterator extends BaseJsonIterator {
       long word, input, tmp;
       for (int i = head; ; ) {
         word = (long) TO_LONG.get(buf, i);
-        if (containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN)
-            || containsPattern(word ^ ESCAPE_PATTERN)) {
+        if (containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN) || containsPattern(word ^ ESCAPE_PATTERN)) {
           final int len = parseMultiByteString(0);
           return new String(charBuf, 0, len);
         } else {
