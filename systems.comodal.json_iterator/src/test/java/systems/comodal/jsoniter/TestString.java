@@ -6,10 +6,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
 import java.io.ByteArrayInputStream;
+import java.util.Base64;
+import java.util.Random;
 
+import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.*;
 
 final class TestString {
+
+  private static final Base64.Encoder BASE64_ENCODER = Base64.getEncoder();
 
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
@@ -17,6 +22,23 @@ final class TestString {
     var ji = factory.create("\"hello\"\"world\"");
     assertEquals("hello", ji.readString());
     assertEquals("world", ji.readString());
+
+
+    final var hello = "hello".getBytes();
+    final var world = "world".getBytes();
+    ji = factory.create(format("\"%s\"\"%s\"", BASE64_ENCODER.encodeToString(hello), BASE64_ENCODER.encodeToString(world)));
+    assertArrayEquals(hello, ji.decodeBase64String());
+    assertArrayEquals(world, ji.decodeBase64String());
+  }
+
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void testRandomBase64Data(final JsonIteratorFactory factory) {
+    final var data = new byte[4_096];
+    final var random = new Random();
+    random.nextBytes(data);
+    final var ji = factory.create(format("{\"data\":\"%s\"}", BASE64_ENCODER.encodeToString(data)));
+    assertArrayEquals(data, ji.skipUntil("data").decodeBase64String());
   }
 
   @ParameterizedTest

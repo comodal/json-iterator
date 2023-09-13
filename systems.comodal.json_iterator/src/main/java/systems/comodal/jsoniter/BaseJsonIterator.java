@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Base64;
 
 import static systems.comodal.jsoniter.ContextFieldBufferMaskedPredicate.BREAK_OUT;
 import static systems.comodal.jsoniter.ValueType.*;
@@ -96,7 +97,7 @@ abstract class BaseJsonIterator implements JsonIterator {
     return false;
   }
 
-  private void skip(final int n) {
+  protected final void skip(final int n) {
     head += n;
     if (head >= tail) {
       final int more = head - tail;
@@ -153,6 +154,11 @@ abstract class BaseJsonIterator implements JsonIterator {
     } else {
       throw reportError("readString", "expected string or null, but " + c);
     }
+  }
+
+  @Override
+  public byte[] decodeBase64String() {
+    return Base64.getDecoder().decode(readString());
   }
 
   abstract int parse();

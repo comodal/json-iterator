@@ -3,6 +3,7 @@ package systems.comodal.jsoniter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.Base64;
 
 final class BufferedStreamJsonIterator extends BytesJsonIterator {
 
@@ -94,5 +95,10 @@ final class BufferedStreamJsonIterator extends BytesJsonIterator {
     } else {
       return buf[head++];
     }
+  }
+
+  @Override
+  public byte[] decodeBase64String() {
+    return Base64.getDecoder().decode(readString());
   }
 }

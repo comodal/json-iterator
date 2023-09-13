@@ -6,6 +6,8 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.math.BigDecimal;
 import java.nio.ByteOrder;
+import java.util.Arrays;
+import java.util.Base64;
 
 class BytesJsonIterator extends BaseJsonIterator {
 
@@ -18,7 +20,7 @@ class BytesJsonIterator extends BaseJsonIterator {
   private char[] charBuf;
 
   BytesJsonIterator(final byte[] buf, final int head, final int tail) {
-    this(buf, head, tail, 32);
+    this(buf, head, tail, 64);
   }
 
   BytesJsonIterator(final byte[] buf, final int head, final int tail, final int charBufferLength) {
@@ -234,6 +236,70 @@ class BytesJsonIterator extends BaseJsonIterator {
                 }
               } else {
                 throw reportError("skipPastEndQuote", "incomplete string");
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @FunctionalInterface
+  private interface BytesFunction<T> {
+
+    T apply(final byte[] buf, final int from, final int to);
+  }
+
+  private static final BytesFunction<byte[]> BASE64_DECODER = (buf, from, to) -> Base64.getDecoder()
+      .decode(Arrays.copyOfRange(buf, from, to));
+
+  @Override
+  public byte[] decodeBase64String() {
+    final char c = nextToken();
+    if (c == '"') {
+      return parseString(BASE64_DECODER);
+    } else if (c == 'n') {
+      skip(3);
+      return null;
+    } else {
+      throw reportError("decodeBase64String", "expected string or null, but " + c);
+    }
+  }
+
+  protected final <T> T parseString(final BytesFunction<T> adapter) {
+    final int from = head;
+    int nextOffset = head + Long.BYTES;
+    if (nextOffset > tail) {
+      final int len = parse();
+      return adapter.apply(buf, from, from + len);
+    } else {
+      long word, input, tmp;
+      for (int i = head; ; ) {
+        word = (long) TO_LONG.get(buf, i);
+        if (containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN)
+            || containsPattern(word ^ ESCAPE_PATTERN)) {
+          final int len = parseMultiByteString(0);
+          return adapter.apply(buf, from, from + len);
+        } else {
+          input = word ^ QUOTE_PATTERN;
+          tmp = ~(((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL) | input | 0x7F7F7F7F7F7F7F7FL);
+          if (tmp != 0) {
+            i += (Long.numberOfTrailingZeros(tmp << 1) >>> 3);
+            final int to = i - 1;
+            final var str = adapter.apply(buf, head, to);
+            head = i;
+            return str;
+          } else {
+            i = nextOffset;
+            nextOffset += Long.BYTES;
+            if (nextOffset > tail) {
+              if (i < tail) {
+                i = tail - Long.BYTES;
+              } else if (supportsMarkReset()) { // Hack to check if reading from stream or not.
+                throw reportError("parseString", "incomplete string");
+              } else {
+                final int len = parseMultiByteString(0);
+                return adapter.apply(buf, from, from + len);
               }
             }
           }

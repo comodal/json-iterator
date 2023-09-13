@@ -224,6 +224,8 @@ public interface JsonIterator extends Closeable {
 
   String readString();
 
+  byte[] decodeBase64String();
+
   String readNumberAsString();
 
   String readNumberOrNumberString();
