@@ -6,6 +6,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.math.BigDecimal;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 
@@ -29,10 +30,22 @@ class BytesJsonIterator extends BaseJsonIterator {
     this.charBuf = new char[charBufferLength];
   }
 
-  private static boolean containsPattern(final long input) {
+  private static long matchPattern(final long input) {
     // https://richardstartin.github.io/posts/finding-bytes
     // Hacker's Delight ch. 6: https://books.google.com/books?id=VicPJYM0I5QC&lpg=PP1&pg=PA117#v=onepage&q&f=false
-    return ~(((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL) | input | 0x7F7F7F7F7F7F7F7FL) != 0;
+    return ~(((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL) | input | 0x7F7F7F7F7F7F7F7FL);
+  }
+
+  private static boolean containsPattern(final long input) {
+    return matchPattern(input) != 0;
+  }
+
+  private static long matchQuotePattern(final long word) {
+    return matchPattern(word ^ BytesJsonIterator.QUOTE_PATTERN);
+  }
+
+  private static boolean containsMultiByteOrEscapePattern(final long word) {
+    return containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN) || containsPattern(word ^ ESCAPE_PATTERN);
   }
 
   @Override
@@ -210,15 +223,13 @@ class BytesJsonIterator extends BaseJsonIterator {
     if (nextOffset > tail) {
       skipPastSingleByteEndQuote();
     } else {
-      for (long word, input, tmp; ; ) {
+      for (long word, tmp; ; ) {
         word = (long) TO_LONG.get(buf, head);
-        if (containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN)
-            || containsPattern(word ^ ESCAPE_PATTERN)) {
+        if (containsMultiByteOrEscapePattern(word)) {
           skipPastMultiByteEndQuote();
           return;
         } else {
-          input = word ^ QUOTE_PATTERN;
-          tmp = ~(((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL) | input | 0x7F7F7F7F7F7F7F7FL);
+          tmp = matchQuotePattern(word);
           if (tmp != 0) {
             head += (Long.numberOfTrailingZeros(tmp << 1) >>> 3);
             return;
@@ -272,33 +283,24 @@ class BytesJsonIterator extends BaseJsonIterator {
       final int len = parse();
       return BytesJsonIterator.BASE64_DECODER.apply(buf, from, from + len);
     } else {
-      long word, input, tmp;
+      long word, tmp;
       for (int i = head; ; ) {
         word = (long) TO_LONG.get(buf, i);
-        if (containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN) || containsPattern(word ^ ESCAPE_PATTERN)) {
-          final int len = parseMultiByteString(0);
-          return BytesJsonIterator.BASE64_DECODER.apply(buf, from, from + len);
+        tmp = matchQuotePattern(word);
+        if (tmp != 0) {
+          i += (Long.numberOfTrailingZeros(tmp << 1) >>> 3);
+          final int to = i - 1;
+          final var data = BytesJsonIterator.BASE64_DECODER.apply(buf, head, to);
+          head = i;
+          return data;
         } else {
-          input = word ^ QUOTE_PATTERN;
-          tmp = ~(((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL) | input | 0x7F7F7F7F7F7F7F7FL);
-          if (tmp != 0) {
-            i += (Long.numberOfTrailingZeros(tmp << 1) >>> 3);
-            final int to = i - 1;
-            final var str = BytesJsonIterator.BASE64_DECODER.apply(buf, head, to);
-            head = i;
-            return str;
-          } else {
-            i = nextOffset;
-            nextOffset += Long.BYTES;
-            if (nextOffset > tail) {
-              if (i < tail) {
-                i = tail - Long.BYTES;
-              } else if (supportsMarkReset()) { // Hack to check if reading from stream or not.
-                throw reportError("parseString", "incomplete string");
-              } else {
-                final int len = parseMultiByteString(0);
-                return BytesJsonIterator.BASE64_DECODER.apply(buf, from, from + len);
-              }
+          i = nextOffset;
+          nextOffset += Long.BYTES;
+          if (nextOffset > tail) {
+            if (i < tail) {
+              i = tail - Long.BYTES; // push i back a bit to match 8 byte pattern length.
+            } else {
+              throw reportError("decodeBase64String", "incomplete string");
             }
           }
         }
@@ -313,18 +315,17 @@ class BytesJsonIterator extends BaseJsonIterator {
       final int len = parse();
       return new String(charBuf, 0, len);
     } else {
-      long word, input, tmp;
+      long word, tmp;
       for (int i = head; ; ) {
         word = (long) TO_LONG.get(buf, i);
-        if (containsPattern(word ^ MULTI_BYTE_CHAR_PATTERN) || containsPattern(word ^ ESCAPE_PATTERN)) {
+        if (containsMultiByteOrEscapePattern(word)) {
           final int len = parseMultiByteString(0);
           return new String(charBuf, 0, len);
         } else {
-          input = word ^ QUOTE_PATTERN;
-          tmp = ~(((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL) | input | 0x7F7F7F7F7F7F7F7FL);
+          tmp = matchQuotePattern(word);
           if (tmp != 0) {
             i += (Long.numberOfTrailingZeros(tmp << 1) >>> 3);
-            final var str = new String(buf, head, (i - 1) - head);
+            final var str = new String(buf, head, (i - 1) - head, StandardCharsets.US_ASCII);
             head = i;
             return str;
           } else {
@@ -332,7 +333,7 @@ class BytesJsonIterator extends BaseJsonIterator {
             nextOffset += Long.BYTES;
             if (nextOffset > tail) {
               if (i < tail) {
-                i = tail - Long.BYTES;
+                i = tail - Long.BYTES; // push i back a bit to match 8 byte pattern length.
               } else if (supportsMarkReset()) { // Hack to check if reading from stream or not.
                 throw reportError("parseString", "incomplete string");
               } else {

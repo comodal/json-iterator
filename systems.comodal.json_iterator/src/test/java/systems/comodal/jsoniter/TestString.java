@@ -34,11 +34,18 @@ final class TestString {
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
   void testRandomBase64Data(final JsonIteratorFactory factory) {
-    final var data = new byte[4_096];
     final var random = new Random();
+    var data = new byte[4_096];
     random.nextBytes(data);
-    final var ji = factory.create(format("{\"data\":\"%s\"}", BASE64_ENCODER.encodeToString(data)));
+    var ji = factory.create(format("{\"data\":\"%s\"}", BASE64_ENCODER.encodeToString(data)));
     assertArrayEquals(data, ji.skipUntil("data").decodeBase64String());
+
+    for (int len = 0; len <= 10; ++len) {
+      data = new byte[len];
+      random.nextBytes(data);
+      ji = factory.create(format("{\"data\":\"%s\"}", BASE64_ENCODER.encodeToString(data)));
+      assertArrayEquals(data, ji.skipUntil("data").decodeBase64String());
+    }
   }
 
   @ParameterizedTest
