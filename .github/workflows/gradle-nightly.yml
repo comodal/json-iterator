@@ -15,12 +15,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: gradle/wrapper-validation-action@v1
 
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 19
+          java-version: 20
           java-package: jre
           cache: 'gradle'
       - run: printf "org.gradle.java.home=%s" "$JAVA_HOME" > gradle.properties
@@ -35,6 +36,4 @@ jobs:
 
       - name: Gradle Check
         run: ./gradlew -PtargetJava=21 check --warning-mode=all --stacktrace --no-daemon
-
-      - uses: gradle/wrapper-validation-action@v1
 
