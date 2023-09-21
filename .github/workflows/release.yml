@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 19
+          java-version: 20
           java-package: jre
           cache: 'gradle'
       - run: printf "org.gradle.java.home=%s" "$JAVA_HOME" > gradle.properties
@@ -28,15 +28,15 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 20
+          java-version: 21
           check-latest: true
       - run: printf "\norg.gradle.java.installations.paths=%s" "$JAVA_HOME" >> gradle.properties
       - run: java --version
 
       - name: Gradle Check
-        run: ./gradlew check -PtargetJava=20 --stacktrace
+        run: ./gradlew check -PtargetJava=21 --stacktrace
 
       - name: Github Packages
-        run: ./gradlew -PtargetJava=20 :json-iterator:publish
+        run: ./gradlew -PtargetJava=21 :json-iterator:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
