@@ -31,6 +31,19 @@ final class TestString {
     assertArrayEquals(world, ji.decodeBase64String());
   }
 
+  @Test
+  void testEscapeQuotes() {
+    var nestedJson = """
+        {"hello": "world"}""";
+    assertEquals("""
+        {\\"hello\\": \\"world\\"}""", JIUtil.escapeQuotes(nestedJson));
+
+    nestedJson = """
+        {"hello": "\\"world\\""}""";
+    assertEquals("""
+        {\\"hello\\": \\"\\"world\\"\\"}""", JIUtil.escapeQuotes(nestedJson));
+  }
+
   @ParameterizedTest
   @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
   void testRandomBase64Data(final JsonIteratorFactory factory) {
