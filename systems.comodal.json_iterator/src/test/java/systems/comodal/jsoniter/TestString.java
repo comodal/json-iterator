@@ -43,8 +43,10 @@ final class TestString {
 
     nestedJson = """
         {"hello": "\\"world\\""}""";
-    assertEquals(escaped, JIUtil.escapeQuotes(nestedJson));
-    assertEquals(escaped, JIUtil.escapeQuotesChecked(nestedJson));
+    assertEquals("""
+        {\\"hello\\": \\"\\"world\\"\\"}""", JIUtil.escapeQuotes(nestedJson));
+    assertEquals("""
+        {\\"hello\\": \\"\\"world\\"\\"}""", JIUtil.escapeQuotesChecked(nestedJson));
 
     assertTrue(escaped == JIUtil.escapeQuotes(escaped));
     assertTrue(escaped == JIUtil.escapeQuotesChecked(escaped));
