@@ -158,7 +158,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final int parseNumber() {
+  int parseNumber() {
     for (int i = head, len = 0; ; i++) {
       if (i == tail) {
         head = tail;
@@ -206,7 +206,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <R> R parse(final CharBufferFunction<R> applyChars) {
+  <R> R parse(final CharBufferFunction<R> applyChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -218,7 +218,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars) {
+  <C, R> R parse(final C context, final ContextCharBufferFunction<C, R> applyChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -278,7 +278,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final boolean parse(final CharBufferPredicate testChars) {
+  boolean parse(final CharBufferPredicate testChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -290,7 +290,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars) {
+  <C> boolean parse(final C context, final ContextCharBufferPredicate<C> testChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -302,7 +302,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final void parse(final CharBufferConsumer testChars) {
+  void parse(final CharBufferConsumer testChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -314,7 +314,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars) {
+  <C> void parse(final C context, final ContextCharBufferConsumer<C> testChars) {
     final int from = head;
     final int len = parse(from);
     if (numEscapes > 0) {
@@ -326,12 +326,12 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final boolean fieldEquals(final String field, final int offset, final int len) {
+  boolean fieldEquals(final String field, final int offset, final int len) {
     return JsonIterator.fieldEquals(field, buf, offset, len);
   }
 
   @Override
-  final boolean breakOut(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) {
+  boolean breakOut(final FieldBufferPredicate fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return !fieldBufferFunction.test(chars, 0, chars.length, this);
@@ -341,7 +341,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C> boolean breakOut(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) {
+  <C> boolean breakOut(final C context, final ContextFieldBufferPredicate<C> fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return !fieldBufferFunction.test(context, chars, 0, chars.length, this);
@@ -361,7 +361,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) {
+  <R> R apply(final FieldBufferFunction<R> fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.apply(chars, 0, chars.length, this);
@@ -371,7 +371,7 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len) {
+  <C, R> R apply(final C context, final ContextFieldBufferFunction<C, R> fieldBufferFunction, final int offset, final int len) {
     if (numEscapes > 0) {
       final char[] chars = handleEscapes(offset, len);
       return fieldBufferFunction.apply(context, chars, 0, chars.length, this);
@@ -381,45 +381,45 @@ final class CharsJsonIterator extends BaseJsonIterator {
   }
 
   @Override
-  final BigDecimal parseBigDecimal(final CharBufferFunction<BigDecimal> parseChars) {
+  BigDecimal parseBigDecimal(final CharBufferFunction<BigDecimal> parseChars) {
     final int len = parseNumber();
     return parseChars.apply(buf, head - len, len);
   }
 
   @Override
-  final String parsedNumberAsString(final int len) {
+  String parsedNumberAsString(final int len) {
     return new String(buf, head - len, len);
   }
 
   @Override
-  final <R> R parseNumber(final CharBufferFunction<R> applyChars, final int len) {
-    return applyChars.apply(buf, 0, len);
+  <R> R parseNumber(final CharBufferFunction<R> applyChars, final int len) {
+    return applyChars.apply(buf, head - len, len);
   }
 
   @Override
-  final <C, R> R parseNumber(final C context,
-                             final ContextCharBufferFunction<C, R> applyChars,
-                             final int len) {
-    return applyChars.apply(context, buf, 0, len);
+  <C, R> R parseNumber(final C context,
+                       final ContextCharBufferFunction<C, R> applyChars,
+                       final int len) {
+    return applyChars.apply(context, buf, head - len, len);
   }
 
   @Override
   int parseNumber(final CharBufferToIntFunction applyChars, final int len) {
-    return applyChars.applyAsInt(buf, 0, len);
+    return applyChars.applyAsInt(buf, head - len, len);
   }
 
   @Override
   <C> int parseNumber(final C context, final ContextCharBufferToIntFunction<C> applyChars, final int len) {
-    return applyChars.applyAsInt(context, buf, 0, len);
+    return applyChars.applyAsInt(context, buf, head - len, len);
   }
 
   @Override
   long parseNumber(final CharBufferToLongFunction applyChars, final int len) {
-    return applyChars.applyAsLong(buf, 0, len);
+    return applyChars.applyAsLong(buf, head - len, len);
   }
 
   @Override
   <C> long parseNumber(final C context, final ContextCharBufferToLongFunction<C> applyChars, final int len) {
-    return applyChars.applyAsLong(context, buf, 0, len);
+    return applyChars.applyAsLong(context, buf, head - len, len);
   }
 }

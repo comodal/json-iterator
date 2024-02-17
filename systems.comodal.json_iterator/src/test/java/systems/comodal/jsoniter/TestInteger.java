@@ -4,6 +4,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import systems.comodal.jsoniter.factories.JsonIteratorFactory;
 
+import java.math.RoundingMode;
+import java.time.Instant;
+
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -196,5 +200,31 @@ final class TestInteger {
     assertEquals(Integer.MAX_VALUE, ji.readInt());
     ji.readArray();
     assertEquals(Integer.MIN_VALUE, ji.readInt());
+  }
+
+  @ParameterizedTest
+  @MethodSource("systems.comodal.jsoniter.TestFactories#factories")
+  void testParseMicroseconds(final JsonIteratorFactory factory) {
+    final CharBufferFunction<Instant> MICROS_PARSER = (buf, offset, len) -> {
+      final int secondsLength = len - 6;
+      final long seconds = Long.parseLong(new String(buf, offset, secondsLength));
+      final long micros = Long.parseLong(new String(buf, offset + secondsLength, 6));
+      return Instant.ofEpochSecond(seconds, MICROSECONDS.toNanos(micros));
+    };
+
+    final var json = "{\"timestamp\": 1694687692989999}";
+    var ji = factory.create(json);
+    ji.skipObjField();
+    var instant = ji.applyNumberChars(MICROS_PARSER);
+    final var expected = Instant.ofEpochSecond(1694687692, 989999000);
+    assertEquals(expected, instant);
+
+    ji = factory.create(json);
+    ji.skipObjField();
+    final var micros = ji.readBigDecimal().movePointLeft(6);
+    final var seconds = micros.setScale(0, RoundingMode.DOWN);
+    final var nanos = micros.subtract(seconds).movePointRight(9);
+    instant = Instant.ofEpochSecond(seconds.longValue(), nanos.longValue());
+    assertEquals(expected, instant);
   }
 }

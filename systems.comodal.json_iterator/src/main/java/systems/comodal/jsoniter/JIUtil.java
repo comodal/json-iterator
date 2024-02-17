@@ -39,11 +39,63 @@ public final class JIUtil {
         | (pattern << 56);
   }
 
+
+  public static String escapeQuotesChecked(final String str) {
+    final int len = str.length();
+    int from = 0;
+    do {
+      from = str.indexOf('"', from);
+      if (from < 0) {
+        return str;
+      }
+      int i = from - 1;
+      if (i < 0) {
+        return escapeQuotes(str, from);
+      }
+      if (str.charAt(i) == '\\') {
+        int escapes = 1;
+        while (--i >= 0) {
+          if (str.charAt(i) == '\\') {
+            ++escapes;
+          } else {
+            break;
+          }
+        }
+        if ((escapes & 1) == 0) {
+          return escapeQuotes(str, from);
+        }
+      } else {
+        return escapeQuotes(str, from);
+      }
+    } while (++from < len);
+    return str;
+  }
+
   public static String escapeQuotes(final String str) {
+    return escapeQuotes(str, -1);
+  }
+
+  private static String escapeQuotes(final String str, final int firstUnescapedQuote) {
     final char[] chars = str.toCharArray();
     final char[] escaped = new char[chars.length << 1];
+
+    int from, to;
+    if (firstUnescapedQuote < 0) {
+      from = 0;
+      to = 0;
+    } else if (firstUnescapedQuote > 0) {
+      System.arraycopy(chars, 0, escaped, 0, firstUnescapedQuote);
+      escaped[firstUnescapedQuote] = '\\';
+      from = firstUnescapedQuote;
+      to = firstUnescapedQuote + 1;
+    } else {
+      escaped[0] = '\\';
+      from = 0;
+      to = 1;
+    }
+
     char c;
-    for (int escapes = 0, from = 0, dest = 0, to = 0; ; to++) {
+    for (int escapes = 0, dest = to; ; ++to) {
       if (to == chars.length) {
         if (from == 0) {
           return str;

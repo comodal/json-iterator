@@ -33,15 +33,21 @@ final class TestString {
 
   @Test
   void testEscapeQuotes() {
+    final var escaped = """
+        {\\"hello\\": \\"world\\"}""";
+
     var nestedJson = """
         {"hello": "world"}""";
-    assertEquals("""
-        {\\"hello\\": \\"world\\"}""", JIUtil.escapeQuotes(nestedJson));
+    assertEquals(escaped, JIUtil.escapeQuotes(nestedJson));
+    assertEquals(escaped, JIUtil.escapeQuotesChecked(nestedJson));
 
     nestedJson = """
         {"hello": "\\"world\\""}""";
-    assertEquals("""
-        {\\"hello\\": \\"\\"world\\"\\"}""", JIUtil.escapeQuotes(nestedJson));
+    assertEquals(escaped, JIUtil.escapeQuotes(nestedJson));
+    assertEquals(escaped, JIUtil.escapeQuotesChecked(nestedJson));
+
+    assertTrue(escaped == JIUtil.escapeQuotes(escaped));
+    assertTrue(escaped == JIUtil.escapeQuotesChecked(escaped));
   }
 
   @ParameterizedTest

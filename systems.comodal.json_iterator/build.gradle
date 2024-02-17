@@ -128,8 +128,8 @@ publishing {
       name = "GitHubPackages"
       url = "https://maven.pkg.github.com/comodal/json-iterator"
       credentials {
-        username = System.getenv("GITHUB_ACTOR")
-        password = System.getenv("GITHUB_TOKEN")
+        username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user.write")
+        password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.token.write")
       }
     }
   }
