@@ -14,7 +14,7 @@ ext {
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(project.findProperty('targetJava') as Integer ?: 21)
+    languageVersion = JavaLanguageVersion.of(project.findProperty('targetJava') as Integer ?: 22)
   }
 }
 
