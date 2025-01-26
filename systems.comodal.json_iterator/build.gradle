@@ -3,8 +3,8 @@ plugins {
   id 'maven-publish'
 }
 
-project.version = "$VERSION"
 project.group = 'systems.comodal'
+project.version = "$VERSION"
 
 java {
   toolchain {
@@ -17,16 +17,14 @@ repositories {
 }
 
 dependencies {
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:+'
-  testImplementation 'org.junit.jupiter:junit-jupiter-params:+'
-
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:+'
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.11.+'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 test {
   useJUnitPlatform()
   testLogging {
-    events "passed", "skipped", "failed", "standardOut", "standardError"
+    events "skipped", "failed", "standardOut", "standardError"
     exceptionFormat = "full"
     showStandardStreams = true
   }
@@ -63,11 +61,9 @@ publishing {
         }
         developers {
           developer {
-            name = 'Jim'
-            id = 'jpe7s'
-            email = 'jpe7s.salt188@passfwd.com'
-            organization = 'Sava Software'
-            organizationUrl = 'https://github.com/sava-software'
+            id = 'jpe42'
+            organization = 'Comodal Systems'
+            organizationUrl = 'https://github.com/comodal'
           }
         }
         scm {
