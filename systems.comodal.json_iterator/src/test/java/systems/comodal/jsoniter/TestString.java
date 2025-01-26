@@ -48,8 +48,8 @@ final class TestString {
     assertEquals("""
         {\\"hello\\": \\"\\"world\\"\\"}""", JIUtil.escapeQuotesChecked(nestedJson));
 
-    assertTrue(escaped == JIUtil.escapeQuotes(escaped));
-    assertTrue(escaped == JIUtil.escapeQuotesChecked(escaped));
+    assertSame(escaped, JIUtil.escapeQuotes(escaped));
+    assertSame(escaped, JIUtil.escapeQuotesChecked(escaped));
   }
 
   @ParameterizedTest

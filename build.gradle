@@ -1,36 +1,5 @@
-buildscript {
-  repositories {
-    maven { url = 'https://plugins.gradle.org/m2/' }
-  }
-  dependencies {
-    classpath 'me.champeau.gradle:jmh-gradle-plugin:+'
-    classpath 'gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:+'
-  }
-}
-
-def getAppVersion = { ->
-  try (final var gitTagOut = new ByteArrayOutputStream()) {
-    exec {
-      commandLine 'git', 'tag', '--points-at', 'HEAD'
-      standardOutput = gitTagOut
-    }
-    final var tagName = gitTagOut.toString().strip()
-    if (tagName.isBlank()) {
-      try (final var gitHashOut = new ByteArrayOutputStream()) {
-        exec {
-          commandLine 'git', 'rev-parse', '--short', 'HEAD'
-          standardOutput = gitHashOut
-        }
-        return 'git-' + gitHashOut.toString().strip();
-      }
-    } else {
-      return tagName;
-    }
-  }
-}
-
 ext {
-  VERSION = getAppVersion()
+  VERSION = project.findProperty('version')
   DESCRIPTION = 'Json Parser'
   VCS_URL = 'https://github.com/comodal/json-iterator'
   MODULE_NAME = 'systems.comodal.json_iterator'
