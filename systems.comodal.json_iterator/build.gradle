@@ -8,7 +8,7 @@ project.version = "$VERSION"
 
 java {
   toolchain {
-    languageVersion =  JavaLanguageVersion.of(project.findProperty('javaVersion') as Integer ?: 23)
+    languageVersion =  JavaLanguageVersion.of(project.findProperty('javaVersion') as Integer ?: 24)
   }
 }
 
@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-  testImplementation 'org.junit.jupiter:junit-jupiter:5.11.+'
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.12.+'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
