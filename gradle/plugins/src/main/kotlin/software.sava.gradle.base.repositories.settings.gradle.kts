@@ -1,11 +1,3 @@
-dependencyResolutionManagement {
-  @Suppress("UnstableApiUsage")
-  repositories {
-    mavenCentral()
-  }
-}
-
-
 val gprUser =
   providers.gradleProperty("gpr.user").orElse(providers.environmentVariable("GITHUB_ACTOR")).orElse("")
 val gprToken =
