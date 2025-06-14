@@ -1,6 +1,0 @@
-ext {
-  VERSION = project.findProperty('version')
-  DESCRIPTION = 'Json Parser'
-  VCS_URL = 'https://github.com/comodal/json-iterator'
-  MODULE_NAME = 'systems.comodal.json_iterator'
-}
