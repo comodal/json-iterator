@@ -1,0 +1,25 @@
+name: Gradle Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request_target:
+    types: [ opened, synchronize ]
+
+jobs:
+  publish:
+    uses: sava-software/sava-build/.github/workflows/publish.yml@main
+    secrets: inherit
+
+  github-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish Github Packages
+        run: ./gradlew --stacktrace -Psign=true -PjavaVersion=${{ needs.publish.outputs.java-version }} -Pversion=${{ github.ref_name }} :json-iterator:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_PUBLISH_PK: ${{ secrets.GPG_PUBLISH_PK }}
+          GPG_PUBLISH_PF: ${{ secrets.GPG_PUBLISH_PF }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+          MAVEN_CENTRAL_SECRET: ${{ secrets.MAVEN_CENTRAL_SECRET }}
