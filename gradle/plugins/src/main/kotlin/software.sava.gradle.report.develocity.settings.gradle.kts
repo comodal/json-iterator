@@ -10,5 +10,6 @@ develocity {
         if (!providers.environmentVariable("CI").getOrElse("false").toBoolean()) {
             publishing.onlyIf { false } // only publish with explicit '--scan'
         }
+//        publishing.onlyIf { providers.environmentVariable("CI").getOrElse("false").toBoolean() }
     }
 }
