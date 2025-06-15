@@ -3,7 +3,7 @@ name: Gradle Check
 on:
   push:
     branches:
-      - main
+      - disable
   pull_request_target:
     types: [ opened, synchronize ]
 
