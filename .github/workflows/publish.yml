@@ -1,11 +1,9 @@
-name: Gradle Check
+name: Publish Release
 
 on:
-  push:
-    branches:
-      - main
-  pull_request_target:
-    types: [ opened, synchronize ]
+  create:
+    tags:
+      - '\d+\.\d+\.\d+'
 
 jobs:
   publish:
