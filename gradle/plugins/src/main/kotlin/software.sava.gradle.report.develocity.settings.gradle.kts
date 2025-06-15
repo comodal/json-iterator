@@ -10,6 +10,7 @@ develocity {
         if (!providers.environmentVariable("CI").getOrElse("false").toBoolean()) {
             publishing.onlyIf { false }
         }
+
 //        publishing.onlyIf { providers.environmentVariable("CI").getOrElse("false").toBoolean() }
     }
 }
