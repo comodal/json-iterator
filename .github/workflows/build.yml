@@ -10,5 +10,4 @@ on:
 jobs:
   build:
     uses: sava-software/sava-build/.github/workflows/build.yml@main
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    secrets: inherit
